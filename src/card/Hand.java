@@ -2,6 +2,8 @@ package card;
 
 import java.util.Arrays;
 
+import game.Table;
+
 /**
  * The representation of the hand, this class defines a hand with attributes
  * representing the cards and whether the hand is a split hand. 
@@ -304,11 +306,53 @@ public class Hand implements Cloneable
 	public int getHandScore()
 	{
 		int score = 0;
+		boolean aceFound = false;
 		for(int i = 0; i < cards.length; i++)
 		{
 			if(cards[i] != null && cards[i].getFaceUp())
 			{
 				score += cards[i].getValue();
+				if(cards[i].getFace() == Face.ACE)
+				{
+					aceFound = true;
+				}
+			}
+		}
+		
+		//If the hand has an ace and the score is greater than blackjack.
+		if(score > Table.BLACKJACK && aceFound)
+		{
+			int i = 0;
+			while(i < cards.length && score > Table.BLACKJACK)
+			{
+				if(cards[i] != null && cards[i].getFaceUp())
+				{
+					if(cards[i].getValue() == 11)
+					{
+						cards[i].setValue();
+						score -= 10;
+					}
+				}
+				i++;
+			}
+		}
+		
+		//If the hand has an ace and the score is less than blackjack.
+		if(score < Table.BLACKJACK && aceFound)
+		{
+			int i = 0;
+			while((i < cards.length && score < Table.BLACKJACK) && score + 10 <=
+					Table.BLACKJACK) 
+			{
+				if(cards[i] != null && cards[i].getFaceUp())
+				{
+					if(cards[i].getValue() == 1 )
+					{
+						cards[i].setValue();
+						score += 10;
+					}
+				}
+				i++;
 			}
 		}
 		

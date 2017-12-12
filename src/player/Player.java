@@ -21,9 +21,21 @@ public class Player extends Person implements Cloneable
 	 */
 	private double insurance;
 	/**
-	 * The player's total money
+	 * The player's total money.
 	 */
 	private double totalMoney;
+	/**
+	 * The player's total wagers.
+	 */
+	private double totalWager;
+	/**
+	 * The player's total insurance payments.
+	 */
+	private double totalInsurance;
+	/**
+	 * The player's total winnings.
+	 */
+	private double totalWinnings;
 	/**
 	 * Whether the player has bust.
 	 */
@@ -57,10 +69,13 @@ public class Player extends Person implements Cloneable
 	 */
 	private boolean surrendered;
 	/**
+	 * Whether the player is bankrupt.
+	 */
+	private boolean bankrupt;
+	/**
 	 * The player's starting money.
 	 */
-	private static final int STARTINGMONEY = 1000;
-	
+	private static final int STARTINGMONEY = 25;
 	/**
 	 * Constructor for the player, takes the name of the player as an argument.
 	 */
@@ -77,6 +92,8 @@ public class Player extends Person implements Cloneable
 			System.exit(0);
 		}
 		busted = false;
+		surrendered = false;
+		bankrupt = false;
 	}
 	
 	/**
@@ -222,14 +239,16 @@ public class Player extends Person implements Cloneable
 		//If the current wager minus the new wager is greater than or equal to
 		//zero.
 		if(this.wager - wager >= 0)
-		{;
+		{
 			setTotalMoney(totalMoney - wager);
+			setTotalWager(totalWager + wager);
 			this.wager = wager;
 		}
 		//If the current wager minus the new wager less than zero.
 		else
 		{
 			setTotalMoney(totalMoney - (wager - this.wager));
+			setTotalWager(totalWager + (wager - this.wager));
 			this.wager = wager;
 		}
 	}
@@ -259,6 +278,7 @@ public class Player extends Person implements Cloneable
 		}
 		
 		setTotalMoney(totalMoney - insurance);
+		setTotalInsurance(totalInsurance + insurance);
 		this.insurance = insurance;
 	}
 	
@@ -287,6 +307,87 @@ public class Player extends Person implements Cloneable
 		}
 		
 		this.totalMoney = totalMoney;
+	}
+	
+	/**
+	 * Gets the player's total wagers.
+	 * 
+	 * @return The player's total wagers.
+	 */
+	public double getTotalWager()
+	{
+		return totalWager;
+	}
+	
+	/**
+	 * Sets the player's total of wagers.
+	 * 
+	 * @param totalWager The player's new total of wager
+	 * @throws PlayerException If the total wager is negative.
+	 */
+	private void setTotalWager(double totalWager) throws PlayerException
+	{
+		if(totalWager < 0)
+		{
+			throw new PlayerException("Total wager can't be less than 0: " + 
+						totalWager);
+		}
+		
+		this.totalWager = totalWager;
+	}
+	
+	/**
+	 * Gets the player's total insurance payments.
+	 * 
+	 * @return The player's total insurance payments.
+	 */
+	public double getTotalInsurance()
+	{
+		return totalInsurance;
+	}
+	
+	/**
+	 * Sets the player's total insurance.
+	 * 
+	 * @param totalInsurance The player's new total insurance payments.
+	 * @throws PlayerException If the total insurance is negative.
+	 */
+	private void setTotalInsurance(double totalInsurance) throws PlayerException
+	{
+		if(totalInsurance < 0)
+		{
+			throw new PlayerException("Total insurance can't be less than 0: " + 
+						totalInsurance);
+		}
+		
+		this.totalInsurance = totalInsurance;
+	}
+	
+	/**
+	 * Gets the player's total winnings.
+	 * 
+	 * @return The player's total winnings.
+	 */
+	public double getTotalWinnings()
+	{
+		return totalWinnings;
+	}
+	
+	/**
+	 * Sets the player's total winnings.
+	 * 
+	 * @param totalWinnings The player's total winnings.
+	 * @throws PlayerException If the total winning is negative.
+	 */
+	public void setTotalWinnnings(double totalWinnings) throws PlayerException
+	{
+		if(totalWinnings < 0)
+		{
+			throw new PlayerException("Total winnings can't be less than 0: " + 
+					totalWinnings);
+		}
+		
+		this.totalWinnings = totalWinnings;
 	}
 	
 	/**
@@ -522,6 +623,26 @@ public class Player extends Person implements Cloneable
 	public boolean getSurrendered()
 	{
 		return surrendered;
+	}
+	
+	/**
+	 * Gets whether the player is bankrupt.
+	 * 
+	 * @return Whether the player is bankrupt.
+	 */
+	public boolean getBankrupt()
+	{
+		return bankrupt;
+	}
+	
+	/**
+	 * Sets whether the player is bankrupt.
+	 * 
+	 * @param bankrupt WHether the player is now bankrupt.
+	 */
+	public void setBankrupt(boolean bankrupt)
+	{
+		this.bankrupt = bankrupt;
 	}
 	
 	/**

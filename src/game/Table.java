@@ -36,9 +36,13 @@ public class Table
 	 */
 	private int currentRound;
 	/**
-	 * The total rounds in the game.
+	 * The absolute total number of rounds.
 	 */
 	private int totalRounds;
+	/**
+	 * The total number of rounds actually played
+	 */
+	private int completedRounds;
 	/**
 	 * The minimum number of players.
 	 */
@@ -58,70 +62,50 @@ public class Table
 	/**
 	 * The value of blackjack.
 	 */
-	private static final int BLACKJACK = 21;
+	public static final int BLACKJACK = 21;
 	
 	public static void main(String[] args)
 	{
 		Table game = new Table(2, 1, 1);
-		
+		boolean availablePlayers = true;
 		//While there are still rounds remaining, continue the game.
-		while(game.currentRound < game.totalRounds)
+		while(game.currentRound < game.totalRounds && availablePlayers)
 		{
 			System.out.println("Round: " + (game.currentRound + 1));
-			for(int i = 0; i < game.players.length; i++)
-			{
-				System.out.println(game.players[i]);	
-			}
+			game.displayPlayers();
 			game.initialBet();
 			
-			for(int i = 0; i < game.players.length; i++)
-			{
-				System.out.println(game.players[i]);	
-			}
+			game.displayPlayers();
 			game.deal();
 			
-			for(int i = 0; i < game.players.length; i++)
-			{
-				System.out.println(game.players[i]);	
-			}
+			game.displayPlayers();
 			game.insurance();
 			
-			for(int i = 0; i < game.players.length; i++)
-			{
-				System.out.println(game.players[i]);	
-			}
+			game.displayPlayers();
 			
 			//If the dealer didn't reach 21 after the insurance round.
 			if(game.players[game.players.length - 1].getHand(0).getHandScore() < 21)
 			{
 				game.round();
 				
-				for(int i = 0; i < game.players.length; i++)
-				{
-					System.out.println(game.players[i]);	
-				}
-				
+				game.displayPlayers();				
 				game.payout();
 			}
-			game.resetPlayers();
+			game.prepareForNewRound();
 			game.deck = new Deck(game.deck.getNumOfDecks());
 			game.currentRound++;
+			
+			availablePlayers = false;
+			for(int i = 0; i < game.players.length - 1; i++)
+			{
+				Player player = (Player)game.players[i];
+				if(!player.getBankrupt())
+				{
+					availablePlayers = true;
+				}
+			}
 		}
-		
-		//Displays the final statistics after the end of the game.
-		System.out.println("Overall Game Statistics:");
-		for(int i = 0; i < game.players.length - 1; i++)
-		{
-			Player player = (Player)game.players[i];
-			System.out.println(player.getName());
-			System.out.println("Wins: " + player.getWin());
-			System.out.println("Losses: " + player.getLoss());
-			System.out.println("Pushes: " + player.getPush());
-			System.out.println("Blackjacks: " + player.getBlackjack());
-			System.out.println("Busts: " + player.getBust());
-			System.out.println("Surrenders: " + player.getSurrender());
-			System.out.println();
-		}
+		game.displayGameStats();
 	}
 	
 	/**
@@ -145,11 +129,8 @@ public class Table
 	 * ends if the number of human players, AI players or both added together
 	 * are invalid.
 	 * 
-	 * REQURIES UPDATE: Prompt the user for input.
-	 * 
 	 * @param numOfHumanPlayers The number of human players.
 	 * @param numOfAiPlayers The number of AI players.
-	 * @
 	 */
 	private void createPlayers(int numOfHumanPlayers, int numOfAiPlayers)
 	{
@@ -180,6 +161,7 @@ public class Table
 		
 		
 		int playerIndex = 0;
+		//Creates the human players.
 		players = new Person[numOfHumanPlayers + numOfAiPlayers + 1];
 		for(int i = 0; i < numOfHumanPlayers; i++)
 		{
@@ -187,6 +169,7 @@ public class Table
 			playerIndex++;
 		}
 		
+		//Creates the AI players.
 		for(int i = 0; i < numOfAiPlayers; i++)
 		{
 			players[playerIndex] = new CPU("CPU " + i);
@@ -194,6 +177,63 @@ public class Table
 		}
 		
 		players[playerIndex] = new Dealer("Dealer");
+	}
+	
+	/**
+	 * Displays the hands and general statistics of each player.
+	 */
+	private void displayPlayers()
+	{
+		for(int i = 0; i < players.length; i++)
+		{
+			//If the player is of type player.
+			if(players[i] instanceof Player)
+			{
+				Player player = (Player)players[i];
+				if(!player.getBankrupt())
+				{
+					System.out.println(players[i]);	
+				}
+			}
+			//If the player is a dealer.
+			else
+			{
+				System.out.println(players[i]);	
+			}
+		}
+	}
+	
+	/**
+	 * Displays the complete statistics for the game and every player.
+	 */
+	private void displayGameStats()
+	{
+		//Displays the final statistics after the end of the game.
+		System.out.println("Overall Game Statistics:");
+		System.out.println("Minimum Wager: " + MINWAGER);
+		System.out.println("Maximum Wager: " + MAXWAGER);
+		System.out.println("Number of players: " + (players.length - 1));
+		System.out.println("Completed Rounds: " + (completedRounds + 1));
+		for(int i = 0; i < players.length - 1; i++)
+		{
+			Player player = (Player)players[i];
+			System.out.println();
+			System.out.println("Name: " + player.getName());
+			if(player.getBankrupt())
+			{
+				System.out.println("Bankrupt");
+			}
+			System.out.println("Money Remaining: " + player.getTotalMoney());
+			System.out.println("Total Winnings: " + player.getTotalWinnings());
+			System.out.println("Total Wagers: " + player.getTotalWager());
+			System.out.println("Total Insurance: " + player.getTotalInsurance());
+			System.out.println("Wins: " + player.getWin());
+			System.out.println("Losses: " + player.getLoss());
+			System.out.println("Pushes: " + player.getPush());
+			System.out.println("Blackjacks: " + player.getBlackjack());
+			System.out.println("Busts: " + player.getBust());
+			System.out.println("Surrenders: " + player.getSurrender());
+		}
 	}
 	
 	/**
@@ -292,55 +332,68 @@ public class Table
 	{
 		for(int i = 0; i < players.length - 1; i++)
 		{
-			Player temp = (Player)players[i];
-			//If the player is human, prompt the user for an input.
-			if(temp instanceof Human)
+			Player player = (Player)players[i];
+			if(!player.getBankrupt())
 			{
-				System.out.println(temp.getName() + " enter wager between " 
-						+ MINWAGER + " and " + MAXWAGER);
-				boolean validInput = false;
-				double wager;
-				//Prompts the user for an input until they give a valid input.
-				while(!validInput)
-				{	
-					try 
-					{
-						wager = keyboard.nextDouble();
-						if(wager >= MINWAGER & wager <= MAXWAGER)
+				//If the player is human, prompt the user for an input.
+				if(player instanceof Human)
+				{
+					System.out.println(player.getName() + " enter wager between " 
+							+ MINWAGER + " and " + MAXWAGER);
+					boolean validInput = false;
+					double wager;
+					//Prompts the user for an input until they give a valid input.
+					while(!validInput)
+					{	
+						try 
 						{
-							temp.setWager(wager);
-							validInput = true;
+							wager = keyboard.nextDouble();
+							if(wager >= MINWAGER & wager <= MAXWAGER)
+							{
+								player.setWager(wager);
+								validInput = true;
+							}
+							else
+							{
+								System.out.println("Invalid wager: " + wager);
+							}
+						} 
+						catch (PlayerException e) 
+						{
+							System.out.println(e.getMessage());
+						}
+						catch(InputMismatchException e)
+						{
+							System.out.println("Invalid input");
+							keyboard.next();
+						}
+					}
+					keyboard.nextLine();
+				}
+				//If the player is a CPU, set the wager to 50
+				else
+				{
+					int wager = 50;
+					boolean validWager = false;
+					while(!validWager)
+					{
+						if(wager >= MINWAGER && wager <= player.getTotalMoney())
+						{
+							validWager = true;
 						}
 						else
 						{
-							System.out.println("Invalid wager: " + wager);
+							wager--;
 						}
+					}
+					
+					try 
+					{
+						player.setWager(wager);
 					} 
 					catch (PlayerException e) 
 					{
-						System.out.println(e.getMessage());
-					}
-					catch(InputMismatchException e)
-					{
-						System.out.println("Invalid input");
-						keyboard.next();
-					}
-				}
-				keyboard.nextLine();
-			}
-			//If the player is a CPU, set the wager to 50
-			else
-			{
-				int wager = 50;
-				try 
-				{
-					temp.setWager(wager);
-				} 
-				catch (PlayerException e) 
-				{
-					while(wager > temp.getTotalMoney())
-					{
-						wager -= 5;
+
 					}
 				}
 			}
@@ -357,12 +410,12 @@ public class Table
 		{
 			for(int i = 0; i < players.length - 1; i++)
 			{
-				Player temp = (Player)players[i];
+				Player player = (Player)players[i];
 				//If the player is human and didn't achieve blackjack with there
 				//first 2 cards.
-				if(temp instanceof Human && temp.getHand(0).getHandScore() < BLACKJACK)
+				if(player instanceof Human && player.getHand(0).getHandScore() < BLACKJACK)
 				{
-					System.out.println(temp.getName() + " would you like insurance?"
+					System.out.println(player.getName() + " would you like insurance?"
 							+ " Y|N");
 					String input = "";
 					boolean validInput = false;
@@ -370,7 +423,19 @@ public class Table
 					while(!validInput)
 					{
 						input = keyboard.next();
-						if(input.equalsIgnoreCase("y") || (input.equalsIgnoreCase("n")))
+						if(input.equalsIgnoreCase("y"))
+						{
+							if(player.getTotalMoney() > 0)
+							{
+								validInput = true;
+							}
+							else
+							{
+								System.out.println("You need to have money "
+										+ "remaining to buy insurance");
+							}
+						}
+						else if(input.equalsIgnoreCase("n"))
 						{
 							validInput = true;
 						}
@@ -384,7 +449,7 @@ public class Table
 					//If the player takes insurance.
 					if(input.equalsIgnoreCase("y"))
 					{
-						System.out.println(temp.getName() + " how much insurance "
+						System.out.println(player.getName() + " how much insurance "
 								+ "would you like?");
 						double insurance;
 						validInput = false;
@@ -395,9 +460,9 @@ public class Table
 							try 
 							{	
 								insurance = keyboard.nextDouble();
-								if(insurance <= temp.getWager() / 2)
+								if(insurance <= player.getWager() / 2)
 								{
-									temp.setInsurance(insurance);
+									player.setInsurance(insurance);
 									validInput = true;
 								}
 								else
@@ -421,12 +486,12 @@ public class Table
 				}
 				//If the player is a CPU and didn't achieve blackjack with there
 				//first 2 cards.
-				else if(temp instanceof CPU && temp.getHand(0).getHandScore() < 
+				else if(player instanceof CPU && player.getHand(0).getHandScore() < 
 						BLACKJACK)
 				{
 					try 
 					{
-						temp.setInsurance(temp.getWager()/2);
+						player.setInsurance(player.getWager()/2);
 					} 
 					catch (PlayerException e) 
 					{
@@ -542,7 +607,7 @@ public class Table
 		{
 			Player player = (Player)players[i];
 			//If the player did not reach Blackjack with in first 2 cards.
-			if(player.getHand(0).getHandScore() < BLACKJACK)
+			if(!player.getBankrupt() && player.getHand(0).getHandScore() < BLACKJACK)
 			{
 				//If the player is human.
 				if(player instanceof Human)
@@ -581,9 +646,11 @@ public class Table
 						{
 							//If the player can afford to double wager and if the 
 							//players 2 cards have matching values.
-							if(player.getTotalMoney() >= player.getWager() && player.
-									getHand(0).getCard(0).getValue() == player.
-									getHand(0).getCard(1).getValue())
+							if((player.getTotalMoney() >= player.getWager() && player.
+							   getHand(0).getCard(0).getValue() == player.getHand(0).
+							   getCard(1).getValue()) || (player.getHand(0).getCard(0).
+							   getFace() == Face.ACE && player.getHand(0).getCard(1).
+							   getFace() == Face.ACE))
 							{
 								validInput = true;
 							}
@@ -680,11 +747,9 @@ public class Table
 	 */
 	private void hit(Player player, int index)
 	{
-		System.out.println(player.getName() + " hits");
+		System.out.println(player.getName() + " hits\n");
 		player.addToHand(deck.getCard(), index);
-		System.out.println(player.getName() + " has a total of " + 
-		player.getHand(index).getHandScore());
-		System.out.println();
+		System.out.println(player.getHand(index));
 		
 		Hand playerHand = player.getHand(index);
 		//If hand's score less than Blackjack
@@ -1153,7 +1218,9 @@ public class Table
 		final double BLACKJACKRETURN = 2.5;
 		try 
 		{
-			payee.setTotalMoney((payee.getWager() * BLACKJACKRETURN) + payee.getTotalMoney());
+			double blackjackWinnings = payee.getWager() * BLACKJACKRETURN;
+			payee.setTotalMoney(payee.getTotalMoney() + blackjackWinnings);
+			payee.setTotalWinnnings(payee.getTotalWinnings() + blackjackWinnings);
 		} 
 		catch(PlayerException e) 
 		{
@@ -1174,7 +1241,9 @@ public class Table
 		final double STANDARDRETURN = 2;
 		try
 		{
-			payee.setTotalMoney((payee.getWager() * STANDARDRETURN) + payee.getTotalMoney());
+			double standardWinnings = payee.getWager() * STANDARDRETURN;
+			payee.setTotalMoney(payee.getTotalMoney() + standardWinnings);
+			payee.setTotalWinnnings(payee.getTotalWinnings() + standardWinnings);
 		}
 		catch(PlayerException e)
 		{
@@ -1186,14 +1255,14 @@ public class Table
 	
 	/**
 	 * Resets all of the player's hands, wagers, and if they've surrendered set 
-	 * back to default state.
+	 * back to default state and checks if they have enough money to continue.
 	 */
-	private void resetPlayers()
+	private void prepareForNewRound()
 	{
 		for(int i = 0; i < players.length; i++)
 		{
 			players[i].startingHand();
-			if(!(players[i] instanceof Dealer))
+			if(players[i] instanceof Player)
 			{
 				Player player = (Player)players[i];
 				try 
@@ -1209,7 +1278,14 @@ public class Table
 				{
 					player.setSurrendered(false);
 				}
+				
+				if(player.getTotalMoney() < MINWAGER)
+				{
+					player.setBankrupt(true);
+					System.out.println(player.getName() + " has gone bankrupt");
+				}
 			}
 		}
+		System.out.println();
 	}
 }
