@@ -1,5 +1,5 @@
 # Blackjack Changelog
-Version 1.0
+Version 1.0.0
 Known Bugs
 1. Ace values do not change to 1 if 11 would put the player over 21.
 2. When 1 is fixed aces will be treated as different cards in a split because there values differ.
