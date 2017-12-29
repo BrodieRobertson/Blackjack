@@ -31,19 +31,10 @@ public abstract class Person implements Cloneable
 	 * 
 	 * @param name The name of the person.
 	 */
-	public Person(String name)
+	public Person()
 	{
 		super();
 		startingHand();
-		try
-		{
-			setName(name);
-		} 
-		catch (PersonException e) 
-		{
-			e.printStackTrace();
-			System.exit(0);
-		}
 	}
 	
 	/**
@@ -263,7 +254,7 @@ public abstract class Person implements Cloneable
 	 * 
 	 * @param name The name of the person.
 	 */
-	private void setName(String name) throws PersonException
+	public void setName(String name) throws PersonException
 	{
 		if(name.equals("") || name.equals(null))
 		{
@@ -280,10 +271,11 @@ public abstract class Person implements Cloneable
 	 * @param card The card being added.
 	 * @param index The index of the specified hand.
 	 */
-	public void addToHand(Card card, int index)
+	public Card addToHand(Card card, int index)
 	{
 		validateHandIndex(index);
 		hands[index].addCard(card);
+		return new Card(card);
 	}
 	
 	/**
@@ -310,6 +302,12 @@ public abstract class Person implements Cloneable
 	{
 		validateHandIndex(handIndex);
 		hands[handIndex].flipCardInHand(cardIndex);
+	}
+	
+	public void setHandSplit(int handIndex)
+	{
+		validateHandIndex(handIndex);
+		hands[handIndex].setSplit(true);
 	}
 	
 	/**

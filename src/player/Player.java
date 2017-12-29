@@ -73,15 +73,18 @@ public class Player extends Person implements Cloneable
 	 */
 	private boolean bankrupt;
 	/**
+	 * 
+	 */
+	private boolean tookInsurance;
+	/**
 	 * The player's starting money.
 	 */
-	private static final int STARTINGMONEY = 25;
+	private static final int STARTINGMONEY = 100;
 	/**
 	 * Constructor for the player, takes the name of the player as an argument.
 	 */
-	public Player(String name)
+	public Player()
 	{
-		super(name);
 		try 
 		{
 			setTotalMoney(STARTINGMONEY);
@@ -223,17 +226,19 @@ public class Player extends Person implements Cloneable
 	 */
 	public void setWager(double wager) throws PlayerException
 	{
-		try
+		if(this.wager > 0)
 		{
-			if(wager < 0)
+			if(wager < 0 || wager - this.wager > totalMoney)
 			{
-				throw new PlayerException();
+				throw new PlayerException("Invalid wager: " + wager);
 			}
 		}
-		catch(PlayerException e)
+		else
 		{
-			e.printStackTrace();
-			System.exit(0);
+			if(wager < 0 || wager > totalMoney)
+			{
+				throw new PlayerException("Invalid wager: " + wager);
+			}
 		}
 		
 		//If the current wager minus the new wager is greater than or equal to
@@ -272,7 +277,7 @@ public class Player extends Person implements Cloneable
 	 */
 	public void setInsurance(double insurance) throws PlayerException
 	{
-		if(insurance < 0)
+		if(insurance < 0 || insurance > totalMoney)
 		{
 			throw new PlayerException("Invalid amount of insurance: " + insurance);
 		}
@@ -405,7 +410,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * @param bust Whether the player is now bust.
 	 */
-	public void setBust(boolean busted)
+	public void setBusted(boolean busted)
 	{
 		this.busted = busted;
 	}
@@ -653,5 +658,15 @@ public class Player extends Person implements Cloneable
 	public void setSurrendered(boolean surrendered)
 	{
 		this.surrendered = surrendered;
+	}
+	
+	public boolean getTookInsurance()
+	{
+		return tookInsurance;
+	}
+	
+	public void setTookInsurance(boolean tookInsurance)
+	{
+		this.tookInsurance = tookInsurance;
 	}
 }

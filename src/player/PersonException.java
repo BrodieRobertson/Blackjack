@@ -13,7 +13,7 @@ public class PersonException extends Exception
 	 */
 	public PersonException() 
 	{
-		super();
+		super("Exception in Person");
 	}
 
 	/**

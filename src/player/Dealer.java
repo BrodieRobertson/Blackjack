@@ -13,7 +13,15 @@ public class Dealer extends Person implements Cloneable
 	 */
 	public Dealer(String name) 
 	{
-		super(name);
+		try
+		{
+			setName(name);
+		} 
+		catch (PersonException e) 
+		{
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 	
 	/**

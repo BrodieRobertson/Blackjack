@@ -12,9 +12,9 @@ public class Human extends Player implements Cloneable
 	 * The constructor for the human, takes the name of the human as an
 	 * argument.
 	 */
-	public Human(String name) 
+	public Human() 
 	{
-		super(name);
+		
 	}
 	
 	/**

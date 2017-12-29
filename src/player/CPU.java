@@ -13,7 +13,15 @@ public class CPU extends Player implements Cloneable
 	 */
 	public CPU(String name) 
 	{
-		super(name);
+		try 
+		{
+			setName(name);
+		} 
+		catch (PersonException e) 
+		{
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 	
 	/**
