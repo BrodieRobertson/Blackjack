@@ -1,6 +1,6 @@
 # Blackjack Changelog
 GUI Alpha 0.1.0
-Side Note: 
+<br>Side Note: 
 I've come to realise that I've been approaching Event-Driven programming incorrectly, before my next realease I plan to address these issues. I've been doing sequential programming for so long that I've developed some bad habits which has caused some issues with my code, it hasn't created any bugs per se however the solutions I came up with are sub optimal at best. Wilst writing this log I've come up with a few solutions to the problem so I'll get working on those ASAP.
 
 Change Log:
