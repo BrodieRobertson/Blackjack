@@ -87,8 +87,15 @@ public class Card implements Cloneable
 	@Override
 	public String toString()
 	{
-		return colour.name().toString() + " " + face.toString() + " of " 
-				+ suit.toString() + " " + value;
+		if(faceUp)
+		{
+			return colour.name().toString() + " " + face.toString() + " of " 
+				+ suit.toString();
+		}
+		else
+		{
+			return "FACE DOWN CARD";
+		}
 	}
 	
 	/**

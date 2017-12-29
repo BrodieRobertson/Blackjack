@@ -2,7 +2,7 @@ package card;
 
 import java.util.Arrays;
 
-import game.Table;
+import logic.Table;
 
 /**
  * The representation of the hand, this class defines a hand with attributes
@@ -203,6 +203,20 @@ public class Hand implements Cloneable
 		
 		Card temp = new Card(cards[index]);
 		return temp;
+	}
+	
+	public Card[] getCards()
+	{
+		Card[] temp = new Card[cards.length];
+		for(int i = 0; i < temp.length; i++)
+		{
+			if(cards[i] != null)
+			{
+				temp[i] = cards[i].clone();
+			}
+		}
+		
+		return cards;
 	}
 	
 	/**
