@@ -6,7 +6,7 @@ I've come to realise that I've been approaching Event-Driven programming incorre
 Change Log:
 1. Basic GUI elements for most elements in the game.
 2. Human player names a choosable when the game is started.
-3. Number of human ad CPU players choosable when the game is started.
+3. Number of human and CPU players choosable when the game is started.
 4. On screen log which keeps track of all choices made during the game.
 5. Tool tips for some options (most are still missing).
 6. Fixed a minor bugs which would only occur under incredibly rare circumstances.
