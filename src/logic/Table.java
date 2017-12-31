@@ -1,9 +1,5 @@
 package logic;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.Scanner;
-
-import org.omg.CORBA.Current;
 
 import card.*;
 import player.*;
@@ -28,10 +24,6 @@ public class Table
 	 * The deck.
 	 */
 	private Deck deck;
-	/**
-	 * The input device.
-	 */
-	private Scanner keyboard;
 	/**
 	 * The current round.
 	 */
@@ -449,6 +441,7 @@ public class Table
 			if(insurance <= player.getWager() / 2)
 			{
 				player.setInsurance(insurance);
+				player.setTookInsurance(true);
 			}
 			else if(insurance > player.getTotalMoney())
 			{
@@ -467,7 +460,6 @@ public class Table
 	 */
 	public double setCpuInsurance(int index)
 	{
-		
 		Player player = null;
 		try 
 		{
@@ -485,7 +477,7 @@ public class Table
 		
 		player = (Player)players[index];
 		double insurance = player.getWager() / 2;
-		while(!player.getTookInsurance() || insurance <= 0)
+		while(insurance > player.getTotalMoney() && insurance > 0)
 		{
 			if(insurance > player.getTotalMoney())
 			{
@@ -496,6 +488,15 @@ public class Table
 		if(insurance > 0)
 		{
 			player.setTookInsurance(true);
+			try 
+			{
+				player.setInsurance(insurance);
+			} 
+			catch (PlayerException ex) 
+			{
+				ex.printStackTrace();
+				System.exit(0);
+			}
 		}
 		
 		return insurance;
@@ -519,7 +520,7 @@ public class Table
 		//If the dealer's 2nd card's value is 10, flip it.
 		if(dealerHand.getCard(1).getValue() == 10)
 		{
-			dealerHand.flipCardInHand(1);
+			players[players.length - 1].flipCardInHand(1, 0);
 			return true;
 		}
 		return false;
@@ -541,6 +542,7 @@ public class Table
 				player.setTotalMoney(player.getTotalMoney() + player.getInsurance() * 
 						INSURANCE_RETURN);
 				player.setInsurance(0);
+				player.setTookInsurance(false);
 			} 
 			catch (PlayerException e) 
 			{

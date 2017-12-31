@@ -126,7 +126,8 @@ public class GUI extends JFrame
 		
 		private class SetNameWindow extends JDialog
 		{
-			private int playerNumber;
+			private int index;
+			private int maxIndex;
 			private JLabel error;
 			private JTextField input;
 			private class ButtonListener implements ActionListener
@@ -139,7 +140,7 @@ public class GUI extends JFrame
 					{
 						try 
 						{
-							table.setPersonNameAtIndex(playerNumber, input.getText());
+							table.setPersonNameAtIndex(index, input.getText());
 						} 
 						catch (PersonException ex) 
 						{
@@ -148,6 +149,7 @@ public class GUI extends JFrame
 							return;
 						}
 						dispose();
+						nextName(index, maxIndex);
 					}
 					else if(command.equals("Clear"))
 					{
@@ -161,7 +163,7 @@ public class GUI extends JFrame
 				}	
 			}
 			
-			public SetNameWindow(String title, int playerNumber)
+			public SetNameWindow(String title, int index, int maxIndex)
 			{
 				setSize(tinyWindow);
 				setTitle(title);
@@ -190,7 +192,22 @@ public class GUI extends JFrame
 				clearButton.addActionListener(new ButtonListener());
 				buttonPanel.add(clearButton);
 				add(buttonPanel, BorderLayout.SOUTH);
-				this.playerNumber = playerNumber;
+				this.index = index;
+				this.maxIndex = maxIndex;
+			}
+			
+			private void nextName(int index, int maxIndex)
+			{
+				if(index + 1 < maxIndex)
+				{
+					SetNameWindow window = new SetNameWindow("Player " + (index + 2) 
+							+ " name", index + 1, maxIndex);
+					window.setVisible(true);
+				}
+				else
+				{
+					mainScreen();
+				}
 			}
 		}
 		
@@ -306,13 +323,9 @@ public class GUI extends JFrame
 					}
 					dispose();
 					
-					for(int i = 0; i < humanPlayers; i++)
-					{
-						SetNameWindow window = new SetNameWindow("Player " + (i + 1) + " name", i);
-						window.setVisible(true);
-					}
-					
-					mainScreen();
+					SetNameWindow window = new SetNameWindow("Player " + (0 + 1) 
+							+ " name", 0, humanPlayers);
+					window.setVisible(true);
 				}
 				else if(command.equals("Cancel"))
 				{
@@ -574,6 +587,17 @@ public class GUI extends JFrame
 				scoreLabel2.setText("Hand 2 Score");
 				score2.setText("" + player.getHand(1).getHandScore());
 			}
+			
+			if(player.getTookInsurance())
+			{
+				extraLabel.setText("Insurance");
+				extra.setText("$" + player.getInsurance());
+			}
+			else
+			{
+				extraLabel.setText("");
+				extra.setText("");
+			}
 		}
 	}
 	
@@ -668,8 +692,9 @@ public class GUI extends JFrame
 					}
 					gameLog.setText(gameLog.getText() + table.getPersonAtIndex(index).
 							getName() + "'s wager is $" + wager + "\n");
+					nextBet(index);
 					dispose();
-							
+					return;
 				}
 				else if(command.equals("Clear"))
 				{
@@ -689,7 +714,7 @@ public class GUI extends JFrame
 			setSize(tinyWindow);
 			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			setResizable(false);
-			setModalityType(ModalityType.APPLICATION_MODAL);
+			setModalityType(ModalityType.MODELESS);
 			setLayout(new BorderLayout());
 			
 			JPanel inputPanel = new JPanel(new GridLayout(2, 1));
@@ -764,13 +789,14 @@ public class GUI extends JFrame
 						
 						getContentPane().revalidate();
 						repaint();
-						gameLog.setText(gameLog.getText() + player + " takes insurance\n");
+						gameLog.setText(gameLog.getText() + player.getName() + " takes insurance\n");
 					}
 				}
 				else if(cmd.equals("No"))
 				{
+					gameLog.setText(gameLog.getText() + player.getName() + " doesn't take insurance\n");
 					dispose();
-					gameLog.setText(gameLog.getText() + player + " doesn't take insurance\n");
+					nextInsurance(index);
 				}
 				else if(cmd.equals("Confirm"))
 				{
@@ -792,9 +818,10 @@ public class GUI extends JFrame
 						error.setText(ex.getMessage());
 						return;
 					}
-					gameLog.setText(gameLog.getText() + player + " has $" + 
+					gameLog.setText(gameLog.getText() + player.getName() + " has $" + 
 							insurance + " of insurance\n");
 					dispose();
+					nextInsurance(index);
 				}
 				else if(cmd.equals("Clear"))
 				{
@@ -813,9 +840,9 @@ public class GUI extends JFrame
 			String name = table.getPersonAtIndex(index).getName();
 			setTitle(name + "'s Insurance");
 			setSize(tinyWindow);
-			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			setResizable(false);
-			setModalityType(ModalityType.APPLICATION_MODAL);
+			setModalityType(ModalityType.MODELESS);
 			setLayout(new BorderLayout());
 			
 			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
@@ -830,6 +857,7 @@ public class GUI extends JFrame
 			yesButton.addActionListener(new ButtonListener());
 			buttonPanel.add(yesButton);
 			JButton noButton = new JButton("No");
+			noButton.addActionListener(new ButtonListener());
 			buttonPanel.add(noButton);
 			add(buttonPanel, BorderLayout.SOUTH);
 			this.index = index;
@@ -853,9 +881,11 @@ public class GUI extends JFrame
 				
 				if(cmd.equals("Stand"))
 				{
-					gameLog.setText(gameLog.getText() + " stands with a score of "
-							+ player.getHand(0).getHandScore() + "\n");
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " stands with a score of " + player.getHand(0).
+						getHandScore() + "\n");
 					dispose();
+					nextPlayer(index);
 				}
 				else if(cmd.equals("Hit"))
 				{
@@ -885,12 +915,14 @@ public class GUI extends JFrame
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " has Blackjack and is forced to stand\n");
 						dispose();
+						nextPlayer(index);
 					}
 					else
 					{
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " busts\n");
 						dispose();
+						nextPlayer(index);
 					}
 				}
 				else if(cmd.equals("Double Down"))
@@ -911,10 +943,11 @@ public class GUI extends JFrame
 						if(player.getBusted())
 						{
 							gameLog.setText(gameLog.getText() 
-									+ player.getBust() + " has gone bust");
+									+ player.getName() + " has gone bust");
 						}
 						playerPanels[index].updatePanel(index);
 						dispose();
+						nextPlayer(index);
 					}
 					else
 					{
@@ -978,6 +1011,7 @@ public class GUI extends JFrame
 						+ " regains $" + returnedAmount + "\n");
 					playerPanels[index].updatePanel(index);
 					dispose();
+					nextPlayer(index);
 				}
 				else
 				{
@@ -1043,6 +1077,7 @@ public class GUI extends JFrame
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " busts\n");
 						dispose();
+						nextPlayer(index);
 					}
 					
 				}
@@ -1068,6 +1103,7 @@ public class GUI extends JFrame
 							gameLog.setText(gameLog.getText() 
 									+ player.getName() + " busts\n");
 							dispose();
+							nextPlayer(handIndex);
 						}
 						else
 						{
@@ -1108,6 +1144,7 @@ public class GUI extends JFrame
 					else
 					{
 						dispose();
+						nextPlayer(index);
 					}
 				}
 			}
@@ -1265,7 +1302,328 @@ public class GUI extends JFrame
 		
 		getContentPane().revalidate();
 		repaint();
-		runGame();
+		currentRound();
+		initialBet(0);
+	}
+	
+	/**
+	 * 
+	 */
+	private void currentRound()
+	{
+		gameLog.setText(gameLog.getText() + "Round " + table.getCurrentRound() + "\n");
+	}
+	
+	/**
+	 * @param index
+	 */
+	private void initialBet(int index)
+	{
+		Player player = (Player)table.getPersonAtIndex(index);
+		if(!player.getBankrupt())
+		{
+			if(player instanceof Human)
+			{
+				WagerWindow window = new WagerWindow(index);
+				window.setVisible(true);		
+				playerPanels[index].updatePanel(index);
+			}
+			else if(player instanceof CPU)
+			{
+				double wager = table.setCpuWager(index);
+				gameLog.setText(gameLog.getText() + player.getName() + 
+						"'s wager is $" + wager + "\n");
+				playerPanels[index].updatePanel(index);
+				
+				nextBet(index);
+			}
+		}
+		else
+		{
+			nextBet(index);
+		}
+	}
+	
+	/**
+	 * @param index
+	 */
+	private void nextBet(int index)
+	{
+		if(index + 1 < table.getPlayers().length - 1)
+		{
+			initialBet(index + 1);
+		}
+		else
+		{
+			initialDeal();
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	private void initialDeal()
+	{
+		table.deal();
+		Person[] players = table.getPlayers();
+		gameLog.setText(gameLog.getText() + "All player's are dealt 2 cards\n");
+		for(int i = 0; i < players.length; i++)
+		{
+			if(players[i] instanceof Player)
+			{
+				Player player = (Player)players[i];
+				if(!player.getBankrupt())
+				{
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " was dealt a ");
+					Card[] cards = player.getHand(0).getCards();
+					for(int j = 0; j < cards.length; j++)
+					{
+						gameLog.setText(gameLog.getText() + cards[j]);
+						if(j < cards.length - 1)
+						{
+							gameLog.setText(gameLog.getText() + " and a ");
+						}
+					}
+					gameLog.setText(gameLog.getText() + "\n");
+					
+					//If the player has Blackjack
+					player = (Player)table.getPersonAtIndex(i);
+					if(player.getHand(0).getHandScore() == Table.BLACKJACK)
+					{
+						gameLog.setText(gameLog.getText() + player.getName() 
+							+ " has Blackjack\n");
+					}
+					playerPanels[i].updatePanel(i);
+				}
+			}
+			else
+			{
+				Person dealer = players[i];
+
+				gameLog.setText(gameLog.getText() + dealer.getName() 
+					+ " was dealt a ");
+				Card[] cards = dealer.getHand(0).getCards();
+				for(int j = 0; j < cards.length; j++)
+				{
+					gameLog.setText(gameLog.getText() + cards[j]);
+					if(j < cards.length - 1)
+					{
+						gameLog.setText(gameLog.getText() + " and a ");
+					}
+				}
+				gameLog.setText(gameLog.getText() + "\n");
+				
+				//If the player has Blackjack
+				dealer = table.getPersonAtIndex(i);
+				if(dealer.getHand(0).getHandScore() == Table.BLACKJACK)
+				{
+					gameLog.setText(gameLog.getText() + dealer.getName() 
+						+ " has Blackjack\n");
+				}
+				dealerPanel.updatePanel(i);
+			}
+		}
+		
+		if(players[players.length - 1].getHand(0).getHandScore() == 11)
+		{
+			insurance(0);
+		}
+		else
+		{
+			playerTurn(0);
+		}
+	}
+	
+	/**
+	 * @param index
+	 */
+	private void insurance(int index)
+	{
+		Player player = (Player)table.getPersonAtIndex(index);
+		if(!player.getBankrupt() && player.getHand(0).getHandScore() < Table.BLACKJACK)
+		{
+			if(player instanceof Human)
+			{
+				InsuranceWindow window = new InsuranceWindow(index);
+				window.setVisible(true);
+				playerPanels[index].updatePanel(index);
+			}
+			
+			else if(player instanceof CPU)
+			{
+				double insurance = table.setCpuInsurance(index);
+				player = (Player)table.getPersonAtIndex(index);
+				if(player.getTookInsurance())
+				{
+					playerPanels[index].updatePanel(index);
+					gameLog.setText(gameLog.getText() + player.getName() + 
+							" has $" + insurance + " of insurance\n");
+				}
+				else
+				{
+					gameLog.setText(gameLog.getText() + 
+							player.getName() + " doesn't take insurance\n");
+				}
+				
+				playerPanels[index].updatePanel(index);
+				nextInsurance(index);
+			} 
+		}
+		else
+		{
+			nextInsurance(index);
+		}
+	}
+	
+	/**
+	 * @param index
+	 */
+	private void nextInsurance(int index)
+	{
+		if(index + 1 < table.getPlayers().length - 1)
+		{
+			insurance(index + 1);
+		}
+		else
+		{
+			insuranceResult();
+			playerTurn(0);
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	private void insuranceResult()
+	{
+		Person[] players = table.getPlayers();
+		int finalIndex = table.getPlayers().length - 1;
+		if(table.attemptDealerCardFlip())
+		{
+			Person dealer = table.getPersonAtIndex(finalIndex);
+			gameLog.setText(gameLog.getText() + dealer.getName() + "'s second card is " + 
+					dealer.getHand(0).getCard(1) + "\n");
+			gameLog.setText(gameLog.getText() + dealer.getName() 
+					+ " has Blackjack\n");
+			dealerPanel.updatePanel(finalIndex);
+				
+			for(int i = 0; i < players.length - 1; i++)
+			{
+				int result = table.insurancePayout(i);
+				Player player = (Player) table.getPersonAtIndex(i);
+				if(result == 2)
+				{
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " wins the insurance bet\n");
+				}
+				else if(result == 1)
+				{
+					gameLog.setText(gameLog.getText() + "Push: " + player.getName() 
+						+ "'s wager is returned\n");
+				}
+				else if(result == 0)
+				{
+					gameLog.setText(gameLog.getText() + player.getName() + " loses this round\n");
+				}	
+				playerPanels[i].updatePanel(i);
+				
+				//END ROUND HERE
+			}
+		}
+		else
+		{
+			gameLog.setText(gameLog.getText() + table.getPersonAtIndex(finalIndex).
+					getName() + " does not have Blackjack, all insurace bets lost\n");
+			for(int i = 0; i < table.getPlayers().length - 1; i++)
+			{
+				Player player = (Player)table.getPersonAtIndex(i);
+				if(player.getTookInsurance())
+				{
+					table.resetInsurance(i);
+				}
+				playerPanels[i].updatePanel(i);
+			}
+		}
+	}
+	
+	/**
+	 * @param index
+	 */
+	private void playerTurn(int index)
+	{
+		Person[] players = table.getPlayers();
+		Player player = (Player)players[index];
+		if(!player.getBankrupt() && player.getHand(0).getHandScore() < Table.BLACKJACK)			
+		{
+			gameLog.setText(gameLog.getText() + "It's now " 
+					+ player.getName() + "'s turn\n");
+			if(player instanceof Human)
+			{
+				TurnWindow window = new TurnWindow(index);
+				window.setVisible(true);
+			}
+			else if(player instanceof CPU)
+			{
+				System.out.println(index);
+				gameLog.setText(gameLog.getText() + player.getName() + " stands\n");
+				playerPanels[index].updatePanel(index);
+				nextPlayer(index);
+			}
+		}
+		else
+		{
+			nextPlayer(index);
+		}
+	}
+	
+	/**
+	 * @param index
+	 */
+	private void nextPlayer(int index)
+	{
+		if(index + 1 < table.getPlayers().length - 1)
+		{
+			playerTurn(index + 1);
+		}
+		else
+		{
+			dealerTurn();
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	private void dealerTurn()
+	{
+		int finalIndex = table.getPlayers().length - 1;
+		table.flipDealersCard();
+		Person dealer = table.getPersonAtIndex(finalIndex);
+		gameLog.setText(gameLog.getText() + "It's now " 
+				+ dealer.getName() + "'s turn\n");
+		gameLog.setText(gameLog.getText() + dealer.getName() + "'s face "
+				+ "down card was " + dealer.getHand(0).getCard(1) + " and"
+				+ " they now have a score of " + dealer.getHand(0).
+				getHandScore() + "\n");
+		
+		Card[] cards = table.addToDealersHand();
+		if(cards.length > 0)
+		{
+			gameLog.setText(gameLog.getText() + dealer.getName() 
+				+ " adds a ");
+			for(int i = 0; i < cards.length; i++)
+			{
+				gameLog.setText(gameLog.getText() + cards[i]);
+				if(i < cards.length - 1)
+				{
+					gameLog.setText(gameLog.getText() + ", ");
+				}
+			}
+			gameLog.setText(gameLog.getText() + "\n");
+		}
+		
+		dealerPanel.updatePanel(finalIndex);
 	}
 	
 	private void runGame()
@@ -1278,220 +1636,9 @@ public class GUI extends JFrame
 		
 		while(k < 1)
 		{
-			gameLog.setText(gameLog.getText() + "Round " + table.getCurrentRound() + "\n");
-			
-			//Initial Bet
-			Person[] players = table.getPlayers();
-			for(int i = 0; i < players.length - 1; i++)
-			{
-				Player player = (Player)players[i];
-				if(!player.getBankrupt())
-				{
-					if(player instanceof Human)
-					{
-						WagerWindow window = new WagerWindow(i);
-						window.setVisible(true);		
-						playerPanels[i].updatePanel(i);
-					}
-					else if(player instanceof CPU)
-					{
-						double wager = table.setCpuWager(i);
-						gameLog.setText(gameLog.getText() + player.getName() + 
-								"'s wager is $" + wager + "\n");
-						playerPanels[i].updatePanel(i);
-					}
-				}
-			}
-			
-			//Initial Deal
-			table.deal();
-			players = table.getPlayers();
-			gameLog.setText(gameLog.getText() + "All player's are dealt 2 cards\n");
-			for(int i = 0; i < players.length; i++)
-			{
-				if(players[i] instanceof Player)
-				{
-					Player player = (Player)players[i];
-					if(!player.getBankrupt())
-					{
-						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " was dealt a ");
-						Card[] cards = player.getHand(0).getCards();
-						for(int j = 0; j < cards.length; j++)
-						{
-							gameLog.setText(gameLog.getText() + cards[j]);
-							if(j < cards.length - 1)
-							{
-								gameLog.setText(gameLog.getText() + " and a ");
-							}
-						}
-						gameLog.setText(gameLog.getText() + "\n");
-						
-						//If the player has Blackjack
-						player = (Player)table.getPersonAtIndex(i);
-						if(player.getHand(0).getHandScore() == Table.BLACKJACK)
-						{
-							gameLog.setText(gameLog.getText() + player.getName() 
-								+ " has Blackjack\n");
-						}
-						playerPanels[i].updatePanel(i);
-					}
-				}
-				else
-				{
-					Person dealer = players[i];
-
-					gameLog.setText(gameLog.getText() + dealer.getName() 
-						+ " was dealt a ");
-					Card[] cards = dealer.getHand(0).getCards();
-					for(int j = 0; j < cards.length; j++)
-					{
-						gameLog.setText(gameLog.getText() + cards[j]);
-						if(j < cards.length - 1)
-						{
-							gameLog.setText(gameLog.getText() + " and a ");
-						}
-					}
-					gameLog.setText(gameLog.getText() + "\n");
-					
-					//If the player has Blackjack
-					dealer = table.getPersonAtIndex(i);
-					if(dealer.getHand(0).getHandScore() == Table.BLACKJACK)
-					{
-						gameLog.setText(gameLog.getText() + dealer.getName() 
-							+ " has Blackjack");
-					}
-					dealerPanel.updatePanel(i);
-				}
-			}
-			
-			//Insurance
-			int finalIndex = table.getPlayers().length - 1;
-			players = table.getPlayers();
-			if(players[players.length - 1].getHand(0).getHandScore() == 11)
-			{
-				for(int i = 0; i < players.length - 1; i++)
-				{
-					Player player = (Player)players[i];
-					if(!player.getBankrupt() && player.getHand(0).getHandScore() < Table.BLACKJACK)
-					{
-						if(player instanceof Human)
-						{
-							InsuranceWindow window = new InsuranceWindow(i);
-							window.setVisible(true);
-							playerPanels[i].updatePanel(i);
-						}
-						else if(player instanceof CPU)
-						{
-							double insurance = table.setCpuInsurance(i);
-								
-							if(player.getTookInsurance())
-							{
-								playerPanels[i].updatePanel(i);
-								gameLog.setText(gameLog.getText() + player.getName() + 
-										" has $" + insurance + " of insurance\n");
-							}
-							else
-							{
-								gameLog.setText(gameLog.getText() + 
-										player + " doesn't take insurance\n");
-							}
-							
-						}
-					}
-				}
-				
-				if(table.attemptDealerCardFlip())
-				{
-					gameLog.setText(gameLog.getText() + table.getPersonAtIndex(finalIndex).getName() 
-							+ " has Blackjack");
-					dealerPanel.updatePanel(finalIndex);
-					
-					for(int i = 0; i < players.length - 1; i++)
-					{
-						int result = table.insurancePayout(i);
-						Person player = table.getPersonAtIndex(i);
-						if(result == 2)
-						{
-							gameLog.setText(gameLog.getText() + player.getName() 
-								+ " wins the insurance bet");
-						}
-						else if(result == 1)
-						{
-							gameLog.setText(gameLog.getText() + "Push: " + player.getName() 
-								+ "'s wager is returned\n");
-						}
-						else
-						{
-							gameLog.setText(gameLog.getText() + player.getName() + " loses this round\n");
-						}	
-						playerPanels[i].updatePanel(i);
-					}
-				}
-				else
-				{
-					gameLog.setText(gameLog.getText() + " does not have Blackjack, all insurace bets lost\n");
-					for(int i = 0; i < table.getPlayers().length - 1; i++)
-					{
-						Player player = (Player)table.getPersonAtIndex(i);
-						if(player.getTookInsurance())
-						{
-							table.resetInsurance(i);
-						}
-						playerPanels[i].updatePanel(i);
-					}
-				}
-			}
 			
 			//Main Round
-			if(table.getPersonAtIndex(finalIndex).getHand(0).getHandScore() < Table.BLACKJACK)
-			{
-				players = table.getPlayers();
-				for(int i = 0; i < players.length - 1; i++)
-				{
-					Player player = (Player)players[i];
-					if(!player.getBankrupt() && player.getHand(0).getHandScore() < Table.BLACKJACK)			
-					{
-						gameLog.setText(gameLog.getText() + "It's now " 
-								+ player.getName() + "'s turn\n");
-						if(player instanceof Human)
-						{
-							TurnWindow window = new TurnWindow(i);
-							window.setVisible(true);
-						}
-						else if(player instanceof CPU)
-						{
-							gameLog.setText(gameLog.getText() + player.getName() + " stands\n");
-						}
-					}
-				}
-				
-				table.flipDealersCard();
-				Person dealer = table.getPersonAtIndex(finalIndex);
-				gameLog.setText(gameLog.getText() + "It's now " 
-						+ dealer.getName() + "'s turn\n");
-				gameLog.setText(gameLog.getText() + dealer.getName() + "'s face "
-						+ "down card was " + dealer.getHand(0).getCard(1) + " and"
-						+ " they now have a score of " + dealer.getHand(0).
-						getHandScore() + "\n");
-				
-				Card[] cards = table.addToDealersHand();
-				if(cards.length > 0)
-				{
-					gameLog.setText(gameLog.getText() + dealer.getName() 
-						+ " adds a ");
-					for(int i = 0; i < cards.length; i++)
-					{
-						gameLog.setText(gameLog.getText() + cards[i]);
-						if(i < cards.length - 1)
-						{
-							gameLog.setText(gameLog.getText() + ", ");
-						}
-					}
-					gameLog.setText(gameLog.getText() + "\n");
-				}
-				dealerPanel.updatePanel(finalIndex);
-			}
+
 			
 			gameLog.setText(gameLog.getText() + "MORE FEATURES COMING SOON");
 			k++;
