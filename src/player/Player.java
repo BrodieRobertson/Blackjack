@@ -1,5 +1,7 @@
 package player;
 
+import logic.TableException;
+
 /**
  * The representation of the player, this class defines a player with 
  * attributes representing the player's wager, insurance, total money, whether
@@ -77,9 +79,25 @@ public class Player extends Person implements Cloneable
 	 */
 	private boolean tookInsurance;
 	/**
+	 * 
+	 */
+	private double currentBlackjack;
+	/**
+	 * 
+	 */
+	private boolean hasBlackjack;
+	/**
+	 * 
+	 */
+	private double currentWin;
+	/**
+	 * 
+	 */
+	private boolean hasWin;
+	/**
 	 * The player's starting money.
 	 */
-	private static final int STARTINGMONEY = 100;
+	private static final int STARTINGMONEY = 37;
 	/**
 	 * Constructor for the player, takes the name of the player as an argument.
 	 */
@@ -438,10 +456,10 @@ public class Player extends Person implements Cloneable
 		{
 			if(blackjack < 0)
 			{
-				throw new PersonException("Number of blackjack must be greater than 0");
+				throw new PlayerException("Number of blackjack must be greater than 0");
 			}
 		}
-		catch(PersonException e)
+		catch(PlayerException e)
 		{
 			e.printStackTrace();
 			System.exit(0);
@@ -472,10 +490,10 @@ public class Player extends Person implements Cloneable
 		{
 			if(win < 0)
 			{
-				throw new PersonException("Number of wins must be greater than 0");
+				throw new PlayerException("Number of wins must be greater than 0");
 			}
 		}
-		catch(PersonException e)
+		catch(PlayerException e)
 		{
 			e.printStackTrace();
 			System.exit(0);
@@ -506,10 +524,10 @@ public class Player extends Person implements Cloneable
 		{
 			if(push < 0)
 			{
-				throw new PersonException("Number of pushes must be greater than 0");
+				throw new PlayerException("Number of pushes must be greater than 0");
 			}
 		}
-		catch(PersonException e)
+		catch(PlayerException e)
 		{
 			e.printStackTrace();
 			System.exit(0);
@@ -540,10 +558,10 @@ public class Player extends Person implements Cloneable
 		{
 			if(loss < 0)
 			{
-				throw new PersonException("Number of losses must be greater than 0");
+				throw new PlayerException("Number of losses must be greater than 0");
 			}
 		}
-		catch(PersonException e)
+		catch(PlayerException e)
 		{
 			e.printStackTrace();
 			System.exit(0);
@@ -574,10 +592,10 @@ public class Player extends Person implements Cloneable
 		{
 			if(bust < 0)
 			{
-				throw new PersonException("Number of busts must be greater than 0");
+				throw new PlayerException("Number of busts must be greater than 0");
 			}
 		}
-		catch(PersonException e)
+		catch(PlayerException e)
 		{
 			e.printStackTrace();
 			System.exit(0);
@@ -608,10 +626,10 @@ public class Player extends Person implements Cloneable
 		{
 			if(surrender < 0)
 			{
-				throw new PersonException("Number of surrenders must be greater than 0");
+				throw new PlayerException("Number of surrenders must be greater than 0");
 			}
 		}
-		catch(PersonException e)
+		catch(PlayerException e)
 		{
 			e.printStackTrace();
 			System.exit(0);
@@ -660,13 +678,111 @@ public class Player extends Person implements Cloneable
 		this.surrendered = surrendered;
 	}
 	
+	/**
+	 * @return
+	 */
 	public boolean getTookInsurance()
 	{
 		return tookInsurance;
 	}
 	
+	/**
+	 * @param tookInsurance
+	 */
 	public void setTookInsurance(boolean tookInsurance)
 	{
 		this.tookInsurance = tookInsurance;
+	}
+	
+	/**
+	 * @return
+	 */
+	public double getCurrentWin()
+	{
+		return currentWin;
+	}
+	
+	/**
+	 * @param currentWin
+	 */
+	public void setCurrentWin(double currentWin)
+	{
+		try
+		{
+			if(currentWin < 0)
+			{
+				throw new PlayerException("Current winnings can't be less than"
+						+ " or equal to 0");
+			}
+		}
+		catch(PlayerException ex)
+		{
+			ex.printStackTrace();
+			System.exit(0);
+		}
+		
+		this.currentWin = currentWin;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean getHasWin()
+	{
+		return hasWin;
+	}
+	
+	/**
+	 * @param hasWin
+	 */
+	public void setHasWin(boolean hasWin)
+	{
+		this.hasWin = hasWin;
+	}
+	
+	/**
+	 * @return
+	 */
+	public double getCurrentBlackjack()
+	{
+		return currentBlackjack;
+	}
+	
+	/**
+	 * @param currentBlackjack
+	 */
+	public void setCurrentBlackjack(double currentBlackjack)
+	{
+		try
+		{
+			if(currentBlackjack < 0)
+			{
+				throw new PlayerException("Current blackjack winnings can't be "
+						+ "less than or equal to 0");
+			}
+		}
+		catch(PlayerException ex)
+		{
+			ex.printStackTrace();
+			System.exit(0);
+		}	
+		
+		this.currentBlackjack = currentBlackjack;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean getHasBlackjack()
+	{
+		return hasBlackjack;
+	}
+	
+	/**
+	 * @param hasBlackjack
+	 */
+	public void setHasBlackjack(boolean hasBlackjack)
+	{
+		this.hasBlackjack = hasBlackjack;
 	}
 }

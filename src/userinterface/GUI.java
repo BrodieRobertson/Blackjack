@@ -990,7 +990,7 @@ public class GUI extends JFrame
 					}
 					else if(player.getTotalMoney() < player.getWager())
 					{
-						error.setText("You don't have enought money to split");
+						error.setText("You don't have enough money to split");
 						return;
 					}
 					else if(player.getHand(0).getCard(0).getValue() != player.
@@ -1487,15 +1487,31 @@ public class GUI extends JFrame
 		}
 		else
 		{
-			insuranceResult();
-			playerTurn(0);
+			if(insuranceResult())
+			{
+				for(int i = 0; i < table.getPlayers().length - 1; i++)
+				{
+					Player player = (Player)table.getPersonAtIndex(i);
+					if(player.getBankrupt())
+					{
+						gameLog.setText(gameLog.getText() + player.getName() 
+							+ " has gone bankrupt\n");
+					}
+				}
+				
+				resetTableForNewRound();
+			}
+			else
+			{
+				playerTurn(0);
+			}
 		}
 	}
 	
 	/**
 	 * 
 	 */
-	private void insuranceResult()
+	private boolean insuranceResult()
 	{
 		Person[] players = table.getPlayers();
 		int finalIndex = table.getPlayers().length - 1;
@@ -1510,26 +1526,10 @@ public class GUI extends JFrame
 				
 			for(int i = 0; i < players.length - 1; i++)
 			{
-				int result = table.insurancePayout(i);
-				Player player = (Player) table.getPersonAtIndex(i);
-				if(result == 2)
-				{
-					gameLog.setText(gameLog.getText() + player.getName() 
-						+ " wins the insurance bet\n");
-				}
-				else if(result == 1)
-				{
-					gameLog.setText(gameLog.getText() + "Push: " + player.getName() 
-						+ "'s wager is returned\n");
-				}
-				else if(result == 0)
-				{
-					gameLog.setText(gameLog.getText() + player.getName() + " loses this round\n");
-				}	
+				gameLog.setText(gameLog.getText() + table.insurancePayout(i));
 				playerPanels[i].updatePanel(i);
-				
-				//END ROUND HERE
 			}
+			return true;
 		}
 		else
 		{
@@ -1543,7 +1543,9 @@ public class GUI extends JFrame
 					table.resetInsurance(i);
 				}
 				playerPanels[i].updatePanel(i);
+				
 			}
+			return false;
 		}
 	}
 	
@@ -1565,7 +1567,6 @@ public class GUI extends JFrame
 			}
 			else if(player instanceof CPU)
 			{
-				System.out.println(index);
 				gameLog.setText(gameLog.getText() + player.getName() + " stands\n");
 				playerPanels[index].updatePanel(index);
 				nextPlayer(index);
@@ -1624,24 +1625,75 @@ public class GUI extends JFrame
 		}
 		
 		dealerPanel.updatePanel(finalIndex);
+		roundResults();
 	}
 	
-	private void runGame()
+	/**
+	 * 
+	 */
+	private void roundResults()
 	{
-		int k = 0;
-		/*
-		table.getCurrentRound() <= table.getTotalRounds() && table.
-				checkIfAnyPlayerNotBankrupt()
-		*/
-		
-		while(k < 1)
+		for(int i = 0; i < table.getPlayers().length - 1; i++)
 		{
-			
-			//Main Round
-
-			
-			gameLog.setText(gameLog.getText() + "MORE FEATURES COMING SOON");
-			k++;
+			gameLog.setText(gameLog.getText() + table.roundResult(i) + "\n");
+			Player player = (Player)table.getPersonAtIndex(i);
+			if(player.getBankrupt())
+			{
+				gameLog.setText(gameLog.getText() + player.getName() 
+					+ " has gone bankrupt\n");
+			}
+			else
+			{
+				if(player.getHasWin())
+				{
+					gameLog.setText(gameLog.getText() + player.getName() + " wins $" 
+							+ player.getCurrentWin() + "\n");
+				}
+				else if(player.getHasBlackjack())
+				{
+					gameLog.setText(gameLog.getText() + player.getName() + " wins $"
+							+ player.getCurrentBlackjack() + "\n");
+				}
+			}
+			playerPanels[i].updatePanel(i);
+		}
+		
+		resetTableForNewRound();
+	}
+	
+	/**
+	 * 
+	 */
+	private void resetTableForNewRound()
+	{
+		for(int i = 0; i < table.getPlayers().length; i++)
+		{
+			table.prepareForNewRound(i);
+			if(table.getPersonAtIndex(i) instanceof Player)
+			{
+				playerPanels[i].updatePanel(i);
+			}
+			else
+			{
+				dealerPanel.updatePanel(i);
+			}
+		}
+		
+		nextRound();
+	}
+	
+	private void nextRound()
+	{
+		//Rounds Remaining
+		if(table.getCurrentRound() + 1 <= table.getTotalRounds() && 
+				table.checkIfAnyPlayerNotBankrupt())
+		{
+			gameLog.setText(gameLog.getText() + "MORE ROUNDS REMAINING COMING SOON");
+		}
+		//No Rounds Remaining
+		else
+		{
+			gameLog.setText(gameLog.getText() + "NO ROUNDS REMAINING COMING SOON");
 		}
 	}
 }

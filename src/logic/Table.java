@@ -36,6 +36,9 @@ public class Table
 	 * The total number of rounds actually played
 	 */
 	private int completedRounds = 1;
+	/**
+	 * 
+	 */
 	private static final int INSURANCE_RETURN = 2;
 	/**
 	 * The minimum number of players.
@@ -213,6 +216,32 @@ public class Table
 	public int getCurrentRound()
 	{
 		return currentRound;
+	}
+	
+	/**
+	 * @param currentRound
+	 */
+	public void setCurrentRound(int currentRound)
+	{
+		try
+		{
+			if(currentRound < 0)
+			{
+				throw new TableException("Current round can't less than 0: " + currentRound);
+			}
+			
+			if(currentRound > totalRounds)
+			{
+				throw new TableException("Current round can't be greater than total rounds: " + currentRound);
+			}
+		}
+		catch(TableException ex)
+		{
+			ex.printStackTrace();
+			System.exit(0);
+		}
+		
+		this.currentRound = currentRound;
 	}
 	
 	/**
@@ -530,7 +559,7 @@ public class Table
 	 * Pays outs insurance bets if the dealer has blackjack in his first 2 cards
 	 * and sets any insurance bets back to 0 regardless of the result.
 	 */
-	public int insurancePayout(int index)
+	public String insurancePayout(int index)
 	{	
 		Player player = (Player)players[index];
 
@@ -549,7 +578,7 @@ public class Table
 				e.printStackTrace();
 				System.exit(0);
 			}
-			return 2;
+			return player.getName() + " wins the insurance bet\n";
 		}
 		//If player does not have insurance
 		else
@@ -567,14 +596,12 @@ public class Table
 					e.printStackTrace();
 					System.exit(0);
 				}
-				prepareForNewRound();
-				return 1;
+				return "Push: " + player.getName() + "'s wager is returned\n";
 			}
 			//If the player does not have Blackjack
 			else
 			{
-				prepareForNewRound();
-				return 0;
+				return player.getName() + " loses this round\n";
 			}
 		}
 	}
@@ -589,6 +616,7 @@ public class Table
 			validatePlayerIndex(index);
 			Player player = (Player)players[index];
 			player.setInsurance(0);
+			player.setTookInsurance(false);
 		}
 		catch(TableException | PlayerException ex)
 		{
@@ -743,233 +771,238 @@ public class Table
 	/**
 	 * Determines whether each player 
 	 */
-	private void payout() 
-	{
-		for (int i = 0; i < players.length - 1; i++) 
-		{	
-			//Dealer's score is greater than 21.
-			Dealer dealer = (Dealer) players[players.length - 1];
-			Player player = (Player) players[i];
-			Hand[] hands = player.getHands();
+	public String roundResult(int index) 
+	{	
+		//Dealer's score is greater than 21.
+		Dealer dealer = (Dealer) players[players.length - 1];
+		Player player = (Player) players[index];
+		Hand[] hands = player.getHands();
 			
-			//If the player has surrendered.
-			if(player.getSurrendered())
+		//If the player has surrendered.
+		if(player.getSurrendered())
+		{
+			player.setSurrender(player.getSurrender() + 1);
+			return player.getName() + " surrendered this hand";
+		}
+		//If the dealer's score is greater than blackjack.
+		else if (dealer.getHand(0).getHandScore() > BLACKJACK)
+		{
+			//If the player hasn't used split
+			if (hands.length < 2) 
 			{
-				System.out.println(player.getName() + " surrendered this hand");
-				player.setSurrender(player.getSurrender() + 1);
-			}
-			//If the dealer's score is greater than blackjack.
-			else if (dealer.getHand(0).getHandScore() > BLACKJACK)
-			{
-				//If the player hasn't used split
-				if (hands.length < 2) 
+				//If the player's score is greater than 21
+				if (hands[0].getHandScore() > BLACKJACK) 
 				{
-					//If the player's score is greater than 21
-					if (hands[0].getHandScore() > BLACKJACK) 
-					{
-						System.out.println(player.getName() + " pushes");
-						player.setPush(player.getPush() + 1);
-					}
-					//If the player's score is 21
-					else if (hands[0].getHandScore() == BLACKJACK) 
-					{
-						System.out.println(player.getName() + " has Blackjack");
-						blackjackPayout(player);
-					}
-					//If the player's score is less than 21
-					else 
-					{
-						System.out.println(player.getName() + " wins hand");
-						standardPayout(player);
-					}
+					double push = player.getWager();
+					pushPayout(player);
+					return player.getName() + " pushes and regains $" + push;
 				}
-				//If player has used split
+				//If the player's score is 21
+				else if (hands[0].getHandScore() == BLACKJACK) 
+				{
+					blackjackPayout(player);
+					return player.getName() + " has Blackjack";
+				}
+				//If the player's score is less than 21
 				else 
 				{
-					int bestHandIndex = 0;
-					for (int j = 1; i < hands.length; j++) 
-					{
-						if ((hands[j].getHandScore() > hands[bestHandIndex].getHandScore()
-							 && hands[j].getHandScore() <= BLACKJACK) || (hands[j].
-							 getHandScore()< hands[bestHandIndex].getHandScore() 
-							 && hands[bestHandIndex].getHandScore() > BLACKJACK))
-						{
-							bestHandIndex = j;
-						}
-					}
-
-					//If the player's score is greater than 21
-					if (hands[bestHandIndex].getHandScore() > BLACKJACK)
-					{
-						System.out.println(player.getName() + " pushes with hand " + (bestHandIndex + 1));
-						player.setPush(player.getPush() + 1);
-					}
-
-					//If the player's score is equal to or less than 21
-					else 
-					{
-						System.out.println(player.getName() + " wins with hand " + (bestHandIndex + 1));
-						standardPayout(player);
-					}
+					standardPayout(player);
+					return player.getName() + " wins hand";
 				}
 			}
-			//Dealer's score is 21 (equivalent to blackjack)
-			else if (dealer.getHand(0).getHandScore() == BLACKJACK)
-			{
-				//Player hasn't used split
-				if (hands.length < 2)
-				{
-					//If the player's score is greater than 21
-					if (hands[0].getHandScore() > BLACKJACK)
-					{
-						System.out.println(player.getName() + " busts");
-						player.setBust(player.getBust() + 1);
-						player.setLoss(player.getLoss() + 1);
-					}
-					//If the player's score is 21
-					else if (hands[0].getHandScore() == BLACKJACK)
-					{
-						System.out.println(player.getName() + " pushes");
-						player.setPush(player.getPush() + 1);
-					}
-					//If the player's score is less than 21
-					else 
-					{
-						System.out.println(player.getName() + " loses this hand");
-						player.setLoss(player.getLoss() + 1);
-					}
-				}
-				//Player has split
-				else 
-				{
-					int bestHandIndex = 0;
-					for (int j = 1; i < hands.length; j++) 
-					{
-						if ((hands[j].getHandScore() > hands[bestHandIndex].getHandScore()
-								&& hands[j].getHandScore() <= BLACKJACK)
-								|| (hands[j].getHandScore() < hands[bestHandIndex].getHandScore()
-										&& hands[bestHandIndex].getHandScore() > BLACKJACK)) 
-						{
-							bestHandIndex = j;
-						}
-					}
-
-					//If the player's score is greater than 21
-					if (hands[bestHandIndex].getHandScore() > BLACKJACK) 
-					{
-						System.out.println(player.getName() + " busts with all hands");
-						player.setBust(player.getBust() + 1);
-						player.setLoss(player.getLoss() + 1);
-					}
-					//If the player's score is 21
-					else if (hands[bestHandIndex].getHandScore() == BLACKJACK)
-					{
-						System.out.println(player.getName() + " pushes with hand " + (bestHandIndex + 1));
-						player.setPush(player.getPush() + 1);
-					}
-					//If the player's score is less than 21
-					else 
-					{
-						System.out.println(player.getName() + " loses with all hands");
-						player.setLoss(player.getLoss() + 1);
-					}
-				}
-			} 
-			//Dealer's score less than 21
+			//If player has used split
 			else 
 			{
-				//If player hasn't split
-				if (hands.length < 2) 
+				int bestHandIndex = 0;
+				for (int j = 1; index < hands.length; j++) 
 				{
-					//If the player's score is greater than 21
-					if (hands[0].getHandScore() > BLACKJACK) 
+					if ((hands[j].getHandScore() > hands[bestHandIndex].getHandScore()
+						 && hands[j].getHandScore() <= BLACKJACK) || (hands[j].
+						 getHandScore()< hands[bestHandIndex].getHandScore() 
+						 && hands[bestHandIndex].getHandScore() > BLACKJACK))
 					{
-						System.out.println(player.getName() + " busts");
-						player.setBust(player.getBust() + 1);
-						player.setLoss(player.getLoss() + 1);
-					}
-					//If the player's score is 21
-					else if (hands[0].getHandScore() == BLACKJACK) 
-					{
-						System.out.println(player.getName() + " has Blackjack");
-						blackjackPayout(player);
-					}
-					//If the player's score is greater than the dealer's score
-					//and less than 21
-					else if (hands[0].getHandScore() > dealer.getHand(0).getHandScore()
-							&& hands[0].getHandScore() < BLACKJACK) 
-					{
-						System.out.println(player.getName() + " wins hand");
-						standardPayout(player);
-					}
-					//If the player's score equals the dealer's score
-					else if (hands[0].getHandScore() == dealer.getHand(0).getHandScore()) 
-					{
-						System.out.println(player.getName() + " pushes");
-						player.setPush(player.getPush() + 1);
-					}
-					//If the player's score is less than the dealer's score
-					else 
-					{
-						System.out.println(player.getName() + " loses this hand");
-						player.setLoss(player.getLoss() + 1);
+						bestHandIndex = j;
 					}
 				}
-				//If player has split
+				
+				//If the player's score is greater than 21
+				if (hands[bestHandIndex].getHandScore() > BLACKJACK)
+				{
+					double push = player.getWager();
+					pushPayout(player);
+					return player.getName() + " pushes with hand " + (bestHandIndex + 1) 
+							+ " and regains $" + push;
+				}
+
+				//If the player's score is equal to or less than 21
 				else 
 				{
-					int bestHandIndex = 0;
-					for (int j = 1; j < hands.length; j++) 
-					{
-						if ((hands[j].getHandScore() > hands[bestHandIndex].getHandScore()
-							 && hands[j].getHandScore() <= BLACKJACK) || (hands[j].
-							 getHandScore() < hands[bestHandIndex].getHandScore() && hands
-							 [bestHandIndex].getHandScore() > BLACKJACK)) 
-						{
-							bestHandIndex = j;
-						}
-					}
-
-					//If the player's score is greater than 21
-					if (hands[bestHandIndex].getHandScore() > BLACKJACK) 
-					{
-						System.out.println(player.getName() + " busts with all hands");
-						player.setBust(player.getBust() + 1);
-						player.setLoss(player.getLoss() + 1);
-					}
-					//If the player's score is 21
-					else if (hands[bestHandIndex].getHandScore() == BLACKJACK)
-					{
-						System.out.println(player.getName() + " has Blackjack with hand " 
-										   + (bestHandIndex + 1));
-						blackjackPayout(player);
-					}
-					//If the player's score is greater than the dealer's score
-					//and less than 21
-					else if (hands[bestHandIndex].getHandScore() > dealer.getHand(0).getHandScore()
-							&& hands[bestHandIndex].getHandScore() < BLACKJACK) 
-					{
-						System.out.println(player.getName() + " wins with hand " + (bestHandIndex + 1));
-						standardPayout(player);
-					}
-					//If the player's score equals the dealer's score
-					else if (hands[bestHandIndex].getHandScore() == dealer.getHand(0).getHandScore()) 
-					{
-						System.out.println(player.getName() + " pushes with hand " + (bestHandIndex + 1));
-						player.setPush(player.getPush() + 1);
-					}
-					//If the player's score is less than the dealer's score
-					else
-					{
-						System.out.println(player.getName() + " loses with all hands");
-						player.setLoss(player.getLoss() + 1);
-					}
+					standardPayout(player);
+					return player.getName() + " wins with hand " + (bestHandIndex + 1);
 				}
 			}
 		}
-		System.out.println();
+		//Dealer's score is 21 (equivalent to blackjack)
+		else if (dealer.getHand(0).getHandScore() == BLACKJACK)
+		{
+			//Player hasn't used split
+			if (hands.length < 2)
+			{
+				//If the player's score is greater than 21
+				if (hands[0].getHandScore() > BLACKJACK)
+				{
+					player.setBust(player.getBust() + 1);
+					player.setLoss(player.getLoss() + 1);
+					return player.getName() + " busts";
+				}
+				//If the player's score is 21
+				else if (hands[0].getHandScore() == BLACKJACK)
+				{
+					double push = player.getWager();
+					pushPayout(player);
+					return player.getName() + " pushes and regains $" + push;
+				}
+				//If the player's score is less than 21
+				else 
+				{
+					player.setLoss(player.getLoss() + 1);
+					return player.getName() + " loses this hand";
+				}
+			}
+			//Player has split
+			else 
+			{
+				int bestHandIndex = 0;
+				for (int j = 1; index < hands.length; j++) 
+				{
+					if ((hands[j].getHandScore() > hands[bestHandIndex].getHandScore()
+						 && hands[j].getHandScore() <= BLACKJACK)
+						 || (hands[j].getHandScore() < hands[bestHandIndex].getHandScore()
+						 && hands[bestHandIndex].getHandScore() > BLACKJACK)) 
+					{
+						bestHandIndex = j;
+					}
+				}
+
+				//If the player's score is greater than 21
+				if (hands[bestHandIndex].getHandScore() > BLACKJACK) 
+				{
+					player.setBust(player.getBust() + 1);
+					player.setLoss(player.getLoss() + 1);
+					return player.getName() + " busts with all hands";
+				}
+				//If the player's score is 21
+				else if (hands[bestHandIndex].getHandScore() == BLACKJACK)
+				{
+					double push = player.getWager();
+					pushPayout(player);
+					return player.getName() + " pushes with hand " + (bestHandIndex + 1) 
+							+ " and regains $" + push;
+				}
+				//If the player's score is less than 21
+				else 
+				{
+					player.setLoss(player.getLoss() + 1);
+					return player.getName() + " loses with all hands";
+				}
+			}
+		} 
+		//Dealer's score less than 21
+		else 
+		{
+			//If player hasn't split
+			if (hands.length < 2) 
+			{
+				//If the player's score is greater than 21
+				if (hands[0].getHandScore() > BLACKJACK) 
+				{
+					player.setBust(player.getBust() + 1);
+					player.setLoss(player.getLoss() + 1);
+					return player.getName() + " busts";
+				}
+				//If the player's score is 21
+				else if (hands[0].getHandScore() == BLACKJACK) 
+				{
+					blackjackPayout(player);
+					return player.getName() + " has Blackjack";
+				}
+				//If the player's score is greater than the dealer's score
+				//and less than 21
+				else if (hands[0].getHandScore() > dealer.getHand(0).getHandScore()
+						&& hands[0].getHandScore() < BLACKJACK) 
+				{
+					standardPayout(player);
+					return player.getName() + " wins hand";
+				}
+				//If the player's score equals the dealer's score
+				else if (hands[0].getHandScore() == dealer.getHand(0).getHandScore()) 
+				{
+					double push = player.getWager();
+					pushPayout(player);
+					return player.getName() + " pushes and regains $" + push;
+				}
+				//If the player's score is less than the dealer's score
+				else 
+				{
+					player.setLoss(player.getLoss() + 1);
+					return player.getName() + " loses this hand";
+				}
+			}
+			//If player has split
+			else 
+			{
+				int bestHandIndex = 0;
+				for (int j = 1; j < hands.length; j++) 
+				{
+					if ((hands[j].getHandScore() > hands[bestHandIndex].getHandScore()
+						 && hands[j].getHandScore() <= BLACKJACK) || (hands[j].
+						 getHandScore() < hands[bestHandIndex].getHandScore() && hands
+						 [bestHandIndex].getHandScore() > BLACKJACK)) 
+					{
+						bestHandIndex = j;
+					}
+				}
+
+				//If the player's score is greater than 21
+				if (hands[bestHandIndex].getHandScore() > BLACKJACK) 
+				{
+					player.setBust(player.getBust() + 1);
+					player.setLoss(player.getLoss() + 1);
+					return player.getName() + " busts with all hands";
+				}
+				//If the player's score is 21
+				else if (hands[bestHandIndex].getHandScore() == BLACKJACK)
+				{
+					blackjackPayout(player);
+					return player.getName() + " has Blackjack with hand " 
+							   + (bestHandIndex + 1);
+					
+				}
+				//If the player's score is greater than the dealer's score
+				//and less than 21
+				else if (hands[bestHandIndex].getHandScore() > dealer.getHand(0).getHandScore()
+						&& hands[bestHandIndex].getHandScore() < BLACKJACK) 
+				{
+					standardPayout(player);
+					return player.getName() + " wins with hand " + (bestHandIndex + 1);
+				}
+				//If the player's score equals the dealer's score
+				else if (hands[bestHandIndex].getHandScore() == dealer.getHand(0).getHandScore()) 
+				{
+					double push = player.getWager();
+					pushPayout(player);
+					return player.getName() + " pushes with hand " + (bestHandIndex + 1) 
+							+ " and regains $" + push;
+				}
+				//If the player's score is less than the dealer's score
+				else
+				{
+					player.setLoss(player.getLoss() + 1);
+					return player.getName() + " loses with all hands";
+				}
+			}
+		}
 	}
-	
 	
 	/**
 	 * Pays out blackjack winnings, winnings are paid out at a 3:2.
@@ -979,9 +1012,10 @@ public class Table
 	private void blackjackPayout(Player payee)
 	{
 		final double BLACKJACKRETURN = 2.5;
+		double blackjackWinnings = 0;
 		try 
 		{
-			double blackjackWinnings = payee.getWager() * BLACKJACKRETURN;
+			blackjackWinnings = payee.getWager() * BLACKJACKRETURN;
 			payee.setTotalMoney(payee.getTotalMoney() + blackjackWinnings);
 			payee.setTotalWinnnings(payee.getTotalWinnings() + blackjackWinnings);
 		} 
@@ -990,6 +1024,8 @@ public class Table
 			e.printStackTrace();
 			System.exit(0);
 		} 
+		payee.setCurrentBlackjack(blackjackWinnings);
+		payee.setHasBlackjack(true);
 		payee.setBlackjack(payee.getBlackjack() + 1);
 		payee.setWin(payee.getWin() + 1);
 	}
@@ -1002,53 +1038,81 @@ public class Table
 	private void standardPayout(Player payee)
 	{
 		final double STANDARDRETURN = 2;
+		double standardWinnings = 0;
 		try
 		{
-			double standardWinnings = payee.getWager() * STANDARDRETURN;
+			standardWinnings = payee.getWager() * STANDARDRETURN;
 			payee.setTotalMoney(payee.getTotalMoney() + standardWinnings);
 			payee.setTotalWinnnings(payee.getTotalWinnings() + standardWinnings);
 		}
-		catch(PlayerException e)
+		catch(PlayerException ex)
 		{
-			e.printStackTrace();
+			ex.printStackTrace();
 			System.exit(0);
 		}
+		payee.setCurrentWin(standardWinnings);
+		payee.setHasWin(true);
 		payee.setWin(payee.getWin() + 1);
+	}
+	
+	/**
+	 * @param payee
+	 */
+	private void pushPayout(Player payee)
+	{
+		try
+		{
+			payee.setTotalMoney(payee.getTotalMoney() + payee.getWager());
+		}
+		catch(PlayerException ex)
+		{
+			ex.printStackTrace();
+			System.exit(0);
+		}
+		
+		payee.setPush(payee.getPush() + 1);
 	}
 	
 	/**
 	 * Resets all of the player's hands, wagers, and if they've surrendered set 
 	 * back to default state and checks if they have enough money to continue.
 	 */
-	private void prepareForNewRound()
+	public void prepareForNewRound(int index)
 	{
-		for(int i = 0; i < players.length; i++)
+		players[index].startingHand();
+		if(players[index] instanceof Player)
 		{
-			players[i].startingHand();
-			if(players[i] instanceof Player)
+			Player player = (Player)players[index];
+			try 
 			{
-				Player player = (Player)players[i];
-				try 
-				{
-					player.setWager(0);
-				} 
-				catch (PlayerException e) 
-				{
-					e.printStackTrace();
-				}	
-				
-				if(player.getSurrendered())
-				{
-					player.setSurrendered(false);
-				}
-				
-				if(player.getTotalMoney() < MINWAGER)
-				{
-					player.setBankrupt(true);
-					System.out.println(player.getName() + " has gone bankrupt");
-				}
+				player.setWager(0);
+			} 
+			catch (PlayerException e) 
+			{
+				e.printStackTrace();
+			}	
+			
+			if(player.getSurrendered())
+			{
+				player.setSurrendered(false);
+			}
+			
+			if(player.getHasWin())
+			{
+				player.setHasWin(false);
+				player.setCurrentWin(0);
+			}
+			
+			if(player.getHasBlackjack())
+			{
+				player.setHasBlackjack(false);
+				player.setCurrentBlackjack(0);
+			}
+			
+			if(player.getTotalMoney() < MINWAGER)
+			{
+				player.setBankrupt(true);
 			}
 		}
-		System.out.println();
 	}
 }
