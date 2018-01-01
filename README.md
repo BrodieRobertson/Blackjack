@@ -1,10 +1,23 @@
 # Blackjack Changelog
-GUI Alpha 1.1.1
+GUI Alpha 1.0.1
 <br>Note:
 In the last release I've discovered a major issue with the Insurance backend logic which causes the program to compeltely lockup, I'm currently working on an update to the issue.
 
 Change Log:
-1. Fixed the game breaking bug in the insurance backend
+1. Fixed the game breaking bug in the insurance backend.
+2. Begun refactoring code into an Even-Driven format which has caused some of the code to be a bit hard to follow.
+
+Future Features:
+1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
+2. Updated elements for components that are already displayed.
+3. Tool tips everywhere that makes sense.
+4. Allow the user to use Enter and Esc in place of pressing Confirm/Yes Clear/No.
+5. Complete the about win which will show the game version and people who worked on the game.
+6. Print the log to file when the game is over.
+7. Decide how many decks should be used based on the number of players.
+8. Slow down the game to allow for the user to understand what is happening without reading the log.
+9. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
+10. Dynamically generate CPU characters initial bets, insurance, and round descisions.
 
 GUI Alpha 1.0.0
 <br>Note: 
