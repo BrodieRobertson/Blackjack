@@ -1,8 +1,13 @@
 # Blackjack Changelog
-Update: In the last release I've discovered a major issue with the Insurance backend logic which causes the program to compeltely lockup, I'm currently working on an update to the issue.
+GUI Alpha 1.1.1
+<br>Note:
+In the last release I've discovered a major issue with the Insurance backend logic which causes the program to compeltely lockup, I'm currently working on an update to the issue.
 
-GUI Alpha 0.1.0
-<br>Side Note: 
+Change Log:
+1. Fixed the game breaking bug in the insurance backend
+
+GUI Alpha 1.0.0
+<br>Note: 
 I've come to realise that I've been approaching Event-Driven programming incorrectly, before my next realease I plan to address these issues. I've been doing sequential programming for so long that I've developed some bad habits which has caused some issues with my code, it hasn't created any bugs per se however the solutions I came up with are sub optimal at best. Whilst writing this log I've come up with a few solutions to the problem so I'll get working on those ASAP.
 
 Change Log:
@@ -15,8 +20,6 @@ Change Log:
 7. Basic title screen with standard buttons and the title.
 8. As the code is still being refactored, a round can't currently be completely played.
 
-Known Bugs
-None Currently
 
 Future Features
 1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
@@ -40,9 +43,6 @@ Change Log:
 6. No longer stuck in an infinite loop if a player chooses to take insurance when they have no money remaining.
 7. No longer locked in initial bet if a player does not have enough money to continue.
 
-Known Bugs
-None currently
-
 Future Features
 1. Refactor all code away from console IO to a GUI.
 2. Dynamically generate CPU characters initial bets, insurance, and round descisions.
@@ -50,7 +50,6 @@ Future Features
 4. Prompt the user for their name.
 
 Console Version I/O 1.0.0
-
 Known Bugs
 1. Ace values do not change to 1 if 11 would put the player over 21.
 2. When 1 is fixed aces will be treated as different cards in a split because there values differ.
