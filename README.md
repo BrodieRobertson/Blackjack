@@ -1,5 +1,5 @@
 # Blackjack Changelog
-GUI Alpha 1.1.0
+GUI Alpha 1.3.0
 Change Log:
 1. A few windows which had to be modal before have now become modeless.
 2. The first round can be played until the end with accurate payouts happening.
@@ -19,7 +19,7 @@ Future Features:
 9. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
 10. Dynamically generate CPU characters initial bets, insurance, and round descisions.
 
-GUI Alpha 1.0.1
+GUI Alpha 1.2.1
 <br>Note:
 In the last release I've discovered a major issue with the Insurance backend logic which causes the program to compeltely lockup, I'm currently working on an update to the issue.
 
@@ -39,7 +39,7 @@ Future Features:
 9. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
 10. Dynamically generate CPU characters initial bets, insurance, and round descisions.
 
-GUI Alpha 1.0.0
+GUI Alpha 1.2.0
 <br>Note: 
 I've come to realise that I've been approaching Event-Driven programming incorrectly, before my next realease I plan to address these issues. I've been doing sequential programming for so long that I've developed some bad habits which has caused some issues with my code, it hasn't created any bugs per se however the solutions I came up with are sub optimal at best. Whilst writing this log I've come up with a few solutions to the problem so I'll get working on those ASAP.
 
@@ -52,7 +52,6 @@ Change Log:
 6. Fixed a minor bugs which would only occur under incredibly rare circumstances.
 7. Basic title screen with standard buttons and the title.
 8. As the code is still being refactored, a round can't currently be completely played.
-
 
 Future Features
 1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
