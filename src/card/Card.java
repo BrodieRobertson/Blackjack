@@ -1,11 +1,11 @@
 package card;
 
 /**
- * The representation of the card, this class defines a vehicle with attributes
- * representing the colour, suit, face, and value of the card, whether the card
- * is face up or down.s
+ * A card is an object with a data representation of a French playing card.
  * 
  * @author Brodie Robertson
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public class Card implements Cloneable
 {
@@ -31,11 +31,12 @@ public class Card implements Cloneable
 	private boolean faceUp = true;
 	
 	/**
-	 * Constructor for the card, takes a colour, suit and face as arguments.
+	 * Constructs a card with values representing the attributes of a card.
 	 * 
 	 * @param colour The colour of the card.
 	 * @param suit The suit of the card.
 	 * @param face The face of the card.
+	 * @since 1.0.0
 	 */
 	public Card(Colour colour, Suit suit, Face face)
 	{
@@ -46,9 +47,11 @@ public class Card implements Cloneable
 	}
 	
 	/**
-	 * Copy constructor for the card, if the argument is null the program ends.
+	 * Constructs a card using the attributes of another card, program ends
+	 * with a null argument.
 	 * 
-	 * @param other
+	 * @param other Card to be copied.
+	 * @since 1.0.0
 	 */
 	public Card(Card other)
 	{
@@ -106,6 +109,7 @@ public class Card implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
+	 * @since 1.0.0
 	 */
 	@Override
 	public boolean equals(Object obj) 
@@ -146,6 +150,7 @@ public class Card implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#clone()
+	 * @since 1.0.0
 	 */
 	@Override
 	public Card clone()
@@ -167,6 +172,7 @@ public class Card implements Cloneable
 	 * Gets the colour of the card.
 	 * 
 	 * @return The colour of the card.
+	 * @since 1.0.0
 	 */
 	public Colour getColour()
 	{
@@ -177,6 +183,7 @@ public class Card implements Cloneable
 	 * Gets the suit of the card.
 	 * 
 	 * @return The suit of the card.
+	 * @since 1.0.0
 	 */
 	public Suit getSuit()
 	{
@@ -187,6 +194,7 @@ public class Card implements Cloneable
 	 * Gets the face of the card.
 	 * 
 	 * @return The face of the card.
+	 * @since 1.0.0
 	 */
 	public Face getFace()
 	{
@@ -197,6 +205,7 @@ public class Card implements Cloneable
 	 * Gets the value of the card.
 	 * 
 	 * @return The value of the card.
+	 * @since 1.0.0
 	 */
 	public int getValue()
 	{
@@ -205,6 +214,8 @@ public class Card implements Cloneable
 	
 	/**
 	 * Sets the value of the card based on the face of the card.
+	 * 
+	 * @since 1.0.0
 	 */
 	public void setValue()
 	{
@@ -260,7 +271,8 @@ public class Card implements Cloneable
 	/**
 	 * Gets whether the card is face up or not.
 	 * 
-	 * @return  boolean representing whether the card is face up or not.
+	 * @return boolean Whether the card is face up or not.
+	 * @since 1.0.0
 	 */
 	public boolean getFaceUp()
 	{
@@ -269,8 +281,10 @@ public class Card implements Cloneable
 	
 	/**
 	 * Flips whether the card is face up or not.
+	 * 
+	 * @since 1.0.0
 	 */
-	public void setFaceUp()
+	public void flipCard()
 	{
 		if(faceUp)
 		{

@@ -1,22 +1,14 @@
 package player;
 
 /**
- * The representation of a human, used as a flag for game logic.
+ * Implementation of the Player used to flag game logic in the Table.
  * 
  * @author Brodie Robertson
- *
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public class Human extends Player implements Cloneable
-{
-	/**
-	 * The constructor for the human, takes the name of the human as an
-	 * argument.
-	 */
-	public Human() 
-	{
-		
-	}
-	
+{	
 	/**
 	 * String representation of the human in the form
 	 * <br><pre>
@@ -31,6 +23,7 @@ public class Human extends Player implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see player.Player#toString()
+	 * @since 1.0.0
 	 */
 	@Override
 	public String toString()
@@ -45,6 +38,7 @@ public class Human extends Player implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see player.Player#clone()
+	 * @since 1.0.0
 	 */
 	@Override
 	public Human clone()

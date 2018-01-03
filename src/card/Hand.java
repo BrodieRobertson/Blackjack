@@ -5,11 +5,12 @@ import java.util.Arrays;
 import logic.Table;
 
 /**
- * The representation of the hand, this class defines a hand with attributes
- * representing the cards and whether the hand is a split hand. 
+ * A hand is an object with containing the a date representation of a player's 
+ * hand.
  * 
  * @author Brodie Robertson
- *
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public class Hand implements Cloneable
 {
@@ -23,7 +24,9 @@ public class Hand implements Cloneable
 	private boolean split;
 	
 	/**
-	 * Constructor for the hand.
+	 * Constructs a hand with default values.
+	 * 
+	 * @since 1.0.0
 	 */
 	public Hand()
 	{
@@ -33,11 +36,25 @@ public class Hand implements Cloneable
 	}
 	
 	/**
-	 * Copy constructor for the hand, if the argument is null the program ends.
+	 * Constructs a hand using the attributes of another hand, program ends
+	 * with a null argument.
+	 * 
 	 * @param other
+	 * @since 1.0.0
 	 */
 	public Hand(Hand other)
 	{
+		try
+		{
+			if(other == null)
+			{
+				throw new NullPointerException("Null in Hand constructor");
+			}
+		}
+		catch(NullPointerException ex)
+		{
+			
+		}
 		cards = new Card[other.cards.length];
 		for(int i = 0; i < cards.length; i++)
 		{
@@ -58,6 +75,7 @@ public class Hand implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
+	 * @since 1.0.0
 	 */
 	@Override
 	public String toString()
@@ -86,6 +104,7 @@ public class Hand implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
+	 * @since 1.0.0
 	 */
 	@Override
 	public boolean equals(Object obj)
@@ -121,6 +140,7 @@ public class Hand implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#clone()
+	 * @since 1.0.0
 	 */
 	@Override
 	public Hand clone()
@@ -149,6 +169,7 @@ public class Hand implements Cloneable
 	 * Gets the cards remaining in the hand.
 	 * 
 	 * @return The number of cards in the hand.
+	 * @since 1.0.0
 	 */
 	public int getCardsRemaining()
 	{
@@ -159,6 +180,7 @@ public class Hand implements Cloneable
 	 * Adds a card to the hand, the program ends if the card is null.
 	 * 
 	 * @param card The card being added.
+	 * @since 1.0.0
 	 */
 	public void addCard(Card card)
 	{	
@@ -185,6 +207,7 @@ public class Hand implements Cloneable
 	 * 
 	 * @param index The index of the card.
 	 * @return The card at the specified index.
+	 * @see 1.0.0
 	 */
 	public Card getCard(int index)
 	{	
@@ -205,6 +228,12 @@ public class Hand implements Cloneable
 		return temp;
 	}
 	
+	/**
+	 * Gets all of the cards in the hand.
+	 * 
+	 * @return The cards in the hands.
+	 * @since 1.0.0
+	 */
 	public Card[] getCards()
 	{
 		Card[] temp = new Card[cards.length];
@@ -224,11 +253,14 @@ public class Hand implements Cloneable
 	 * is invalid.
 	 * 
 	 * @param index The index of the card.
+	 * @since 1.0.0
 	 */
 	public void removeCard(int index)
 	{
 		try
 		{	
+			//Throws exception if index is less than 0 or greater than the 
+			//number of cards in the hand.
 			if(index < 0 || index >= cards.length)
 			{
 				throw new HandException("Invalid index: " + index);
@@ -248,6 +280,8 @@ public class Hand implements Cloneable
 	/**
 	 * Reorders the hand so that if there is a null in the hand it's moved to
 	 * the end, uses when a card is removed with removeCard.
+	 * 
+	 * @since 1.0.0
 	 */
 	private void reorderHand()
 	{
@@ -263,6 +297,8 @@ public class Hand implements Cloneable
 	/**
 	 * Decreases the size of the hand to the number of cards in the hand, used
 	 * when a card is removed with removeCard.
+	 * 
+	 * @since 1.0.0
 	 */
 	private void decreaseHandSize()
 	{
@@ -279,6 +315,8 @@ public class Hand implements Cloneable
 	/**
 	 * Increases the size of the hand to the number of cards in the hand, used
 	 * when a card is added with addCard.
+	 * 
+	 * @since 1.0.0
 	 */
 	private void increaseHandSize()
 	{
@@ -296,6 +334,7 @@ public class Hand implements Cloneable
 	 * Gets whether the hand has been split or not
 	 * 
 	 * @return Whether the hand has been split or not.
+	 * @since 1.0.0
 	 */
 	public boolean getSplit()
 	{
@@ -306,6 +345,7 @@ public class Hand implements Cloneable
 	 * Sets whether the hand has been split.
 	 * 
 	 * @param split Whether the hand has been split now.
+	 * @since 1.0.0
 	 */
 	public void setSplit(boolean split)
 	{
@@ -316,6 +356,7 @@ public class Hand implements Cloneable
 	 * Gets the hand score, counts the card if it's face up.
 	 * 
 	 * @return The hand score.
+	 * @since 1.0.0
 	 */
 	public int getHandScore()
 	{
@@ -378,6 +419,7 @@ public class Hand implements Cloneable
 	 * the index is invalid.
 	 * 
 	 * @param index The index of the card.
+	 * @since 1.0.0
 	 */
 	public void flipCardInHand(int index)
 	{
@@ -394,6 +436,6 @@ public class Hand implements Cloneable
 			System.exit(0);
 		}
 		
-		cards[index].setFaceUp();
+		cards[index].flipCard();
 	}
 }

@@ -1,18 +1,14 @@
 package player;
 
-import logic.TableException;
-
 /**
- * The representation of the player, this class defines a player with 
- * attributes representing the player's wager, insurance, total money, whether
- * the player has bust, the number of times the player has, achieved blackjack,
- * a win, a push, a loss, a bust or surrender, whether the player has 
- * surrendered and there starting money.
+ * Abstract definition of a player providing the necessary methods for use 
+ * with the table.
  * 
  * @author Brodie Robertson
- *
+ * @version 1.4.0
+ * @since 1.0.0
  */
-public class Player extends Person implements Cloneable
+public abstract class Player extends Person implements Cloneable
 {
 	/**
 	 * The player's wager.
@@ -75,37 +71,40 @@ public class Player extends Person implements Cloneable
 	 */
 	private boolean bankrupt;
 	/**
-	 * 
+	 * Whether the player has taken insurance.
 	 */
 	private boolean tookInsurance;
 	/**
-	 * 
+	 * The player's current Blackjack winnings.
 	 */
 	private double currentBlackjack;
 	/**
-	 * 
+	 * Whether the player has Blackjack.
 	 */
 	private boolean hasBlackjack;
 	/**
-	 * 
+	 * The player's current standard winnings.
 	 */
 	private double currentWin;
 	/**
-	 * 
+	 * Whether the player currently has a standard win.
 	 */
 	private boolean hasWin;
 	/**
 	 * The player's starting money.
 	 */
-	private static final int STARTINGMONEY = 37;
+	private static final int STARTING_MONEY = 1000;
+	
 	/**
-	 * Constructor for the player, takes the name of the player as an argument.
+	 * Constructs the Player with a set of default values.
+	 * 
+	 * @since 1.0.0
 	 */
 	public Player()
 	{
 		try 
 		{
-			setTotalMoney(STARTINGMONEY);
+			setTotalMoney(STARTING_MONEY);
 		} 
 		catch (PlayerException e) 
 		{
@@ -131,6 +130,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see player.Person#toString()
+	 * @since 1.0.0
 	 */
 	@Override
 	public String toString()
@@ -147,6 +147,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see player.Person#equals(java.lang.Object)
+	 * @since 1.0.0
 	 */
 	@Override
 	public boolean equals(Object obj) 
@@ -218,6 +219,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see player.Person#clone()
+	 * @since 1.0.0
 	 */
 	@Override
 	public Player clone()
@@ -229,6 +231,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the player's wager.
 	 * 
 	 * @return The player's wager.
+	 * @since 1.0.0
 	 */
 	public double getWager()
 	{
@@ -241,6 +244,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * @param wager The player's new wager.
 	 * @throws PlayerException If the wager is negative.
+	 * @since 1.0.0
 	 */
 	public void setWager(double wager) throws PlayerException
 	{
@@ -280,6 +284,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the player's insurance.
 	 * 
 	 * @return The player's insurance.
+	 * @since 1.0.0
 	 */
 	public double getInsurance()
 	{
@@ -292,6 +297,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * @param insurance The player's new insurance.
 	 * @throws PlayerException If the insurance is negative.
+	 * @since 1.0.0
 	 */
 	public void setInsurance(double insurance) throws PlayerException
 	{
@@ -309,6 +315,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the player's total money.
 	 * 
 	 * @return The player's total money.
+	 * @since 1.0.0
 	 */
 	public double getTotalMoney()
 	{
@@ -320,6 +327,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * @param totalMoney The player's new total money.
 	 * @throws If the total money is negative.
+	 * @since 1.0.0
 	 */
 	public void setTotalMoney(double totalMoney) throws PlayerException
 	{
@@ -336,6 +344,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the player's total wagers.
 	 * 
 	 * @return The player's total wagers.
+	 * @since 1.0.0
 	 */
 	public double getTotalWager()
 	{
@@ -347,6 +356,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * @param totalWager The player's new total of wager
 	 * @throws PlayerException If the total wager is negative.
+	 * @since 1.0.0
 	 */
 	private void setTotalWager(double totalWager) throws PlayerException
 	{
@@ -363,6 +373,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the player's total insurance payments.
 	 * 
 	 * @return The player's total insurance payments.
+	 * @since 1.0.0
 	 */
 	public double getTotalInsurance()
 	{
@@ -374,6 +385,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * @param totalInsurance The player's new total insurance payments.
 	 * @throws PlayerException If the total insurance is negative.
+	 * @since 1.0.0
 	 */
 	private void setTotalInsurance(double totalInsurance) throws PlayerException
 	{
@@ -390,6 +402,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the player's total winnings.
 	 * 
 	 * @return The player's total winnings.
+	 * @since 1.0.0
 	 */
 	public double getTotalWinnings()
 	{
@@ -401,6 +414,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * @param totalWinnings The player's total winnings.
 	 * @throws PlayerException If the total winning is negative.
+	 * @since 1.0.0
 	 */
 	public void setTotalWinnnings(double totalWinnings) throws PlayerException
 	{
@@ -417,6 +431,7 @@ public class Player extends Person implements Cloneable
 	 * Gets whether the player is bust.
 	 * 
 	 * @return Whether the player is bust.
+	 * @since 1.0.0
 	 */
 	public boolean getBusted()
 	{
@@ -427,6 +442,7 @@ public class Player extends Person implements Cloneable
 	 * Sets whether the player is bust.
 	 * 
 	 * @param bust Whether the player is now bust.
+	 * @since 1.0.0
 	 */
 	public void setBusted(boolean busted)
 	{
@@ -437,6 +453,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the number of times the player has achieved blackjack.
 	 * 
 	 * @return The number of times the player has achieved blackjack.
+	 * @since 1.0.0
 	 */
 	public int getBlackjack()
 	{
@@ -449,6 +466,7 @@ public class Player extends Person implements Cloneable
 	 * 
 	 * @param blackjack The new number of times the player has achieved 
 	 * blackjack.
+	 * @since 1.0.0
 	 */
 	public void setBlackjack(int blackjack)
 	{
@@ -472,6 +490,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the number wins. 
 	 * 
 	 * @return The number of wins.
+	 * @since 1.0.0
 	 */
 	public int getWin()
 	{
@@ -483,6 +502,7 @@ public class Player extends Person implements Cloneable
 	 * negative.
 	 * 
 	 * @param win The new number of wins.
+	 * @since 1.0.0
 	 */
 	public void setWin(int win)
 	{
@@ -506,6 +526,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the number of push.
 	 * 
 	 * @return The number of push.
+	 * @since 1.0.0
 	 */
 	public int getPush()
 	{
@@ -517,6 +538,7 @@ public class Player extends Person implements Cloneable
 	 * negative.
 	 * 
 	 * @param push The new number of push.
+	 * @since 1.0.0
 	 */
 	public void setPush(int push)
 	{
@@ -540,6 +562,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the number of loss.
 	 * 
 	 * @return The number of loss.
+	 * @since 1.0.0
 	 */
 	public int getLoss()
 	{
@@ -551,6 +574,7 @@ public class Player extends Person implements Cloneable
 	 * negative.
 	 * 
 	 * @param loss The new number of loss.
+	 * @since 1.0.0
 	 */
 	public void setLoss(int loss)
 	{
@@ -574,6 +598,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the number of bust.
 	 * 
 	 * @return The number of bust.
+	 * @since 1.0.0
 	 */
 	public int getBust()
 	{
@@ -585,6 +610,7 @@ public class Player extends Person implements Cloneable
 	 * negative.
 	 * 
 	 * @param bust The new number of bust.
+	 * @since 1.0.0
 	 */
 	public void setBust(int bust)
 	{
@@ -608,6 +634,7 @@ public class Player extends Person implements Cloneable
 	 * Gets the number of surrenders.
 	 * 
 	 * @return The number of surrenders.
+	 * @since 1.0.0
 	 */
 	public int getSurrender()
 	{
@@ -619,6 +646,7 @@ public class Player extends Person implements Cloneable
 	 * surrenders is negative.
 	 * 
 	 * @param surrender The new number of surrenders.
+	 * @since 1.0.0
 	 */
 	public void setSurrender(int surrender)
 	{
@@ -642,6 +670,7 @@ public class Player extends Person implements Cloneable
 	 * Gets whether the player has surrendered.
 	 * 
 	 * @return Whether the player has surrendered.
+	 * @since 1.0.0
 	 */
 	public boolean getSurrendered()
 	{
@@ -652,6 +681,7 @@ public class Player extends Person implements Cloneable
 	 * Gets whether the player is bankrupt.
 	 * 
 	 * @return Whether the player is bankrupt.
+	 * @since 1.1.0
 	 */
 	public boolean getBankrupt()
 	{
@@ -661,7 +691,8 @@ public class Player extends Person implements Cloneable
 	/**
 	 * Sets whether the player is bankrupt.
 	 * 
-	 * @param bankrupt WHether the player is now bankrupt.
+	 * @param bankrupt Whether the player is now bankrupt.
+	 * @since 1.1.0
 	 */
 	public void setBankrupt(boolean bankrupt)
 	{
@@ -672,6 +703,7 @@ public class Player extends Person implements Cloneable
 	 * Sets whether the player has surrendered.
 	 * 
 	 * @param surrender Whether the player has surrendered.
+	 * @since 1.0.0
 	 */
 	public void setSurrendered(boolean surrendered)
 	{
@@ -679,7 +711,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @return
+	 * Gets whether the player has taken insurance.
+	 * 
+	 * @return Whether the player has taken insurance.
+	 * @since 1.3.0
 	 */
 	public boolean getTookInsurance()
 	{
@@ -687,7 +722,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @param tookInsurance
+	 * Sets whether the player has taken insurance.
+	 * 
+	 * @param tookInsurance Whether the player has taken insurance.
+	 * @since 1.0.0 
 	 */
 	public void setTookInsurance(boolean tookInsurance)
 	{
@@ -695,7 +733,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @return
+	 * Gets the player's current standard winnings.
+	 * 
+	 * @return The player's current winnings.
+	 * @since 1.3.0
 	 */
 	public double getCurrentWin()
 	{
@@ -703,7 +744,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @param currentWin
+	 * Sets the player's current standard winnings.
+	 * 
+	 * @param currentWin The player's current winnings.
+	 * @since 1.3.0
 	 */
 	public void setCurrentWin(double currentWin)
 	{
@@ -725,7 +769,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @return
+	 * Gets whether the player has a standard win.
+	 * 
+	 * @return Whether the player has a standard win.
+	 * @since 1.3.0
 	 */
 	public boolean getHasWin()
 	{
@@ -733,7 +780,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @param hasWin
+	 * Sets whether the player has a standard win.
+	 * 
+	 * @param hasWin Whether the player has a standard win.
+	 * @since 1.3.0
 	 */
 	public void setHasWin(boolean hasWin)
 	{
@@ -741,7 +791,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @return
+	 * Gets player's current Blackjack winnings.
+	 * 
+	 * @return Whether the player has Blackjack.
+	 * @since 1.3.0
 	 */
 	public double getCurrentBlackjack()
 	{
@@ -749,7 +802,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @param currentBlackjack
+	 * Sets the player's current Blackjack winnings.
+	 * 
+	 * @param currentBlackjack 
+	 * @since 1.3.0
 	 */
 	public void setCurrentBlackjack(double currentBlackjack)
 	{
@@ -771,7 +827,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @return
+	 * Gets whether the player currently has Blackjack.
+	 * 
+	 * @return Whether the player currently has Blackjack.
+	 * @since 1.3.0
 	 */
 	public boolean getHasBlackjack()
 	{
@@ -779,7 +838,10 @@ public class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * @param hasBlackjack
+	 * Sets whether the player currently has Blackjack.
+	 * 
+	 * @param hasBlackjack Whether the player currently has Blackjack.
+	 * @since 1.3.0
 	 */
 	public void setHasBlackjack(boolean hasBlackjack)
 	{

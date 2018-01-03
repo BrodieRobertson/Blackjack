@@ -1,15 +1,19 @@
 package player;
 
 /**
- * The representation of the CPU, used as a flag for game logic.
+ * Implementation of the Player used as a logic flag in the Table.
  * 
  * @author Brodie Robertson
- *
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public class CPU extends Player implements Cloneable
 {
 	/**
 	 * Constructor for CPU, takes the name of the CPU as an argument.
+	 * 
+	 * @param name Name of the CPU.
+	 * @since 1.0.0
 	 */
 	public CPU(String name) 
 	{
@@ -38,6 +42,7 @@ public class CPU extends Player implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see player.Player#toString()
+	 * @since 1.0.0
 	 */
 	@Override
 	public String toString()
@@ -52,6 +57,7 @@ public class CPU extends Player implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see player.Player#clone()
+	 * @since 1.0.0
 	 */
 	@Override
 	public CPU clone()

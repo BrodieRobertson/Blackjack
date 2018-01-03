@@ -4,12 +4,12 @@ import java.util.Arrays;
 import java.util.Random;
 
 /**
- * The representation of the deck, this class defines a deck with attributes
- * representing the cards, in the deck, the number of standard sized decks the
- * size of a standard deck, the minimum and the maximum number of standard
- * decks.
+ * A deck is an object with a data representation of at least 1 deck of 52 
+ * French playing cards but supports up to 8.
  * 
  * @author Brodie Robertson
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public class Deck implements Cloneable
 {
@@ -35,9 +35,10 @@ public class Deck implements Cloneable
 	private static final int MAXNUMOFDECKS = 8;
 	
 	/**
-	 * Constructor for the deck, takes the number of decks as an argument.
+	 * Constructs a deck with a specified number of decks.
 	 * 
-	 * @param numOfDecks
+	 * @param numOfDecks The number of standard decks in the deck.
+	 * @since 1.0.0
 	 */
 	public Deck(int numOfDecks)
 	{
@@ -46,10 +47,11 @@ public class Deck implements Cloneable
 	}
 	
 	/**
-	 * The copy constructor for the Deck, if the argument is null the program
-	 * ends.
+	 * Constructs a deck with using the attributes of another deck, program 
+	 * ends with a null argument.
 	 * 
-	 * @param other
+	 * @param other Deck being copied
+	 * @since 1.0.0
 	 */
 	public Deck(Deck other)
 	{
@@ -93,6 +95,7 @@ public class Deck implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
+	 * @since 1.0.0
 	 */
 	@Override
 	public String toString() 
@@ -114,6 +117,7 @@ public class Deck implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
+	 * @since 1.0.0
 	 */
 	@Override
 	public boolean equals(Object obj) 
@@ -149,6 +153,7 @@ public class Deck implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#clone()
+	 * @since 1.0.0
 	 */
 	@Override
 	public Deck clone()
@@ -177,6 +182,8 @@ public class Deck implements Cloneable
 	 * Creates the deck with the standard set of French playing cards except 
 	 * for the 2 jokers for the total number of decks specified in the 
 	 * constructor and shuffles the deck.
+	 * 
+	 * @since 1.0.0
 	 */
 	private void createDeck()
 	{
@@ -207,6 +214,7 @@ public class Deck implements Cloneable
 	 * Gets the number of decks.
 	 * 
 	 * @return The number of standard decks in the the deck.
+	 * @since 1.0.0
 	 */
 	public int getNumOfDecks()
 	{
@@ -219,6 +227,7 @@ public class Deck implements Cloneable
 	 * number of decks.
 	 * 
 	 * @param The number of standard decks in the the deck.
+	 * @since 1.0.0
 	 */
 	private void setNumOfDecks(int numOfDecks)
 	{
@@ -242,6 +251,7 @@ public class Deck implements Cloneable
 	 * Gets the last card in the deck and removes it from the deck.
 	 * 
 	 * @return A card from the deck.
+	 * @since 1.0.0
 	 */
 	public Card getCard()
 	{
@@ -266,6 +276,8 @@ public class Deck implements Cloneable
 	/**
 	 * Decreases the size of the deck to the number of cards now in the deck,
 	 * used when a card is removed by getCard.
+	 * 
+	 * @since 1.0.0
 	 */
 	private void decreaseDeckSize()
 	{
@@ -282,6 +294,8 @@ public class Deck implements Cloneable
 	/**
 	 * Shuffles the deck, by swapping the positions of the first half of the
 	 * deck with random positions in the second half.
+	 * 
+	 * @since 1.0.0
 	 */
 	public void shuffle()
 	{
@@ -302,6 +316,7 @@ public class Deck implements Cloneable
 	 * 
 	 * @param colour The colour to search for.
 	 * @return The number of cards with the correct colour.
+	 * @since 1.0.0
 	 */
 	public String countColour(Colour colour)
 	{
@@ -323,6 +338,7 @@ public class Deck implements Cloneable
 	 * 
 	 * @param suit The suit to search for.
 	 * @return The number of cards with the correct suit.
+	 * @since 1.0.0
 	 */
 	public String countSuit(Suit suit)
 	{
@@ -344,6 +360,7 @@ public class Deck implements Cloneable
 	 * 
 	 * @param face The face to search for.
 	 * @return The number of the cards with the correct face.
+	 * @since 1.0.0
 	 */
 	public String countFace(Face face)
 	{

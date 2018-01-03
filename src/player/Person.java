@@ -7,17 +7,17 @@ import card.Hand;
 import card.HandException;
 
 /**
- * The abstract representation of a person, this class defines a person with
- * attributes representing the hands of cards of the person, and the name of
- * the person.
+ * Abstract definition of a person providing basic functionality for use with the Table.
  * 
  * @author Brodie Robertson
- *
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public abstract class Person implements Cloneable
 {
 	/**
 	 * The hands of the person.
+	 * 
 	 */
 	private Hand[] hands;
 	/**
@@ -30,6 +30,7 @@ public abstract class Person implements Cloneable
 	 * argument.
 	 * 
 	 * @param name The name of the person.
+	 * @since 1.0.0
 	 */
 	public Person()
 	{
@@ -51,6 +52,7 @@ public abstract class Person implements Cloneable
      * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
+	 * @since 1.0.0
 	 */
 	@Override
 	public String toString()
@@ -79,6 +81,7 @@ public abstract class Person implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
+	 * @since 1.0.0
 	 */
 	@Override
 	public boolean equals(Object obj) 
@@ -121,6 +124,7 @@ public abstract class Person implements Cloneable
 	 * 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#clone()
+	 * @since 1.0.0
 	 */
 	public Person clone()
 	{
@@ -147,6 +151,7 @@ public abstract class Person implements Cloneable
 	 * Gets the hands of the person.
 	 * 
 	 * @return The hands of the person.
+	 * @since 1.0.0
 	 */
 	public Hand[] getHands()
 	{
@@ -167,6 +172,7 @@ public abstract class Person implements Cloneable
 	 * Sets the hands of the person, if the argument is null the program ends.
 	 * 
 	 * @param hand The new set of hands.
+	 * @since 1.0.0
 	 */
 	public void setHands(Hand[] hand)
 	{
@@ -197,6 +203,8 @@ public abstract class Person implements Cloneable
 	
 	/**
 	 * Sets the starting hand of the person.
+	 * 
+	 * @since 1.0.0
 	 */
 	public void startingHand()
 	{
@@ -209,6 +217,7 @@ public abstract class Person implements Cloneable
 	 * the program ends.
 	 * 
 	 * @return The hand at the specified index.
+	 * @since 1.0.0
 	 */
 	public Hand getHand(int index)
 	{
@@ -218,6 +227,8 @@ public abstract class Person implements Cloneable
 	
 	/**
 	 * Increases the number of hands and adds a new hand.
+	 * 
+	 * @since 1.0.0
 	 */
 	public void addHand()
 	{
@@ -227,6 +238,8 @@ public abstract class Person implements Cloneable
 	
 	/**
 	 * Increases the total number of hands the person has.
+	 * 
+	 * @since 1.0.0
 	 */
 	private void increaseHands()
 	{
@@ -243,6 +256,7 @@ public abstract class Person implements Cloneable
 	 * Gets the name of the person.
 	 * 
 	 * @return The name of the person.
+	 * @since 1.0.0
 	 */
 	public String getName()
 	{
@@ -253,6 +267,7 @@ public abstract class Person implements Cloneable
 	 * Sets the name of the person.
 	 * 
 	 * @param name The name of the person.
+	 * @since 1.0.0
 	 */
 	public void setName(String name) throws PersonException
 	{
@@ -270,6 +285,7 @@ public abstract class Person implements Cloneable
 	 * 
 	 * @param card The card being added.
 	 * @param index The index of the specified hand.
+	 * @since 1.0.0
 	 */
 	public Card addToHand(Card card, int index)
 	{
@@ -284,6 +300,7 @@ public abstract class Person implements Cloneable
 	 * 
 	 * @param handIndex The index of the specified hand.
 	 * @param cardIndex The index of the specified card.
+	 * @since 1.0.0
 	 */
 	public void removeFromHand(int handIndex, int cardIndex)
 	{
@@ -297,6 +314,7 @@ public abstract class Person implements Cloneable
 	 * 
 	 * @param cardIndex The index of the specified hand.
 	 * @param handIndex The index of the specified card.
+	 * @since 1.0.0
 	 */
 	public void flipCardInHand(int cardIndex, int handIndex)
 	{
@@ -304,6 +322,12 @@ public abstract class Person implements Cloneable
 		hands[handIndex].flipCardInHand(cardIndex);
 	}
 	
+	/**
+	 * Sets a hand at a specific index to being split.
+	 * 
+	 * @param handIndex
+	 * @since 1.0.0
+	 */
 	public void setHandSplit(int handIndex)
 	{
 		validateHandIndex(handIndex);
@@ -314,11 +338,14 @@ public abstract class Person implements Cloneable
 	 * Validates the hand index, the program ends if the index is invalid.
 	 * 
 	 * @param index The hand index.
+	 * @since 1.0.0
 	 */
 	private void validateHandIndex(int index)
 	{
 		try
 		{
+			//Throws exception if the index is less than 0 or greater than number
+			//of hands.
 			if(index < 0 || index >= hands.length)
 			{
 				throw new PersonException("Invalid Hand index: " + index);

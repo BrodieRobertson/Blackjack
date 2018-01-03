@@ -1,15 +1,18 @@
 package player;
 
 /**
- * Exception type to handle person exceptions.
+ * Thrown when an exception is caused by an interaction with a Person.
  * 
  * @author Brodie Robertson
- *
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public class PersonException extends Exception 
 {
 	/**
-	 * Constructor for the person exception.
+	 * Constructs a PersonException with basic detail message.
+	 * 
+	 * @since 1.0.0
 	 */
 	public PersonException() 
 	{
@@ -17,9 +20,10 @@ public class PersonException extends Exception
 	}
 
 	/**
-	 * Constructor for the person exception, with string parameter.
+	 * Constructs a PersonException with a custom detail message.
 	 * 
-	 * @param str The message for the person exception.
+	 * @param str The detail message.
+	 * @since 1.0.0
 	 */
 	public PersonException(String str) 
 	{

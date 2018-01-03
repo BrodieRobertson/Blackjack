@@ -1,28 +1,29 @@
 package card;
 
 /**
- * Exception type to handle deck exceptions.
+ * Thrown when an exceptions is caused by an interaction with a deck.
  * 
  * @author Brodie Robertson
- *
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public class DeckException extends Exception
 {
 	/**
-	 * Constructor for the deck exception with a string parameter.
-	 * 
-	 * @param str The message held by the deck exception.
-	 */
-	public DeckException(String str)
-	{
-		super(str);
-	}
-	
-	/**
-	 * Constructor for the deck exception.
+	 * Constructs a deck with a basic detail message.
 	 */
 	public DeckException()
 	{
 		super("Exception in deck");
+	}
+	
+	/**
+	 * Constructs a deck with a custom detail message.
+	 * 
+	 * @param str The detail message.
+	 */
+	public DeckException(String str)
+	{
+		super(str);
 	}
 }

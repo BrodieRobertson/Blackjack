@@ -5,23 +5,44 @@ import card.*;
 import player.*;
 
 /**
- * The representation of the table, this class defines the table with
- * attributes representing the, players in the game, the deck, the player's
- * input, the current and total rounds, the minimum and maximum number of
- * player's the minimum and maximum wagers, and the value of blackjack. All
- * gameplay logic takes place here.
+ * The logic layer for the game, manages all of the back end data manipulation.
  * 
  * @author Brodie Robertson
- *
+ * @version 1.4.0
+ * @since 1.0.0
  */
 public class Table 
 {
 	/**
-	 * The player's in the game.
+	 * Return rate of an insurance bet.
+	 */
+	public static final int INSURANCE_RETURN = 2;
+	/**
+	 * Minimum number of players.
+	 */
+	public static final int MINNUMPLAYERS = 1;
+	/**
+	 * Maximum number of player's
+	 */
+	public static final int MAXNUMPLAYERS = 6;
+	/**
+	 * Minimum allowable wager.
+	 */
+	public static final double MINWAGER = 25;
+	/**
+	 * Maximum allowable wager.
+	 */
+	public static final double MAXWAGER = 1000;
+	/**
+	 * Card value of blackjack.
+	 */
+	public static final int BLACKJACK = 21;
+	/**
+	 * Player's in the game.
 	 */
 	private Person[] players;
 	/**
-	 * The deck.
+	 * Deck used by all players.
 	 */
 	private Deck deck;
 	/**
@@ -33,80 +54,14 @@ public class Table
 	 */
 	private int totalRounds;
 	/**
-	 * The total number of rounds actually played
+	 * The number of completed rounds.
 	 */
-	private int completedRounds = 1;
-	/**
-	 * 
-	 */
-	private static final int INSURANCE_RETURN = 2;
-	/**
-	 * The minimum number of players.
-	 */
-	public static final int MINNUMPLAYERS = 1;
-	/**
-	 * The maximum number of player's
-	 */
-	public static final int MAXNUMPLAYERS = 6;
-	/**
-	 * The minimum allowable wager.
-	 */
-	public static final double MINWAGER = 25;
-	/**
-	 * The maximum allowable wager.
-	 */
-	public static final double MAXWAGER = 1000;
-	/**
-	 * The value of blackjack.
-	 */
-	public static final int BLACKJACK = 21;
-	
-	/*
-	public static void main(String[] args)
-	{
-		Table game = new Table();
-		boolean availablePlayers = true;
-		//While there are still rounds remaining, continue the game.
-		while(game.currentRound < game.totalRounds && availablePlayers)
-		{
-			System.out.println("Round: " + game.currentRound + 1);
-			game.displayPlayers();
-			game.initialBet();
-			
-			game.displayPlayers();
-			game.deal();
-			
-			game.displayPlayers();
-			game.insurance();
-			
-			game.displayPlayers();
-			
-			//If the dealer didn't reach 21 after the insurance round.
-			if(game.players[game.players.length - 1].getHand(0).getHandScore() < 21)
-			{
-				game.round();
-				
-				game.displayPlayers();				
-				game.payout();
-			}
-			game.prepareForNewRound();
-			game.deck = new Deck(game.deck.getNumOfDecks());
-			game.currentRound++;
-			game.completeRound++;
-			
-			availablePlayers = false;
-		}
-		game.displayGameStats();
-	}
-	*/
+	private int completedRounds;
 	
 	/**
-	 * Constructor for the table, takes the number of human players, the number
-	 * of AI players and the number of decks as arguments.
+	 * Constructs a Table with a single deck. Will be changed in future update.
 	 * 
-	 * @param numOfHumanPlayers The number of human players.
-	 * @param numOfAiPlayers The number of AI players.
-	 * @param numOfDecks The number of decks.
+	 * @since 1.0.0
 	 */
 	public Table()
 	{
@@ -114,37 +69,44 @@ public class Table
 	}
 	
 	/**
-	 * Creates the list of player's with the parameters specified, the program 
-	 * ends if the number of human players, AI players or both added together
-	 * are invalid.
+	 * Creates an array of player's with the parameters specified.
 	 * 
 	 * @param numOfHumanPlayers The number of human players.
-	 * @param numOfAiPlayers The number of AI players.
+	 * @param numOfCPUPlayers The number of CPU players.
+	 * @since 1.0.0
 	 */
-	public void createPlayers(int numOfHumanPlayers, int numOfAiPlayers) throws 
-	PlayerException, HumanException, CpuException
+	public void createPlayers(int numOfHumanPlayers, int numOfCPUPlayers) throws 
+	PlayerException, HumanException, CPUException
 	{
-		if(numOfHumanPlayers + numOfAiPlayers > MAXNUMPLAYERS || numOfHumanPlayers + 
-				numOfAiPlayers < MINNUMPLAYERS)
+		//Throws exception if total number of players greater than or less 
+		//than the required number of players.
+		if(numOfHumanPlayers + numOfCPUPlayers > MAXNUMPLAYERS || numOfHumanPlayers + 
+				numOfCPUPlayers < MINNUMPLAYERS)
 		{
 			throw new PlayerException("Invalid number of players: " + 
-					(numOfHumanPlayers + numOfAiPlayers));
+					(numOfHumanPlayers + numOfCPUPlayers));
 		}
+		
+		//Throws exception if the number of human players greater than or less
+		//than the required number of players.
 		if(numOfHumanPlayers < MINNUMPLAYERS || numOfHumanPlayers > 
 			MAXNUMPLAYERS)
 		{
 			throw new HumanException("Invalid number of human players: " + 
 				numOfHumanPlayers);
 		}
-		if(numOfAiPlayers < 0 || numOfAiPlayers > MAXNUMPLAYERS)
+		
+		//Throws exception if the number of CPU players greater than or less
+		//than the required number of players.
+		if(numOfCPUPlayers < 0 || numOfCPUPlayers > MAXNUMPLAYERS)
 		{
-			throw new CpuException("Invalid number of AI player: " + 
-					numOfAiPlayers);
+			throw new CPUException("Invalid number of AI player: " + 
+					numOfCPUPlayers);
 		}
 		
 		int playerIndex = 0;
 		//Creates the human players.
-		players = new Person[numOfHumanPlayers + numOfAiPlayers + 1];
+		players = new Person[numOfHumanPlayers + numOfCPUPlayers + 1];
 		for(int i = 0; i < numOfHumanPlayers; i++)
 		{
 			players[playerIndex] = new Human();
@@ -152,7 +114,7 @@ public class Table
 		}
 		
 		//Creates the AI players.
-		for(int i = 0; i < numOfAiPlayers; i++)
+		for(int i = 0; i < numOfCPUPlayers; i++)
 		{
 			players[playerIndex] = new CPU("CPU " + i);
 			playerIndex++;
@@ -162,8 +124,6 @@ public class Table
 	}
 	
 	/**
-	 * Displays the complete statistics for the game and every player.
-	 */
 	private void displayGameStats()
 	{
 		//Displays the final statistics after the end of the game.
@@ -193,9 +153,12 @@ public class Table
 			System.out.println("Surrenders: " + player.getSurrender());
 		}
 	}
+	*/
 	
 	/**
-	 * @return
+	 * Checks if all of the player's have gone bankrupt.
+	 * 
+	 * @return Whether all of the player's have gone bankrupt.
 	 */
 	public boolean checkIfAnyPlayerNotBankrupt()
 	{
@@ -211,7 +174,58 @@ public class Table
 	}
 	
 	/**
-	 * @return
+	 * Gets the number of completed rounds.
+	 * 
+	 * @return The number of completed rounds.
+	 * @since 1.4.0
+	 */
+	public int getCompletedRounds()
+	{
+		return completedRounds;
+	}
+	
+	/**
+	 * Sets the number of completed rounds.
+	 * 
+	 * @param completedRounds The number of completed rounds.
+	 * @since 1.4.0
+	 */
+	public void setCompletedRounds(int completedRounds)
+	{
+		try
+		{
+			if(completedRounds < 0)
+			{
+				throw new TableException("Completed round can't be less than 0: " 
+						+ completedRounds);
+			}
+			
+			if(completedRounds > totalRounds)
+			{
+				throw new TableException("Completed round can't be greater than "
+						+ "the total rounds: " + completedRounds);
+			}
+			
+			if(completedRounds > currentRound)
+			{
+				throw new TableException("Completed round can't be greater than " 
+						+ "than the current round: " + currentRound);
+			}
+		}
+		catch(TableException ex)
+		{
+			ex.printStackTrace();
+			System.exit(0);
+		}
+		
+		this.completedRounds = completedRounds;
+	}
+	
+	/**
+	 * Gets the current round.
+	 * 
+	 * @return The current round.
+	 * @since 1.4.0
 	 */
 	public int getCurrentRound()
 	{
@@ -219,7 +233,10 @@ public class Table
 	}
 	
 	/**
-	 * @param currentRound
+	 * Sets the current round.
+	 * 
+	 * @param currentRound The current round
+	 * @since 1.4.0
 	 */
 	public void setCurrentRound(int currentRound)
 	{
@@ -245,7 +262,10 @@ public class Table
 	}
 	
 	/**
-	 * @return
+	 * Gets the total number of rounds.
+	 * 
+	 * @return The total number of rounds.
+	 * @since 1.4.0
 	 */
 	public int getTotalRounds()
 	{
@@ -255,6 +275,8 @@ public class Table
 	/**
 	 * Sets the total number of rounds, prompts the user for an input until
 	 * a valid value has been received.
+	 * 
+	 * @since 1.0.0
 	 */
 	public void setTotalRounds(int totalRounds) throws TableException
 	{
@@ -270,6 +292,7 @@ public class Table
 	 * Gets the deck.
 	 * 
 	 * @return The deck.
+	 * @since 1.0.0
 	 */
 	public Deck getDeck()
 	{
@@ -280,6 +303,7 @@ public class Table
 	 * Gets the list of players.
 	 * 
 	 * @return The list of players.
+	 * @since 1.0.0
 	 */
 	public Person[] getPlayers()
 	{
@@ -296,15 +320,17 @@ public class Table
 	}
 	
 	/**
-	 * @param index
-	 * @return
-	 * @throws PersonException
+	 * Gets the person at a specified index.
+	 * 
+	 * @param index The index of the person.
+	 * @return A copy of the person.
+	 * @since 1.0.0
 	 */
 	public Person getPersonAtIndex(int index)
 	{
 		try
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 		}
 		catch(TableException ex)
 		{
@@ -316,15 +342,18 @@ public class Table
 	}
 	
 	/**
-	 * @param index
-	 * @param name
-	 * @throws PersonException
+	 * Sets the name of a person at specified index.
+	 * 
+	 * @param index The index of the person.
+	 * @param name The name of the person.
+	 * @throws PersonException Thrown if the name is invalid.
+	 * @since 1.0.0
 	 */
 	public void setPersonNameAtIndex(int index, String name) throws PersonException
 	{
 		try
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 		}
 		catch(TableException e)
 		{
@@ -337,6 +366,8 @@ public class Table
 	/**
 	 * Deals the initial cards to each player and sets the dealers second card
 	 * to face down.
+	 * 
+	 * @since 1.0.0
 	 */
 	public void deal()
 	{
@@ -351,7 +382,7 @@ public class Table
 				if(j == players.length - 1 && players[j].getHand(0).
 						getCardsRemaining() == 1)
 				{
-					card.setFaceUp();
+					card.flipCard();
 				}
 						
 				players[j].addToHand(card, 0);
@@ -360,16 +391,20 @@ public class Table
 	}
 	
 	/**
-	 * @param index
-	 * @param wager
-	 * @throws PlayerException
-	 * @throws TableException
+	 * Sets the wager of a human a specific index.
+	 * 
+	 * @param index The index of the human.
+	 * @param wager The wager of the of the human.
+	 * @throws PlayerException Thrown if the wager is invalid for the player.
+	 * @throws TableException Thrown if the wager is invalid in the game logic.
+	 * @since 1.2.0
 	 */
-	public void setHumanWager(int index, double wager) throws PlayerException, TableException
+	public void setHumanWager(int index, double wager) throws PlayerException, 
+	TableException
 	{
 		try
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 			if(!(players[index] instanceof Human))
 			{
 				throw new PersonException("Error this is not a human");
@@ -381,6 +416,8 @@ public class Table
 			System.exit(0);
 		}
 		
+		//Throws exception if the wager is less than the minimum or greater
+		//the maximum wager.
 		if(wager >= MINWAGER && wager <= MAXWAGER)
 		{
 			Player player = (Player)players[index];
@@ -393,14 +430,17 @@ public class Table
 	}
 	
 	/**
-	 * @param index
-	 * @return
+	 * Sets the wager of a CPU at a specified index.
+	 * 
+	 * @param index The index of the CPU.
+	 * @return The wager of the CPU.
+	 * @since 1.2.0
 	 */
-	public double setCpuWager(int index)
+	public double setCPUWager(int index)
 	{
 		try
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 			if(!(players[index] instanceof CPU))
 			{
 				throw new PersonException("Error this is not a cpu");
@@ -417,7 +457,10 @@ public class Table
 		Player player = (Player)players[index];
 		while(!validWager)
 		{
-			if(wager >= MINWAGER && wager <= MAXWAGER && wager <= player.getTotalMoney())
+			//Valid wager if it's between the min an max wager and wager less 
+			//than or equal to the players total money.
+			if(wager >= MINWAGER && wager <= MAXWAGER && wager <= player.
+					getTotalMoney())
 			{
 				validWager = true;
 			}
@@ -427,24 +470,30 @@ public class Table
 			}
 		}
 		
-		try 
+		if(wager > MINWAGER)
 		{
-			player.setWager(wager);
-		} 
-		catch (PlayerException ex) 
-		{
-			ex.printStackTrace();
-			System.exit(0);
+			try 
+			{
+				player.setWager(wager);
+			} 
+			catch (PlayerException ex) 
+			{
+				ex.printStackTrace();
+				System.exit(0);
+			}
 		}
 		
 		return wager;
 	}
 	
 	/**
-	 * @param index
-	 * @param insurance
-	 * @throws TableException
-	 * @throws PlayerException
+	 * Sets a human wager at a specified index.
+	 * 
+	 * @param index The index of the human.
+	 * @param insurance The insurance of the human.
+	 * @throws TableException Thrown if the insurance is invalid in the game logic.
+	 * @throws PlayerException Thrown if the insurance is invalid for the player.
+	 * @since 1.2.0
 	 */
 	public void setHumanInsurance(int index, double insurance) throws 
 	TableException, PlayerException
@@ -452,7 +501,7 @@ public class Table
 		Player player = null;
 		try
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 			if(!(players[index] instanceof Human))
 			{
 				throw new PersonException("Error this is not a human");
@@ -465,34 +514,45 @@ public class Table
 		}
 		
 		player = (Player) players[index];
-		if(player.getHand(0).getHandScore() < 21)
+		
+		//If the Player's hand score is less than Blackjack.
+		if(player.getHand(0).getHandScore() < BLACKJACK)
 		{
 			if(insurance <= player.getWager() / 2)
 			{
 				player.setInsurance(insurance);
 				player.setTookInsurance(true);
 			}
-			else if(insurance > player.getTotalMoney())
-			{
-				throw new TableException("Invalid insurance: " + insurance);
-			}
 			else
 			{
 				throw new TableException("Invalid insurance: " + insurance);
 			}
 		}
+		//Throws exception if the Player already has Blackjack.
+		else if(player.getHand(0).getHandScore() == BLACKJACK)
+		{
+			throw new PlayerException("Player already has Blackjack");
+		}
+		//Throws exception if the Player's score is greater than Blackjack.
+		else
+		{
+			throw new PlayerException("Player's score greater than Blackjack");
+		}
 	}
 	
 	/**
-	 * @param index
-	 * @return
+	 * Sets a CPU wager at a specified index.
+	 * 
+	 * @param index The index of a CPU.
+	 * @return The insurance of the CPU.
+	 * @since 1.2.0
 	 */
-	public double setCpuInsurance(int index)
+	public double setCPUInsurance(int index)
 	{
 		Player player = null;
 		try 
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 			if(!(players[index] instanceof CPU))
 			{
 				throw new PlayerException("Error this is not a cpu");
@@ -506,6 +566,8 @@ public class Table
 		
 		player = (Player)players[index];
 		double insurance = player.getWager() / 2;
+	
+		//Valid insurance if it's less than total money and greater than 0.
 		while(insurance > player.getTotalMoney() && insurance > 0)
 		{
 			if(insurance > player.getTotalMoney())
@@ -532,10 +594,13 @@ public class Table
 	}
 	
 	/**
-	 * @param index
-	 * @throws TableException
+	 * Validates the index of a Person.
+	 * 
+	 * @param index The index of the Person.
+	 * @throws TableException Thrown if the index is less than 0 or greater 
+	 * than the maximum index.
 	 */
-	private void validatePlayerIndex(int index) throws TableException
+	private void validatePersonIndex(int index) throws TableException
 	{
 		if(index < 0 || index > players.length)
 		{
@@ -543,6 +608,9 @@ public class Table
 		}
 	}
 	
+	/**
+	 * @return
+	 */
 	public boolean attemptDealerCardFlip()
 	{
 		Hand dealerHand = players[players.length - 1].getHand(0);
@@ -558,6 +626,8 @@ public class Table
 	/**
 	 * Pays outs insurance bets if the dealer has blackjack in his first 2 cards
 	 * and sets any insurance bets back to 0 regardless of the result.
+	 * 
+	 * @since 1.0.0
 	 */
 	public String insurancePayout(int index)
 	{	
@@ -607,13 +677,16 @@ public class Table
 	}
 	
 	/**
-	 * @param index
+	 * Resets the insurance of a Player at a specified index.
+	 * 
+	 * @param index The index of the Player.
+	 * @since 1.0.0
 	 */
 	public void resetInsurance(int index)
 	{
 		try
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 			Player player = (Player)players[index];
 			player.setInsurance(0);
 			player.setTookInsurance(false);
@@ -631,12 +704,13 @@ public class Table
 	 * 
 	 * @param player The current player.
 	 * @param handIndex The index of the hand.
+	 * @since 1.0.0
 	 */
 	public Card hit(int newIndex, int handIndex)
 	{
 		try 
 		{
-			validatePlayerIndex(newIndex);
+			validatePersonIndex(newIndex);
 		} 
 		catch (TableException ex) 
 		{
@@ -661,13 +735,14 @@ public class Table
 	 * 
 	 * @param player The current player.
 	 * @param index The index of the hand.
+	 * @since 1.0.0
 	 */
 	public Card doubleDown(int index, int handIndex)
 	{
 		Player player = null;
 		try
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 			player = (Player)players[index];
 			player.setWager(player.getWager() * 2);
 		} 
@@ -692,13 +767,14 @@ public class Table
 	 * Splits the player's hand into 2 hands and doubles their wager.
 	 * 
 	 * @param player The current player.
+	 * @since 1.0.0
 	 */
 	public void split(int index)
 	{
 		Player player = null;
 		try 
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 			player = (Player)players[index];
 			player.setWager(player.getWager() * 2);
 		} 
@@ -720,6 +796,7 @@ public class Table
 	 * in the rest of this round.
 	 * 
 	 * @param player The current player.
+	 * @since 1.0.0
 	 */
 	public double surrender(int index)
 	{
@@ -728,7 +805,7 @@ public class Table
 		//Returns half the player's wager, and sets their wager to 0.
 		try 
 		{
-			validatePlayerIndex(index);
+			validatePersonIndex(index);
 			player = (Player)players[index];
 			returnedAmount = player.getWager() / 2;
 			player.setTotalMoney(player.getTotalMoney() + returnedAmount);
@@ -745,7 +822,9 @@ public class Table
 	}
 	
 	/**
+	 * Flips the dealer's second card.
 	 * 
+	 * @since 1.0.0
 	 */
 	public void flipDealersCard()
 	{
@@ -753,12 +832,16 @@ public class Table
 	}
 	
 	/**
-	 * @return
+	 * Adds cards to the dealer's hand until the value of the hand is greater 
+	 * than or equal to 17.
+	 * 
+	 * @return An array of cards added.
 	 */
 	public Card[] addToDealersHand()
 	{
 		Person dealer = players[players.length - 1];
 		ArrayList<Card> cardsAdded = new ArrayList<Card>();
+		
 		//While the dealer's score is less than 17
 		while(dealer.getHand(0).getHandScore() < 17)
 		{
@@ -769,7 +852,10 @@ public class Table
 	}
 	
 	/**
-	 * Determines whether each player 
+	 * Determines the result of the player's actions this turn.
+	 * 
+	 * @return A String saying the result of the round.
+	 * @since 1.0.0
 	 */
 	public String roundResult(int index) 
 	{	
@@ -1008,6 +1094,7 @@ public class Table
 	 * Pays out blackjack winnings, winnings are paid out at a 3:2.
 	 * 
 	 * @param payee The current player.
+	 * @since 1.0.0
 	 */
 	private void blackjackPayout(Player payee)
 	{
@@ -1034,6 +1121,7 @@ public class Table
 	 * Pays out standard winnings, standard winnings are paid out at 2:1.
 	 * 
 	 * @param payee The current player.
+	 * @since 1.0.0
 	 */
 	private void standardPayout(Player payee)
 	{
@@ -1056,7 +1144,10 @@ public class Table
 	}
 	
 	/**
-	 * @param payee
+	 * Pays out push winnings, push winnings are paid out at 1:1.
+	 * 
+	 * @param payee The current player.
+	 * @since 1.4.0
 	 */
 	private void pushPayout(Player payee)
 	{
@@ -1076,6 +1167,8 @@ public class Table
 	/**
 	 * Resets all of the player's hands, wagers, and if they've surrendered set 
 	 * back to default state and checks if they have enough money to continue.
+	 * 
+	 * @since 1.0.0
 	 */
 	public void prepareForNewRound(int index)
 	{

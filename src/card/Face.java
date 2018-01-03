@@ -3,8 +3,9 @@ package card;
 /**
  * Enumerated type representing the faces of French playing cards.
  * 
- * @author Brodie Robeertsb
- *
+ * @author Brodie Robertson
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public enum Face 
 {
