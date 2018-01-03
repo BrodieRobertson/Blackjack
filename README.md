@@ -1,4 +1,28 @@
 # Blackjack Changelog
+GUI Alpha 1.4.0
+<br>Note:
+I'm really happy to see this project finally leaving it's alpha, for the next update I plan too address features 2, 3, 4, and 5, I may commit an intemediary update but my next major update will be after those features are done, it shouldn't take me too long to do so. On a side note I just learnt that you don't have to use Git as a web based service, I know it seems obvious once you know about it so by the next release I hope to also work out how to use TortoiseGit.
+
+Change Log:
+1. Commenting completed for all of the code.
+2. The entire GUI has been refactored into an Event-Driven format.
+3. The hands of every person are displayed with a basic graphical representation.
+4. Every element of a person's panel which can change will be updated throughout the game.
+5. Added a window at the end of the game prompting the user for what they want to do next.
+6. Moved the player's hand scores labels and scores into arrays.
+
+Future Features:
+1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
+2. Updated elements for components that are already displayed.
+3. Tool tips everywhere that makes sense.
+4. Allow the user to use Enter and Esc in place of pressing Confirm/Yes Clear/No.
+5. Complete the about window which will show the game version and people who worked on the game.
+6. Print the log to file when the game is over.
+7. Decide how many decks should be used based on the number of players.
+8. Slow down the game to allow for the user to understand what is happening without reading the log.
+9. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
+10. Dynamically generate CPU characters initial bets, insurance, and round descisions.
+
 GUI Alpha 1.3.0
 Change Log:
 1. A few windows which had to be modal before have now become modeless.
@@ -12,7 +36,7 @@ Future Features:
 2. Updated elements for components that are already displayed.
 3. Tool tips everywhere that makes sense.
 4. Allow the user to use Enter and Esc in place of pressing Confirm/Yes Clear/No.
-5. Complete the about win which will show the game version and people who worked on the game.
+5. Complete the about window which will show the game version and people who worked on the game.
 6. Print the log to file when the game is over.
 7. Decide how many decks should be used based on the number of players.
 8. Slow down the game to allow for the user to understand what is happening without reading the log.
@@ -32,7 +56,7 @@ Future Features:
 2. Updated elements for components that are already displayed.
 3. Tool tips everywhere that makes sense.
 4. Allow the user to use Enter and Esc in place of pressing Confirm/Yes Clear/No.
-5. Complete the about win which will show the game version and people who worked on the game.
+5. Complete the about window which will show the game version and people who worked on the game.
 6. Print the log to file when the game is over.
 7. Decide how many decks should be used based on the number of players.
 8. Slow down the game to allow for the user to understand what is happening without reading the log.
