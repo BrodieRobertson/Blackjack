@@ -7,11 +7,13 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -19,31 +21,24 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 import card.Card;
 import card.Face;
 import card.Hand;
-import logic.Table;
-import logic.TableException;
-import player.CPU;
-import player.CPUException;
-import player.Dealer;
-import player.Human;
-import player.HumanException;
-import player.Person;
-import player.PersonException;
-import player.Player;
-import player.PlayerException;
+import logic.*;
+import player.*;
 
 /**
  * The graphics layer of the game, manages all of the users interactions with 
  * the logic layer.
  * 
  * @author Brodie Robertson
- * @version 1.4.0
+ * @version 1.4.1
  * @since 1.2.0
  */
 public class GUI extends JFrame 
@@ -93,6 +88,19 @@ public class GUI extends JFrame
 	 */
 	public static final int REDUCED_BUTTON_HGAP = REDUCED_BUTTON_PANEL_HEIGHT / 4;
 	/**
+	 * Shorthand of JComponent constant WHEN_IN_FOCUSED_WINDOW
+	 */
+	public static final int WIFW = JComponent.WHEN_IN_FOCUSED_WINDOW;
+
+	/**
+	 * Every KeyStroke used for one or more key bindings.
+	 */
+	private static final KeyStroke ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), ESC = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+			A = KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), S = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0),
+			H = KeyStroke.getKeyStroke(KeyEvent.VK_H, 0), D = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0),
+			P = KeyStroke.getKeyStroke(KeyEvent.VK_P, 0), U = KeyStroke.getKeyStroke(KeyEvent.VK_U, 0),
+			M = KeyStroke.getKeyStroke(KeyEvent.VK_M, 0);
+	/**
 	 * Font used for all buttons in the game.
 	 */
 	private Font buttonFont = new Font("Verdana", Font.BOLD, 15);
@@ -126,53 +134,6 @@ public class GUI extends JFrame
 	private Table table;
 	
 	/**
-	 * Button listener for the main window.
-	 * 
-	 * @author Brodie Robertson
-	 * @version 1.2.0
-	 * @since 1.2.0
-	 */
-	private class ButtonListener implements ActionListener
-	{
-		/**
-		 * Activates when a button attached to this object is pressed.
-		 * 
-		 * (non-Javadoc)
-		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-		 * @since 1.2.0
-		 */
-		@Override
-		public void actionPerformed(ActionEvent e) 
-		{
-			String command = e.getActionCommand();
-			if(command.equals("Start Game"))
-			{
-				GameSettingsWindow window = new GameSettingsWindow();
-				window.setVisible(true);
-			}
-			else if(command.equals("Quit Game"))
-			{
-				CloseWindow window = new CloseWindow();
-				window.setVisible(true);
-			}
-			else if(command.equals("About"))
-			{
-				AboutWindow window = new AboutWindow();
-				window.setVisible(true);
-			}
-			else if(command.equals("Statistics"))
-			{
-				StatisticsWindow window = new StatisticsWindow();
-				window.setVisible(true);
-			}
-			else
-			{
-				System.out.println("Unexpected Error in the Title Screen");
-			}
-		}
-	}
-	
-	/**
 	 * Window adapter for the main window, activates when the window is closed.
 	 * 
 	 * @author Brodie Robertson
@@ -193,47 +154,11 @@ public class GUI extends JFrame
 	 * Dialog window used for confirming the conclusion of the program.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.2.0
+	 * @version 1.4.1
 	 * @since 1.2.0
 	 */
 	private class CloseWindow extends JDialog
 	{	
-		/**
-		 * Button listener for the CloseWindow.
-		 * 
-		 * @author Brodie Robertson
-		 * @version 1.2.0
-		 * @since 1.2.0
-		 */
-		private class ButtonListener implements ActionListener
-		{
-			/**
-			 * Activates when a button attached to this object is pressed.
-			 * 
-			 * (non-Javadoc)
-			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-			 * @since 1.2.0
-			 */
-			@Override
-			public void actionPerformed(ActionEvent e) 
-			{
-				String command = e.getActionCommand();
-				
-				if(command.equals("Confirm"))
-				{
-					System.exit(0);
-				}
-				else if(command.equals("Cancel"))
-				{
-					dispose();
-				}
-				else
-				{
-					System.out.println("Unexpected Error in the Close Window");
-				}
-			}
-		}
-		
 		/**
 		 * Constructs a close window with a default layout.
 		 * 
@@ -253,24 +178,105 @@ public class GUI extends JFrame
 			message.setHorizontalAlignment(JLabel.CENTER);
 			add(message, BorderLayout.CENTER);
 			
+			//Ends the game.
+			Action confirm = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					System.exit(0);	
+				}
+			};
+			
+			//Disposes of the CloseWindow.
+			Action cancel = new AbstractAction() 
+			{	
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					dispose();
+				}
+			};
+			
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
+			rootPane.getActionMap().put("ENTER", confirm);
+			rootPane.getInputMap(WIFW).put(ESC, "ESC");
+			rootPane.getActionMap().put("ESC", cancel);
+			
+			//Button Panel
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.setLayout(new FlowLayout());
 			buttonPanel.setBackground(Color.DARK_GRAY);
 			JButton confirmButton = new JButton("Confirm");
-			confirmButton.addActionListener(new ButtonListener());
+			confirmButton.addActionListener(confirm);
 			buttonPanel.add(confirmButton);
 			JButton cancelButton = new JButton("Cancel");
-			cancelButton.addActionListener(new ButtonListener());
+			cancelButton.addActionListener(cancel);
 			buttonPanel.add(cancelButton);
 			add(buttonPanel, BorderLayout.SOUTH);
 		}
 	}
 	
 	/**
+	 * Opens a CloseWindow for user confirmation before exiting the program.
+	 * 
+	 * @author Brodie Robertson
+	 * @version 1.4.1
+	 * @since 1.4.1
+	 */
+	private class QuitGame extends AbstractAction
+	{
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			CloseWindow window = new CloseWindow();
+			window.setVisible(true);
+		}
+	}
+	
+	/**
+	 * Opens a StatisicsWindow to show the user various statistics about 
+	 * their current game.
+	 * 
+	 * @author Brodie Robertson
+	 * @version 1.4.1
+	 * @since 1.4.1
+	 */
+	private class Statistics extends AbstractAction
+	{
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			StatisticsWindow window = new StatisticsWindow();
+			window.setVisible(true);
+		}
+	}
+	
+	/**
+	 * Opens a AboutWIndow to show the user various statistics about the game's
+	 * creation.
+	 * 
+	 * @author Brodie Robertsonn
+	 * @version 1.4.1
+	 * @since 1.4.1
+	 */
+	private class About extends AbstractAction
+	{
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			AboutWindow window = new AboutWindow();
+			window.setVisible(true);
+		}	
+	}
+	
+	/**
 	 * Dialog window used for setting the games options.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.2.0
+	 * @version 1.4.1
 	 * @since 1.0.0
 	 */
 	private class GameSettingsWindow extends JDialog
@@ -304,77 +310,11 @@ public class GUI extends JFrame
 		 * Dialog window used for setting the name of a human Player.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.2.0
-		 * @version 1.2.0
+		 * @version 1.4.1
+		 * @since 1.2.0
 		 */
 		private class SetNameWindow extends JDialog
-		{
-			/**
-			 * Index of the human.
-			 */
-			private int index;
-			/**
-			 * Index of the last human.
-			 */
-			private int maxIndex;
-			/**
-			 * Label for displaying a name error.
-			 */
-			private JLabel error;
-			/**
-			 * Text field for the name of the human.
-			 */
-			private JTextField input;
-			
-			/**
-			 * Button listener for the SetNameWindow.
-			 * 
-			 * @author Brodie Robertson
-			 * @version 1.2.0
-			 * @since 1.2.0
-			 */
-			private class ButtonListener implements ActionListener
-			{
-				/**
-				 * Activates when a button attached to this object is pressed.
-				 * 
-				 * (non-Javadoc)
-				 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-				 */
-				@Override
-				public void actionPerformed(ActionEvent e) 
-				{
-					String command = e.getActionCommand();
-					if(command.equals("Confirm"))
-					{
-						//Set the name of the player to the name in the input.
-						try 
-						{
-							table.setPersonNameAtIndex(index, input.getText());
-						} 
-						//Exception thrown when the name is invalid.
-						catch (PersonException ex) 
-						{
-							error.setText(ex.getMessage());
-							input.setText("");
-							return;
-						}
-						dispose();
-						nextName(index, maxIndex);
-					}
-					//Reset the input and error labels.
-					else if(command.equals("Clear"))
-					{
-						input.setText("");
-						error.setText("");
-					}
-					else
-					{
-						System.err.println("Unexpected Error in Set Name Window");
-					}
-				}	
-			}
-			
+		{	
 			/**
 			 * Constructs a SetNameWindow with a title, the index of the human
 			 * and the index of the final human.
@@ -392,28 +332,69 @@ public class GUI extends JFrame
 				setModalityType(ModalityType.APPLICATION_MODAL);
 				setLayout(new BorderLayout());
 				
+				//Request for input
 				JPanel inputPanel = new JPanel(new GridLayout(2, 1));
 				JPanel messagePanel = new JPanel(new GridLayout(1, 2));
 				JLabel command = new JLabel("Please enter the name of this player");
 				command.setToolTipText("Must contain at least 1 character");
 				messagePanel.add(command);
-				error = new JLabel("");
+				JLabel error = new JLabel("");
 				messagePanel.add(error);
 				inputPanel.add(messagePanel);
-				input = new JTextField(30);
+				JTextField input = new JTextField(30);
 				inputPanel.add(input);
 				add(inputPanel, BorderLayout.CENTER);
 				
+				//Confirms the users name input and validates it.
+				Action confirm = new AbstractAction() 
+				{
+					@Override
+					public void actionPerformed(ActionEvent e) 
+					{
+						//Set the name of the player to the name in the input.
+						try 
+						{
+							table.setPersonNameAtIndex(index, input.getText());
+						} 
+						//Exception thrown when the name is invalid.
+						catch (PersonException ex) 
+						{
+							error.setText(ex.getMessage());
+							input.setText("");
+							return;
+						}
+						dispose();
+						nextName(index, maxIndex);
+					}
+				};
+				
+				//Clears the users name input.
+				Action clear = new AbstractAction() 
+				{
+					@Override
+					public void actionPerformed(ActionEvent e) 
+					{
+						input.setText("");
+						error.setText("");
+					}
+				};
+				
+				//Key bindings
+				JRootPane rootPane = getRootPane();
+				rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
+				rootPane.getActionMap().put("ENTER", confirm);
+				rootPane.getInputMap(WIFW).put(ESC, "ESC");
+				rootPane.getActionMap().put("ESC", clear);
+				
+				//Button Panel
 				JPanel buttonPanel = new JPanel(new FlowLayout());
 				JButton confirmButton = new JButton("Confirm");
-				confirmButton.addActionListener(new ButtonListener());
+				confirmButton.addActionListener(confirm);
 				buttonPanel.add(confirmButton);
 				JButton clearButton = new JButton("Clear");
-				clearButton.addActionListener(new ButtonListener());
+				clearButton.addActionListener(clear);
 				buttonPanel.add(clearButton);
 				add(buttonPanel, BorderLayout.SOUTH);
-				this.index = index;
-				this.maxIndex = maxIndex;
 			}
 			
 			/**
@@ -442,28 +423,26 @@ public class GUI extends JFrame
 		}
 		
 		/**
-		 * Button listener for the SetNameWindow.
+		 * Constructs a GameSettingsWindow with a default layout.
 		 * 
-		 * @author Brodie Robertson
-		 * @version 1.2.0
 		 * @since 1.2.0
 		 */
-		private class ButtonListener implements ActionListener
-		{	
-			/**
-			 * Activates when a button attached to this object is pressed.
-			 * 
-			 * (non-Javadoc)
-			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-			 * @since 1.2.0
-			 */
-			@Override
-			public void actionPerformed(ActionEvent e) 
-			{
-				String command = e.getActionCommand();
-				int humanPlayers;
-				if(command.equals("Confirm"))
+		public GameSettingsWindow()
+		{
+			setTitle("Game Settings");
+			setSize(reducedWindow);
+			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+			setResizable(false);
+			setModalityType(ModalityType.APPLICATION_MODAL);
+			setLayout(new BorderLayout());
+			
+			//Confirms the users game setting input.
+			Action confirm = new AbstractAction() 
+			{	
+				@Override
+				public void actionPerformed(ActionEvent e) 
 				{
+					int humanPlayers;
 					table = new Table();
 					roundError.setText("");
 					humanError.setText("");
@@ -575,46 +554,24 @@ public class GUI extends JFrame
 							+ " name", 0, humanPlayers);
 					window.setVisible(true);
 				}
-				//Resets the input and error messages.
-				else if(command.equals("Clear"))
+			};
+			
+			//Clears the users name input.
+			Action clear = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
 				{
 					resetInputs();
 				}
-				else
-				{
-					System.out.println("Unexpected Error in Game Settings Window");
-				}
-			}
+			};
 			
-			/**
-			 * Resets the all of the inputs and error messages.
-			 * 
-			 * @since 1.2.0
-			 */
-			private void resetInputs()
-			{
-				roundInput.setText("");
-				humanInput.setText("");
-				cpuInput.setText("");
-				roundError.setText("");
-				humanError.setText("");
-				cpuError.setText("");
-			}
-		}
-		
-		/**
-		 * Constructs a GameSettingsWindow with a default layout.
-		 * 
-		 * @since 1.2.0
-		 */
-		public GameSettingsWindow()
-		{
-			setTitle("Game Settings");
-			setSize(reducedWindow);
-			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-			setResizable(false);
-			setModalityType(ModalityType.APPLICATION_MODAL);
-			setLayout(new BorderLayout());
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
+			rootPane.getActionMap().put("ENTER", confirm);
+			rootPane.getInputMap(WIFW).put(ESC, "ESC");
+			rootPane.getActionMap().put("ESC", clear);
 			
 			JPanel inputPanel = new JPanel(new GridLayout(6, 1));
 			
@@ -658,13 +615,28 @@ public class GUI extends JFrame
 					REDUCED_BUTTON_HGAP, REDUCED_BUTTON_VGAP));
 			
 			JButton confirmButton = new JButton("Confirm");
-			confirmButton.addActionListener(new ButtonListener());
+			confirmButton.addActionListener(confirm);
 			buttonPanel.add(confirmButton);
 			JButton clearButton = new JButton("Clear");
-			clearButton.addActionListener(new ButtonListener());
+			clearButton.addActionListener(clear);
 			buttonPanel.add(clearButton);
 			add(inputPanel, BorderLayout.CENTER);
 			add(buttonPanel, BorderLayout.SOUTH);
+		}
+		
+		/**
+		 * Resets the all of the inputs and error messages.
+		 * 
+		 * @since 1.2.0
+		 */
+		private void resetInputs()
+		{
+			roundInput.setText("");
+			humanInput.setText("");
+			cpuInput.setText("");
+			roundError.setText("");
+			humanError.setText("");
+			cpuError.setText("");
 		}
 	}
 	
@@ -1019,46 +991,45 @@ public class GUI extends JFrame
 	 * Dialog window used for setting a human's wager.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.3.0
+	 * @version 1.4.1
 	 * @since 1.2.0
 	 */
 	private class WagerWindow extends JDialog
-	{
+	{				
 		/**
-		 * Label displaying an error with the input.
-		 */
-		private JLabel error;
-		/**
-		 * Text field for human's wager.
-		 */
-		private JTextField input;
-		/**
-		 * Index of the human
-		 */
-		private int index;
-		
-		/**
-		 * Button listener for the WagerWindow.
+		 * Constructs a WagerWindow with a default layout.
 		 * 
-		 * @author Brodie Robertson
-		 * @version 1.2.0
+		 * @param index The index of a human.
 		 * @since 1.2.0
 		 */
-		private class ButtonListener implements ActionListener
+		public WagerWindow(int index)
 		{
-			/**
-			 * Activates when a button attached to this object is pressed.
-			 * 
-			 * (non-Javadoc)
-			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-			 * @since 1.2.0
-			 */
-			@Override
-			public void actionPerformed(ActionEvent e) 
+			String name = table.getPersonAtIndex(index).getName();
+			setTitle(name + "'s Wager");
+			setSize(tinyWindow);
+			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+			setResizable(false);
+			setModalityType(ModalityType.MODELESS);
+			setLayout(new BorderLayout());
+			
+			//Request for input.
+			JPanel inputPanel = new JPanel(new GridLayout(2, 1));
+			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
+			JLabel command = new JLabel("Please enter " + name + "'s  wager");
+			command.setToolTipText("Wager must be between" + Table.MINWAGER + " and " + Table.MAXWAGER);
+			messagePanel.add(command);
+			JLabel error = new JLabel("");
+			messagePanel.add(error);
+			inputPanel.add(messagePanel);
+			JTextField input = new JTextField(30);
+			inputPanel.add(input);
+			add(inputPanel, BorderLayout.CENTER);
+			
+			//Confirms the users wager input and validates it.
+			Action confirm = new AbstractAction() 
 			{
-				String command = e.getActionCommand();
-				
-				if(command.equals("Confirm"))
+				@Override
+				public void actionPerformed(ActionEvent arg0) 
 				{
 					double wager;
 					try
@@ -1087,58 +1058,35 @@ public class GUI extends JFrame
 					nextWager(index);
 					return;
 				}
-				//Resets the input and error message
-				else if(command.equals("Clear"))
+			};
+			
+			//Clears the users wager input.
+			Action clear = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
 				{
 					input.setText("");
 					error.setText("");
 				}
-				else
-				{
-					System.out.println("Unexpected Error on Wager Window");
-				}
-			}
-		}
-		
-		/**
-		 * Constructs a WagerWindow with a default layout.
-		 * 
-		 * @param index The index of a human.
-		 * @since 1.2.0
-		 */
-		public WagerWindow(int index)
-		{
-			String name = table.getPersonAtIndex(index).getName();
-			setTitle(name + "'s Wager");
-			setSize(tinyWindow);
-			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-			setResizable(false);
-			setModalityType(ModalityType.MODELESS);
-			setLayout(new BorderLayout());
+			};
 			
-			//Request for input.
-			JPanel inputPanel = new JPanel(new GridLayout(2, 1));
-			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
-			JLabel command = new JLabel("Please enter " + name + "'s  wager");
-			command.setToolTipText("Wager must be between" + Table.MINWAGER + " and " + Table.MAXWAGER);
-			messagePanel.add(command);
-			error = new JLabel("");
-			messagePanel.add(error);
-			inputPanel.add(messagePanel);
-			input = new JTextField(30);
-			inputPanel.add(input);
-			add(inputPanel, BorderLayout.CENTER);
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
+			rootPane.getActionMap().put("ENTER", confirm);
+			rootPane.getInputMap(WIFW).put(ESC, "ESC");
+			rootPane.getActionMap().put("ESC", clear);
 			
-			//Button Panel.
+			//Button Panel
 			JPanel buttonPanel = new JPanel(new FlowLayout());
 			JButton confirmButton = new JButton("Confirm");
-			confirmButton.addActionListener(new ButtonListener());
+			confirmButton.addActionListener(confirm);
 			buttonPanel.add(confirmButton);
 			JButton clearButton = new JButton("Clear");
-			clearButton.addActionListener(new ButtonListener());
+			clearButton.addActionListener(clear);
 			buttonPanel.add(clearButton);
 			add(buttonPanel, BorderLayout.SOUTH);
-			this.index = index;
 		}
 	}
 	
@@ -1146,134 +1094,11 @@ public class GUI extends JFrame
 	 * Dialog window used for setting a human's insurance.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.0
+	 * @version 1.4.1
 	 * @since 1.2.0
 	 */
 	private class InsuranceWindow extends JDialog
-	{
-		/**
-		 * Index of the human.
-		 */
-		private int index;
-		/**
-		 * Label displaying an error with the input.
-		 */
-		private JLabel error;
-		
-		/**
-		 * Button listener for the InsuranceWindow.
-		 * 
-		 * @author Brodie Robertson
-		 * @version 1.2.0
-		 * @since 1.2.0
-		 */
-		private class ButtonListener implements ActionListener
-		{
-			/**
-			 * Text field for the human's insurance.
-			 */
-			private JTextField input;
-			
-			/**
-			 * Activates when a button attached to this object is pressed.
-			 * 
-			 * (non-Javadoc)
-			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-			 * @since 1.2.0
-			 */
-			@Override
-			public void actionPerformed(ActionEvent e) 
-			{
-				Player player = (Player)table.getPersonAtIndex(index);
-				String cmd = e.getActionCommand();
-				
-				if(cmd.equals("Yes"))
-				{
-					if(player.getTotalMoney() == 0)
-					{
-						error.setText(player.getName() + " has no money remaining");
-						return;
-					}
-					else
-					{
-						getContentPane().removeAll();;
-						setLayout(new BorderLayout());
-						
-						//Request for input.
-						JPanel inputPanel = new JPanel(new GridLayout(2, 1));
-						JPanel messagePanel = new JPanel(new GridLayout(1, 2));
-						JLabel command = new JLabel("How much would you like?");
-						messagePanel.add(command);
-						error = new JLabel("");
-						messagePanel.add(error);
-						inputPanel.add(messagePanel);
-						input = new JTextField(30);
-						inputPanel.add(input);
-						add(inputPanel, BorderLayout.CENTER);
-						
-						//Button panel.
-						JPanel buttonPanel = new JPanel(new FlowLayout());
-						JButton confirmButton = new JButton("Confirm");
-						confirmButton.addActionListener(this);
-						buttonPanel.add(confirmButton);
-						JButton clearButton = new JButton("Clear");
-						clearButton.addActionListener(this);
-						buttonPanel.add(clearButton);
-						add(buttonPanel, BorderLayout.SOUTH);
-						
-						getContentPane().revalidate();
-						repaint();
-						gameLog.setText(gameLog.getText() + player.getName() + " takes insurance\n");
-					}
-				}
-				//Closes the insurance window.
-				else if(cmd.equals("No"))
-				{
-					gameLog.setText(gameLog.getText() + player.getName() + " doesn't take insurance\n");
-					dispose();
-					nextInsurance(index);
-				}
-				//Confirm the input.
-				else if(cmd.equals("Confirm"))
-				{
-					double insurance = 0;
-					try
-					{
-						insurance = Integer.parseInt(input.getText());
-						table.setHumanInsurance(index, insurance);
-					}
-					//Error casting input to integer.
-					catch(NumberFormatException ex)
-					{
-						input.setText("");
-						error.setText("Invalid input, please enter a valid number");
-						return;
-					}
-					//Invalid insurance.
-					catch(PlayerException | TableException ex)
-					{
-						input.setText("");
-						error.setText(ex.getMessage());
-						return;
-					}
-					gameLog.setText(gameLog.getText() + player.getName() + " has $" + 
-							insurance + " of insurance\n");
-					dispose();
-					nextInsurance(index);
-				}
-				//Resets the input and error message.
-				else if(cmd.equals("Clear"))
-				{
-					error.setText("");
-					input.setText("");
-				}
-				else
-				{
-					System.out.println("Unexpected Error on Insurance Window");
-				}
-			}
-		}
-		
+	{		
 		/**
 		 * Constructs a InsuranceWindow with a default layout.
 		 * 
@@ -1294,20 +1119,142 @@ public class GUI extends JFrame
 			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
 			JLabel command = new JLabel("Would you like insurance?");
 			messagePanel.add(command);
-			error = new JLabel("");
+			JLabel error = new JLabel("");
 			messagePanel.add(error);
 			add(messagePanel, BorderLayout.CENTER);
 			
-			//Button panel.
+			Player player = (Player)table.getPersonAtIndex(index);
+			JTextField input = new JTextField();
+			
+			//Confims the users insurance input and validates it.
+			Action confirm = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					double insurance = 0;
+					try
+					{
+						insurance = Integer.parseInt(input.getText());
+						table.setHumanInsurance(index, insurance);
+					}
+					//Error casting input to integer.
+					catch(NumberFormatException ex)
+					{
+						input.setText("");
+						error.setText("Invalid input, please enter a valid "
+								+ "number");
+						return;
+					}
+					//Invalid insurance.
+					catch(PlayerException | TableException ex)
+					{
+						input.setText("");
+						error.setText(ex.getMessage());
+						return;
+					}
+					gameLog.setText(gameLog.getText() + player.getName()
+							+ " has $" + insurance + " of insurance\n");
+					dispose();
+					nextInsurance(index);
+				}
+			};
+			
+			//Clears the users insurance input.
+			Action clear = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					error.setText("");
+					input.setText("");
+				}
+			};
+			
+			//Confirms that the user wishes to take insurance and validates
+			//that they can.
+			Action yes = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					if(player.getTotalMoney() == 0)
+					{
+						error.setText(player.getName() + " has no money remaining");
+						return;
+					}
+					else
+					{
+						getContentPane().removeAll();;
+						setLayout(new BorderLayout());
+						
+						//Request for input.
+						JPanel inputPanel = new JPanel(new GridLayout(2, 1));
+						JPanel messagePanel = new JPanel(new GridLayout(1, 2));
+						JLabel command = new JLabel("How much would you like?");
+						messagePanel.add(command);
+						error.setText("");;
+						messagePanel.add(error);
+						inputPanel.add(messagePanel);
+						input.setText("");;
+						inputPanel.add(input);
+						add(inputPanel, BorderLayout.CENTER);
+						
+						//Key bindings
+						JRootPane rootPane = getRootPane();
+						rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
+						rootPane.getActionMap().put("ENTER", confirm);
+						rootPane.getInputMap(WIFW).put(ESC, "ESC");
+						rootPane.getActionMap().put("ESC", clear);
+						
+						//Button panel.
+						JPanel buttonPanel = new JPanel(new FlowLayout());
+						JButton confirmButton = new JButton("Confirm");
+						confirmButton.addActionListener(confirm);
+						buttonPanel.add(confirmButton);
+						JButton clearButton = new JButton("Clear");
+						clearButton.addActionListener(clear);
+						buttonPanel.add(clearButton);
+						add(buttonPanel, BorderLayout.SOUTH);
+						
+						
+						getContentPane().revalidate();
+						repaint();
+						gameLog.setText(gameLog.getText() + player.getName() 
+						+ " takes insurance\n");
+					}
+				}
+			};
+			
+			//Confirms that the user does not wish to take insurance.
+			Action no = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					gameLog.setText(gameLog.getText() + player.getName() 
+					+ " doesn't take insurance\n");
+					dispose();
+					nextInsurance(index);
+				}
+			};
+			
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
+			rootPane.getActionMap().put("ENTER", yes);
+			rootPane.getInputMap(WIDTH).put(ESC, "ESC");
+			rootPane.getActionMap().put("ESC", no);
+			
+			//Button panel
 			JPanel buttonPanel = new JPanel(new FlowLayout());
 			JButton yesButton = new JButton("Yes");
-			yesButton.addActionListener(new ButtonListener());
+			yesButton.addActionListener(yes);
 			buttonPanel.add(yesButton);
 			JButton noButton = new JButton("No");
-			noButton.addActionListener(new ButtonListener());
+			noButton.addActionListener(no);
 			buttonPanel.add(noButton);
 			add(buttonPanel, BorderLayout.SOUTH);
-			this.index = index;
 		}
 	}
 	
@@ -1315,7 +1262,7 @@ public class GUI extends JFrame
 	 * Dialog window used for playing out a human's turn.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.0
+	 * @version 1.4.1
 	 * @since 1.2.0
 	 */
 	private class TurnWindow extends JDialog
@@ -1335,42 +1282,193 @@ public class GUI extends JFrame
 		/**
 		 * Index of the human.
 		 */
+		private int handIndex = 0;
+		/**
+		 * The index of the human.
+		 */
 		private int index;
 		
 		/**
-		 * Main button listener for the TurnWindow.
+		 * Ends the Human's turn with this hand and displays the results.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.0
-		 * @since 1.2.0
+		 * @version 1.4.1
+		 * @since 1.4.1
 		 */
-		private class ButtonListener implements ActionListener
+		private class SplitStand extends AbstractAction
 		{
-			/**
-			 * Activates when a button attached to this object is pressed.
-			 * 
-			 * (non-Javadoc)
-			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-			 * @since 1.2.0
-			 */
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
-				String cmd = e.getActionCommand();
-				Player player = (Player)table.getPersonAtIndex(0);
+				Player player = (Player)table.getPersonAtIndex(index);
+				gameLog.setText(gameLog.getText() + "Stands hand " 
+						+ (handIndex + 1) + " with a score of " + player.
+						getHand(0).getHandScore() + "\n");
+				nextHand(handIndex);
+			}
+		}
+		
+		/**
+		 * Deals the human another card to this hand and displays the reuslts.
+		 * 
+		 * @author Brodie Robertson
+		 * @version 1.4.1
+		 * @since 1.4.1
+		 */
+		private class SplitHit extends AbstractAction
+		{
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				Player player = (Player)table.getPersonAtIndex(index);
+				error.setText("");
+				Card card = table.hit(index, handIndex);
+				player = (Player)table.getPersonAtIndex(index);
+				gameLog.setText(gameLog.getText() + player.getName() 
+					+ " hits and is dealt a " + card + " to hand " + 
+					(handIndex + 1) + "\n");
+				playerPanels[index].updatePanel(index);
 				
-				//Ends the player's turn.
-				if(cmd.equals("Stand"))
+				int handScore = player.getHand(handIndex).getHandScore();
+				//Rebuilds the window if the hand's score is less than
+				//Blackjack.
+				if(handScore < Table.BLACKJACK)
+				{
+					//Key bindings
+					JRootPane rootPane = getRootPane();
+					rootPane.getInputMap(WIFW).remove(D);
+					rootPane.getActionMap().remove(D);
+					
+					//Button Panel
+					buttonPanel.removeAll();
+					buttonPanel.setLayout(new FlowLayout());
+					JButton standButton = new JButton("Stand");
+					standButton.addActionListener(new SplitStand());
+					buttonPanel.add(standButton);
+					JButton hitButton = new JButton("Hit");
+					hitButton.addActionListener(new SplitHit());
+					buttonPanel.add(hitButton);
+					buttonPanel.revalidate();
+					buttonPanel.repaint();
+				}
+				//If the hand's score is equal to Blackjack
+				else if(handScore == Table.BLACKJACK)
 				{
 					gameLog.setText(gameLog.getText() + player.getName() 
-						+ " stands with a score of " + player.getHand(0).
-						getHandScore() + "\n");
+						+ " has Blackjack and is forced to stand\n");
+					nextHand(handIndex);
+				}
+				//If the hand's score is greater than Blackjack.
+				else if(player.getBusted())
+				{
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " busts\n");
 					dispose();
 					nextPlayer(index);
 				}
-				//Deals the human a new card and rebuilds the window.
-				else if(cmd.equals("Hit"))
+			}
+		}
+		
+		/**
+		 * Doubles the Human's wager, deals them a second card and then 
+		 * displays the results.
+		 * 
+		 * @author Brodie Robertson
+		 * @version 1.4.1
+		 * @since 1.4.1
+		 */
+		private class SplitDoubleDown extends AbstractAction
+		{
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				Player player = (Player)table.getPersonAtIndex(index);
+				error.setText("");
+				//If the human can afford to double down.
+				if(player.getTotalMoney() >= player.getWager())
 				{
+					Card card = table.doubleDown(index, handIndex);
+					player = (Player)table.getPersonAtIndex(index);
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " doubles down hand " + (handIndex + 1) + " and their "
+						+ "wager has increased to " + player.getWager() + "\n");
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " is dealt a " + card + " to hand " + (handIndex + 1) + "\n");
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " now has a score of " + player.getHand(handIndex).
+						getHandScore() + "\n");
+					
+					playerPanels[index].updatePanel(index);
+					//If the player's hand score is above Blackjack
+					if(player.getBusted())
+					{
+						gameLog.setText(gameLog.getText() 
+								+ player.getName() + " busts\n");
+						dispose();
+						nextPlayer(handIndex);
+					}
+					//If not go to the next hand.
+					else
+					{
+						nextHand(handIndex);
+					}
+				}
+				//Error if the human can't afford to double down.
+				else
+				{
+					error.setText("You don't have enough money to double down");
+					return;
+				}	
+			}
+		}
+		
+		/**
+		 * Constructs the TurnWindow with a default layout.
+		 * 
+		 * @param index The index of the human.
+		 * @since 1.2.0
+		 */
+		public TurnWindow(int index)
+		{
+			String name = table.getPersonAtIndex(index).getName();
+			setTitle(name + "'s Turn");
+			setSize(tinyWindow);
+			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+			setResizable(false);
+			setModalityType(ModalityType.MODELESS);
+			setLayout(new BorderLayout());
+			this.index = index;
+			
+			//Request for action
+			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
+			command = new JLabel("What action would you like to take?");
+			messagePanel.add(command);
+			error = new JLabel("");
+			messagePanel.add(error);
+			add(messagePanel, BorderLayout.CENTER);
+			
+			//Ends the Human's turn and displays the results.
+			Action stand = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					Player player = (Player)table.getPersonAtIndex(0);
+					gameLog.setText(gameLog.getText() + player.getName() 
+					+ " stands with a score of " + player.getHand(0).
+					getHandScore() + "\n");
+					dispose();
+					nextPlayer(index);
+				}
+			};
+			
+			//Deals the Human another card and displays the result.
+			Action hit = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					Player player = (Player)table.getPersonAtIndex(0);
 					error.setText("");
 					Card card = table.hit(index, 0);
 					player = (Player)table.getPersonAtIndex(index);
@@ -1383,10 +1481,20 @@ public class GUI extends JFrame
 					//If hand score is less than Blackjack.
 					if(handScore < Table.BLACKJACK)
 					{
+						//Key bindings
+						JRootPane rootPane = getRootPane();
+						rootPane.getInputMap(WIFW).clear();
+						rootPane.getActionMap().clear();
+						rootPane.getInputMap(WIFW).put(S, "S");
+						rootPane.getActionMap().put("S", stand);
+						rootPane.getInputMap(WIFW).put(H, "H");
+						rootPane.getActionMap().put("H", this);
+						
+						//Button panel
 						buttonPanel.removeAll();
 						buttonPanel.setLayout(new FlowLayout());
 						JButton standButton = new JButton("Stand");
-						standButton.addActionListener(this);
+						standButton.addActionListener(stand);
 						buttonPanel.add(standButton);
 						JButton hitButton = new JButton("Hit");
 						hitButton.addActionListener(this);
@@ -1409,11 +1517,18 @@ public class GUI extends JFrame
 							+ " busts\n");
 						dispose();
 						nextPlayer(index);
-					}
+					}	
 				}
-				//Doubles the humans wager and deals a new card.
-				else if(cmd.equals("Double Down"))
+			};
+			
+			//Doubles the Human's wager, deals them another card and displays 
+			//the result.
+			Action doubleDown = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
 				{
+					Player player = (Player)table.getPersonAtIndex(0);
 					error.setText("");
 					//Doubles the wager and deals a new card if the human can 
 					//afford to.
@@ -1446,10 +1561,16 @@ public class GUI extends JFrame
 						return;
 					}
 				}
-				//Splits the humans hand and double wager if the 2 cards in the
-				//humans hand match and rebuilds the window.
-				else if(cmd.equals("Split"))
+			};
+			
+			//Doubles the Human's wager and splits there hand into 2 distinct 
+			//hands.
+			Action split = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
 				{
+					Player player = (Player)table.getPersonAtIndex(0);
 					error.setText("");
 					//If the human meet the requirements for a split.
 					if(player.getTotalMoney() >= player.getWager() && (player.
@@ -1466,18 +1587,30 @@ public class GUI extends JFrame
 							+ player.getWager() + "\n");
 						playerPanels[index].updatePanel(index);
 						
-						int handIndex = 0;
-						buttonPanel.removeAll();
 						command.setText("What action would you like to take with hand " 
 								+ (handIndex + 1) + "?");
+						
+						//Key bindings
+						JRootPane rootPane = getRootPane();
+						rootPane.getInputMap(WIFW).clear();
+						rootPane.getActionMap().clear();
+						rootPane.getInputMap(WIFW).put(S, "S");
+						rootPane.getActionMap().put("S", new SplitStand());
+						rootPane.getInputMap(WIFW).put(H, "H");
+						rootPane.getActionMap().put("H", new SplitHit());
+						rootPane.getInputMap(WIFW).put(D, "D");
+						rootPane.getActionMap().put("D", new SplitDoubleDown());
+						
+						//Button panel
+						buttonPanel.removeAll();
 						JButton standButton = new JButton("Stand");
-						standButton.addActionListener(new SplitButtonListener(handIndex));
+						standButton.addActionListener(new SplitStand());
 						buttonPanel.add(standButton);
 						JButton hitButton = new JButton("Hit");
-						hitButton.addActionListener(new SplitButtonListener(handIndex));
+						hitButton.addActionListener(new SplitHit());
 						buttonPanel.add(hitButton);
 						JButton doubleDownButton = new JButton("Double Down");
-						doubleDownButton.addActionListener(new SplitButtonListener(handIndex));
+						doubleDownButton.addActionListener(new SplitDoubleDown());
 						buttonPanel.add(doubleDownButton);
 						buttonPanel.repaint();
 						buttonPanel.revalidate();
@@ -1498,9 +1631,16 @@ public class GUI extends JFrame
 						return;
 					}
 				}
-				//The human loses the round and half their wager is returned.
-				else if(cmd.equals("Surrender"))
+			};
+			
+			//Nullifies the Human's chances of winning the round and returns
+			//half of their bet.
+			Action surrender = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
 				{
+					Player player = (Player)table.getPersonAtIndex(0);
 					double returnedAmount = table.surrender(index);
 					gameLog.setText(gameLog.getText() + player.getName()
 						+ " surrenders and half of their wager is returned\n");
@@ -1510,228 +1650,83 @@ public class GUI extends JFrame
 					dispose();
 					nextPlayer(index);
 				}
-				else
-				{
-					System.out.println("Unexpected Error on Turn Window");
-				}
-			}
-		}
-		
-		/**
-		 * Button listener for use with the TurnWindow after a hand has been 
-		 * split.
-		 * 
-		 * @author Brodie Robertson
-		 * @version 1.4.0
-		 * @since 1.2.0
-		 */
-		private class SplitButtonListener implements ActionListener
-		{
-			private int handIndex;
-			Player player = (Player)table.getPersonAtIndex(index);
+			};
 			
-			/**
-			 * Constructs a SplitButtonLister with a hand index.
-			 * 
-			 * @param handIndex
-			 */
-			public SplitButtonListener(int handIndex)
-			{
-				this.handIndex = handIndex;
-			}
-
-			/**
-			 * Activates when a button attached to this object is pressed.
-			 * 
-			 * (non-Javadoc)
-			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-			 * @since 1.2.0
-			 */
-			@Override
-			public void actionPerformed(ActionEvent e) 
-			{
-				String cmd = e.getActionCommand();
-				
-				//Ends the humans turn.
-				if(cmd.equals("Stand"))
-				{
-					gameLog.setText(gameLog.getText() + "Stands hand " 
-							+ (handIndex + 1) + " with a score of " + player.
-							getHand(0).getHandScore() + "\n");
-					nextHand(handIndex);
-				}
-				//Deals the human another card and rebuilds the window.
-				else if(cmd.equals("Hit"))
-				{
-					error.setText("");
-					Card card = table.hit(index, handIndex);
-					player = (Player)table.getPersonAtIndex(index);
-					gameLog.setText(gameLog.getText() + player.getName() 
-						+ " hits and is dealt a " + card + " to hand " + 
-						(handIndex + 1) + "\n");
-					playerPanels[index].updatePanel(index);
-					
-					int handScore = player.getHand(handIndex).getHandScore();
-					//Rebuilds the window if the hand's score is less than
-					//Blackjack.
-					if(handScore < Table.BLACKJACK)
-					{
-						buttonPanel.removeAll();
-						buttonPanel.setLayout(new FlowLayout());
-						JButton standButton = new JButton("Stand");
-						standButton.addActionListener(this);
-						buttonPanel.add(standButton);
-						JButton hitButton = new JButton("Hit");
-						hitButton.addActionListener(this);
-						buttonPanel.add(hitButton);
-						buttonPanel.revalidate();
-						buttonPanel.repaint();
-					}
-					//If the hand's score is equal to Blackjack
-					else if(handScore == Table.BLACKJACK)
-					{
-						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " has Blackjack and is forced to stand\n");
-						nextHand(handIndex);
-					}
-					//If the hand's score is greater than Blackjack.
-					else if(player.getBusted())
-					{
-						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " busts\n");
-						dispose();
-						nextPlayer(index);
-					}
-				}
-				//Deals the human another card and doubles the humans wager if 
-				//they can afford it.
-				else if(cmd.equals("Double Down"))
-				{
-					error.setText("");
-					//If the human can afford to double down.
-					if(player.getTotalMoney() >= player.getWager())
-					{
-						Card card = table.doubleDown(index, handIndex);
-						player = (Player)table.getPersonAtIndex(index);
-						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " doubles down hand " + (handIndex + 1) + " and their "
-							+ "wager has increased to " + player.getWager() + "\n");
-						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " is dealt a " + card + " to hand " + (handIndex + 1) + "\n");
-						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " now has a score of " + player.getHand(handIndex).
-							getHandScore() + "\n");
-						
-						playerPanels[index].updatePanel(index);
-						//If the player's hand score is above Blackjack
-						if(player.getBusted())
-						{
-							gameLog.setText(gameLog.getText() 
-									+ player.getName() + " busts\n");
-							dispose();
-							nextPlayer(handIndex);
-						}
-						//If not go to the next hand.
-						else
-						{
-							nextHand(handIndex);
-						}
-					}
-					//Error if the human can't afford to double down.
-					else
-					{
-						error.setText("You don't have enough money to double down");
-						return;
-					}
-				}
-				else
-				{
-					System.out.println("Unexpected error in Split Turn Window");
-				}
-			}
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap(WIFW).put(S, "S");
+			rootPane.getActionMap().put("S", stand);
+			rootPane.getInputMap(WIFW).put(H, "H");
+			rootPane.getActionMap().put("H", hit);
+			rootPane.getInputMap(WIFW).put(D, "D");
+			rootPane.getActionMap().put("D", doubleDown);
+			rootPane.getInputMap(WIFW).put(P, "P");
+			rootPane.getActionMap().put("P", split);
+			rootPane.getInputMap(WIFW).put(U, "U");
+			rootPane.getActionMap().put("U", surrender);
 			
-			/**
-			 * Checks if there are any hands remaining, if not move onto the 
-			 * next stage of the game.
-			 * 
-			 * @param handIndex The index of the hand.
-			 * @since 1.3.0
-			 */
-			private void nextHand(int handIndex)
-			{
-				Hand[] hands = player.getHands();
-				
-				//If there is a hand remaining, rebuild the window.
-				if(handIndex + 1 < hands.length)
-				{
-					int newHandIndex = handIndex + 1;
-					command.setText("What action would you like to take with hand " 
-							+ (newHandIndex + 1) + "?");
-					buttonPanel.removeAll();
-					JButton standButton = new JButton("Stand");
-					standButton.addActionListener(new SplitButtonListener(newHandIndex));
-					buttonPanel.add(standButton);
-					JButton hitButton = new JButton("Hit");
-					hitButton.addActionListener(new SplitButtonListener(newHandIndex));
-					buttonPanel.add(hitButton);
-					JButton doubleDownButton = new JButton("Double Down");
-					doubleDownButton.addActionListener(new SplitButtonListener(newHandIndex));
-					buttonPanel.add(doubleDownButton);
-				}
-				//If not go to the next player.
-				else
-				{
-					dispose();
-					nextPlayer(index);
-				}
-			}
-		}
-		
-		/**
-		 * Constructs the TurnWindow with a default layout.
-		 * 
-		 * @param index The index of the human.
-		 * @since 1.2.0
-		 */
-		public TurnWindow(int index)
-		{
-			String name = table.getPersonAtIndex(index).getName();
-			setTitle(name + "'s Turn");
-			setSize(tinyWindow);
-			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-			setResizable(false);
-			setModalityType(ModalityType.MODELESS);
-			setLayout(new BorderLayout());
-			
-			//Request for action.
-			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
-			command = new JLabel("What action would you like to take?");
-			messagePanel.add(command);
-			error = new JLabel("");
-			messagePanel.add(error);
-			add(messagePanel, BorderLayout.CENTER);
-			
-			
-			//Button panel.
+			//Button panel
 			buttonPanel = new JPanel(new FlowLayout());
 			JButton standButton = new JButton("Stand");
-			standButton.addActionListener(new ButtonListener());
+			standButton.addActionListener(stand);
 			buttonPanel.add(standButton);
 			JButton hitButton = new JButton("Hit");
-			hitButton.addActionListener(new ButtonListener());
+			hitButton.addActionListener(hit);
 			buttonPanel.add(hitButton);
 			JButton doubleDownButton = new JButton("Double Down");
-			doubleDownButton.addActionListener(new ButtonListener());
+			doubleDownButton.addActionListener(doubleDown);
 			buttonPanel.add(doubleDownButton);
 			JButton splitButton = new JButton("Split");
-			splitButton.addActionListener(new ButtonListener());
+			splitButton.addActionListener(split);
 			buttonPanel.add(splitButton);
 			JButton surrenderButton = new JButton("Surrender");
-			surrenderButton.addActionListener(new ButtonListener());
+			surrenderButton.addActionListener(surrender);
 			buttonPanel.add(surrenderButton);
 			add(buttonPanel, BorderLayout.SOUTH);
+		}
+		
+		/**
+		 * Checks if there are any hands remaining, if not move onto the 
+		 * next stage of the game.
+		 * 
+		 * @param handIndex The index of the hand.
+		 * @since 1.3.0
+		 */
+		private void nextHand(int handIndex)
+		{
+			Hand[] hands = table.getPersonAtIndex(index).getHands();
 			
-			this.index = index;
+			//If there is a hand remaining, rebuild the window.
+			if(handIndex + 1 < hands.length)
+			{
+				handIndex++;
+				error.setText("");
+				command.setText("What action would you like to take with hand " 
+						+ (handIndex + 1) + "?");
+				
+				//Key bindings
+				JRootPane rootPane = getRootPane();
+				rootPane.getInputMap(WIFW).put(D, "D");
+				rootPane.getActionMap().put("D", new SplitDoubleDown());
+				
+				//Button Panel
+				buttonPanel.removeAll();
+				JButton standButton = new JButton("Stand");
+				standButton.addActionListener(new SplitStand());
+				buttonPanel.add(standButton);
+				JButton hitButton = new JButton("Hit");
+				hitButton.addActionListener(new SplitHit());
+				buttonPanel.add(hitButton);
+				JButton doubleDownButton = new JButton("Double Down");
+				doubleDownButton.addActionListener(new SplitDoubleDown());
+				buttonPanel.add(doubleDownButton);
+			}
+			//If not go to the next player.
+			else
+			{
+				dispose();
+				nextPlayer(index);
+			}
 		}
 	}
 	
@@ -1740,65 +1735,11 @@ public class GUI extends JFrame
 	 * completed.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.0
+	 * @version 1.4.1
 	 * @since 1.2.0
 	 */
 	private class EndGameWindow extends JDialog
-	{
-		/**
-		 * Button listener for the EndGameWindow.
-		 * 
-		 * @author Brodie Robertson
-		 * @version 1.4.0
-		 * @since 1.4.0
-		 */
-		private class ButtonListener implements ActionListener
-		{
-			/**
-			 * Activates when a button attached to this object is pressed.
-			 *  
-			 * (non-Javadoc)
-			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-			 * @since 1.2.0
-			 */
-			@Override
-			public void actionPerformed(ActionEvent e) 
-			{
-				String cmd = e.getActionCommand();
-				
-				if(cmd.equals("Yes"))
-				{
-					dispose();
-					GameSettingsWindow window = new GameSettingsWindow();
-					window.setVisible(true);
-				}
-				else if(cmd.equals("No"))
-				{
-					CloseWindow window = new CloseWindow();
-					window.setVisible(true);
-				}
-				else if(cmd.equals("Menu"))
-				{
-					dispose();
-					titleScreen();
-				}
-				else if(cmd.equals("Statistics"))
-				{
-					StatisticsWindow window = new StatisticsWindow();
-					window.setVisible(true);
-				}
-				else if(cmd.equals("About"))
-				{
-					AboutWindow window = new AboutWindow();
-					window.setVisible(true);
-				}
-				else
-				{
-					System.out.println("Unexpected error in End Game Window");
-				}
-			}
-		}
-		
+	{		
 		/**
 		 * Constructs an EndGameWindow with a default layout.
 		 * 
@@ -1819,23 +1760,59 @@ public class GUI extends JFrame
 			messagePanel.add(command);
 			add(messagePanel, BorderLayout.CENTER);
 			
-			//Button panel.
+			//Confirms that the user wants to play another set of rounds.
+			Action yes = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					dispose();
+					GameSettingsWindow window = new GameSettingsWindow();
+					window.setVisible(true);
+				}
+			};
+			
+			//Confirms that the user wants to return to the main menu.
+			Action menu = new AbstractAction() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					dispose();
+					titleScreen();
+				}
+			};
+			
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
+			rootPane.getActionMap().put("ENTER", yes);
+			rootPane.getInputMap(WIFW).put(ESC, "ESC");
+			rootPane.getActionMap().put("ESC", new QuitGame());
+			rootPane.getInputMap(WIFW).put(M, "M");
+			rootPane.getActionMap().put("M", menu);
+			rootPane.getInputMap(WIFW).put(S, "S");
+			rootPane.getActionMap().put("S", new Statistics());
+			rootPane.getInputMap(WIFW).put(A, "A");
+			rootPane.getActionMap().put("A", new About());
+			
+			//Button panel
 			JPanel buttonPanel = new JPanel(new FlowLayout());
 			JButton yesButton = new JButton("Yes");
-			yesButton.addActionListener(new ButtonListener());
+			yesButton.addActionListener(yes);
 			buttonPanel.add(yesButton);
 			JButton noButton = new JButton("No");
-			noButton.addActionListener(new ButtonListener());
+			noButton.addActionListener(new QuitGame());
 			buttonPanel.add(noButton);
 			JButton menuButton = new JButton("Return to Menu");
 			menuButton.setActionCommand("Menu");
-			menuButton.addActionListener(new ButtonListener());
+			menuButton.addActionListener(menu);
 			buttonPanel.add(menuButton);
 			JButton statisticsButton = new JButton("Statistics");
-			statisticsButton.addActionListener(new ButtonListener());
+			statisticsButton.addActionListener(new Statistics());
 			buttonPanel.add(statisticsButton);
 			JButton aboutButton = new JButton("About");
-			aboutButton.addActionListener(new ButtonListener());
+			aboutButton.addActionListener(new About());
 			buttonPanel.add(aboutButton);
 			
 			add(buttonPanel, BorderLayout.SOUTH);
@@ -1850,6 +1827,9 @@ public class GUI extends JFrame
 	public GUI()
 	{
 		super("Blackjack - By Brodie Robertson");
+		JRootPane rootPane = getRootPane();
+		rootPane.getInputMap(WIFW).put(ESC, "ESCAPE");
+		rootPane.getActionMap().put("ESCAPE", new QuitGame());
 		titleScreen();
 	}
 	
@@ -1868,6 +1848,27 @@ public class GUI extends JFrame
 		addWindowListener(new CheckOnExit());
 		setJMenuBar(null);
 		
+		Action startGame = new AbstractAction() 
+		{
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				GameSettingsWindow window = new GameSettingsWindow();
+				window.setVisible(true);
+			}
+		};
+		
+		About about = new About();
+		Statistics statistics = new Statistics();
+		
+		JRootPane rootPane = getRootPane();
+		rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
+		rootPane.getActionMap().put("ENTER", startGame);
+		rootPane.getInputMap(WIFW).put(A, "A");
+		rootPane.getActionMap().put("A", about);
+		rootPane.getInputMap(WIFW).put(S, "S");
+		rootPane.getActionMap().put("S", statistics);
+		
 		//Background colour
 		Color orange = new Color(243, 101, 37);
 		getContentPane().setBackground(orange);
@@ -1885,17 +1886,17 @@ public class GUI extends JFrame
 		buttonPanel.setBackground(Color.DARK_GRAY);
 		buttonPanel.setPreferredSize(new Dimension(WIDTH, TITLE_BUTTON_PANEL_HEIGHT));
 		JButton playButton = new JButton("Start Game");
-		playButton.addActionListener(new ButtonListener());
+		playButton.addActionListener(startGame);
 		playButton.setPreferredSize(buttonSize);
 		playButton.setFont(buttonFont);
 		buttonPanel.add(playButton);
 		JButton quitButton = new JButton("Quit Game");
-		quitButton.addActionListener(new ButtonListener());
+		quitButton.addActionListener(new QuitGame());
 		quitButton.setPreferredSize(buttonSize);
 		quitButton.setFont(buttonFont);
 		buttonPanel.add(quitButton);
 		JButton aboutButton = new JButton("About");
-		aboutButton.addActionListener(new ButtonListener());
+		aboutButton.addActionListener(new About());
 		aboutButton.setPreferredSize(buttonSize);
 		aboutButton.setFont(buttonFont);
 		buttonPanel.add(aboutButton);
@@ -1917,17 +1918,21 @@ public class GUI extends JFrame
 		Color lightGray = new Color(249, 249, 250);
 		getContentPane().setBackground(lightGray);
 		
+		JRootPane rootPane = getRootPane();
+		rootPane.getInputMap(WIFW).remove(ENTER);
+		rootPane.getActionMap().remove(ENTER);
+		
 		//Menu Bar
 		JMenuBar menuBar = new JMenuBar();
 		JMenu menu = new JMenu("Menu");
 		JMenuItem aboutButton = new JMenuItem("About");
-		aboutButton.addActionListener(new ButtonListener());
+		aboutButton.addActionListener(new About());
 		menu.add(aboutButton);
 		JMenuItem statsButton = new JMenuItem("Statistics");
-		statsButton.addActionListener(new ButtonListener());
+		statsButton.addActionListener(new Statistics());
 		menu.add(statsButton);
 		JMenuItem quitButton = new JMenuItem("Quit Game");
-		quitButton.addActionListener(new ButtonListener());
+		quitButton.addActionListener(new QuitGame());
 		menu.add(quitButton);
 		menuBar.add(menu);
 		setJMenuBar(menuBar);
@@ -2287,6 +2292,26 @@ public class GUI extends JFrame
 	}
 	
 	/**
+	 * Checks if there are any player's left to have a turn.
+	 * 
+	 * @param index Index of the player.
+	 * @since 1.3.0
+	 */
+	private void nextPlayer(int index)
+	{
+		//If there are any more Player's left.
+		if(index + 1 < table.getPlayers().length - 1)
+		{
+			playerTurn(index + 1);
+		}
+		//If not run the Dealer's turn.
+		else
+		{
+			dealerTurn();
+		}
+	}
+	
+	/**
 	 * Plays out the turn of a player at a specific index.
 	 * 
 	 * @param index The index of a Player
@@ -2321,26 +2346,6 @@ public class GUI extends JFrame
 		else
 		{
 			nextPlayer(index);
-		}
-	}
-	
-	/**
-	 * Checks if there are any player's left to have a turn.
-	 * 
-	 * @param index Index of the player.
-	 * @since 1.3.0
-	 */
-	private void nextPlayer(int index)
-	{
-		//If there are any more Player's left.
-		if(index + 1 < table.getPlayers().length - 1)
-		{
-			playerTurn(index + 1);
-		}
-		//If not run the Dealer's turn.
-		else
-		{
-			dealerTurn();
 		}
 	}
 	
