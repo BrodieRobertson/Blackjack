@@ -1,4 +1,23 @@
 # Blackjack Changelog
+GUI Beta 1.4.1
+Note: I was planning to get more done in this release but I've never done keybindings before so I had to learn how to do that before I was able to do anything and that ended up taking far longer than I expected, I noticed after my commit that I bound enter for yes and esc for no, but I completely forgot about y for yes and n for no, in 1.4.2 I'll be fixing that.
+
+Change Log:
+1. Hot keys for every action in the game.
+2. ActionListeners refactored to AbstractAction's to allow for keybindings.
+3. With the refactoring any action that doesn't get reused has been made into an anonymous class.
+
+Future Features:
+1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
+2. Updated elements for components that are already displayed.
+3. Tool tips everywhere that makes sense.
+4. Complete the about window which will show the game version and people who worked on the game.
+5. Print the log to file when the game is over.
+6. Decide how many decks should be used based on the number of players.
+7. Slow down the game to allow for the user to understand what is happening without reading the log.
+8. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
+
+10. Dynamically generate CPU characters initial bets, insurance, and round descisions.
 GUI Alpha 1.4.0
 <br>Note:
 I'm really happy to see this project finally leaving it's alpha, for the next update I plan too address features 2, 3, 4, and 5, I may commit an intemediary update but my next major update will be after those features are done, it shouldn't take me too long to do so. On a side note I just learnt that you don't have to use Git as a web based service, I know it seems obvious once you know about it so by the next release I hope to also work out how to use TortoiseGit.
