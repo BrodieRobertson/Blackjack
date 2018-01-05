@@ -16,8 +16,8 @@ Future Features:
 6. Decide how many decks should be used based on the number of players.
 7. Slow down the game to allow for the user to understand what is happening without reading the log.
 8. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
+9. Dynamically generate CPU characters initial bets, insurance, and round descisions.
 
-10. Dynamically generate CPU characters initial bets, insurance, and round descisions.
 GUI Alpha 1.4.0
 <br>Note:
 I'm really happy to see this project finally leaving it's alpha, for the next update I plan too address features 2, 3, 4, and 5, I may commit an intemediary update but my next major update will be after those features are done, it shouldn't take me too long to do so. On a side note I just learnt that you don't have to use Git as a web based service, I know it seems obvious once you know about it so by the next release I hope to also work out how to use TortoiseGit.
