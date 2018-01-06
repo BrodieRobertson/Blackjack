@@ -1,6 +1,26 @@
 # Blackjack Changelog
+GUI Beta 1.4.2
+<br>Change Log:
+1. All buttons replaced with custom JButtons with gradients.
+2. A few extra hot keys added.
+3. Hand panel now actually shows the second hand.
+4. Player panel resets after a round where a player split their hand.
+5. A few mistakes within the gamelog have been addressed.
+
+Future Features:
+1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
+2. Updated elements for components that are already displayed.
+3. Tool tips everywhere that makes sense.
+4. Complete the about window which will show the game version and people who worked on the game.
+5. Print the log to file when the game is over.
+6. Decide how many decks should be used based on the number of players.
+7. Slow down the game to allow for the user to understand what is happening without reading the log.
+8. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
+9. Dynamically generate CPU characters initial bets, insurance, and round descisions.
+
 GUI Beta 1.4.1
-Note: I was planning to get more done in this release but I've never done keybindings before so I had to learn how to do that before I was able to do anything and that ended up taking far longer than I expected, I noticed after my commit that I bound enter for yes and esc for no, but I completely forgot about y for yes and n for no, in 1.4.2 I'll be fixing that.
+<br>Note:
+I was planning to get more done in this release but I've never done keybindings before so I had to learn how to do that before I was able to do anything and that ended up taking far longer than I expected, I noticed after my commit that I bound enter for yes and esc for no, but I completely forgot about y for yes and n for no, in 1.4.2 I'll be fixing that.
 
 Change Log:
 1. Hot keys for every action in the game.
