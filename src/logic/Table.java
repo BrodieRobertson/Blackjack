@@ -900,11 +900,11 @@ public class Table
 			else 
 			{
 				int bestHandIndex = 0;
-				for (int j = 1; index < hands.length; j++) 
+				for (int j = 0; j < hands.length; j++) 
 				{
 					if ((hands[j].getHandScore() > hands[bestHandIndex].getHandScore()
 						 && hands[j].getHandScore() <= BLACKJACK) || (hands[j].
-						 getHandScore()< hands[bestHandIndex].getHandScore() 
+						 getHandScore() < hands[bestHandIndex].getHandScore() 
 						 && hands[bestHandIndex].getHandScore() > BLACKJACK))
 					{
 						bestHandIndex = j;
@@ -959,7 +959,7 @@ public class Table
 			else 
 			{
 				int bestHandIndex = 0;
-				for (int j = 1; index < hands.length; j++) 
+				for (int j = 1; j < hands.length; j++) 
 				{
 					if ((hands[j].getHandScore() > hands[bestHandIndex].getHandScore()
 						 && hands[j].getHandScore() <= BLACKJACK)

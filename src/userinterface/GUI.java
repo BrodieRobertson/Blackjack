@@ -5,11 +5,16 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
@@ -26,6 +31,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.border.MatteBorder;
 
 import card.Card;
 import card.Face;
@@ -99,7 +105,15 @@ public class GUI extends JFrame
 			A = KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), S = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0),
 			H = KeyStroke.getKeyStroke(KeyEvent.VK_H, 0), D = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0),
 			P = KeyStroke.getKeyStroke(KeyEvent.VK_P, 0), U = KeyStroke.getKeyStroke(KeyEvent.VK_U, 0),
-			M = KeyStroke.getKeyStroke(KeyEvent.VK_M, 0);
+			M = KeyStroke.getKeyStroke(KeyEvent.VK_M, 0), Y = KeyStroke.getKeyStroke(KeyEvent.VK_Y, 0),
+			N = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0);
+	
+	/**
+	 * 
+	 */
+	public static final Color orange = new Color(243, 101, 37), GREEN = new Color(0, 220, 0), 
+			RED = new Color(235, 0, 0), LIGHT_BLUE = new Color(45, 177, 255);
+	
 	/**
 	 * Font used for all buttons in the game.
 	 */
@@ -134,6 +148,63 @@ public class GUI extends JFrame
 	private Table table;
 	
 	/**
+	 * @author Brodie Robertson
+	 * @version 1.4.2
+	 * @since 1.4.2
+	 */
+	private class JGradientButton extends JButton
+	{
+	    /**
+	     * Constructs a JGradientButton with a string parameter.
+	     * 
+	     * @param text The text on the JGradientButton.
+	     */
+	    private JGradientButton(String text)
+	    {
+	        super(text);
+	        setContentAreaFilled(false);
+	        setFocusPainted(false);
+	    }
+
+	    /**
+	     * 
+	     * 
+	     * (non-Javadoc)
+	     * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+	     * @since 1.4.2
+	     */
+	    @Override
+	    protected void paintComponent(Graphics g)
+	    {
+	    	//If the button has been pressed set to a solid colour.
+	    	if(getModel().isPressed())
+	    	{
+	    		Graphics2D g2 = (Graphics2D)g.create();
+	    		g2.setPaint(getBackground());
+	    		g2.fillRect(0, 0, getWidth(), getHeight());
+	    		g2.dispose();
+	    		
+	    		super.paintComponent(g);
+	    	}
+	    	//If the button is only enabled set to a gradient.
+	    	else if(getModel().isEnabled())
+	    	{
+		        Graphics2D g2 = (Graphics2D)g.create();
+		        
+		        g2.setPaint(new GradientPaint(new Point(0, 0), getBackground(),
+		                new Point(0, getHeight()/3), Color.WHITE));
+		        g2.fillRect(0, 0, getWidth(), getHeight()/3);
+		        g2.setPaint(new GradientPaint(new Point(0, getHeight()/3), 
+		        		Color.WHITE, new Point(0, getHeight()), getBackground()));
+		        g2.fillRect(0, getHeight()/3, getWidth(), getHeight());
+		        g2.dispose();
+
+		        super.paintComponent(g);
+	    	}
+	    }
+	}
+	
+	/**
 	 * Window adapter for the main window, activates when the window is closed.
 	 * 
 	 * @author Brodie Robertson
@@ -154,7 +225,7 @@ public class GUI extends JFrame
 	 * Dialog window used for confirming the conclusion of the program.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.1
+	 * @version 1.4.2
 	 * @since 1.2.0
 	 */
 	private class CloseWindow extends JDialog
@@ -209,11 +280,16 @@ public class GUI extends JFrame
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.setLayout(new FlowLayout());
 			buttonPanel.setBackground(Color.DARK_GRAY);
-			JButton confirmButton = new JButton("Confirm");
+			JGradientButton confirmButton = new JGradientButton("Confirm");
+			confirmButton.setBackground(GREEN);
 			confirmButton.addActionListener(confirm);
+			confirmButton.setToolTipText("Closes the game");
 			buttonPanel.add(confirmButton);
-			JButton cancelButton = new JButton("Cancel");
+			JGradientButton cancelButton = new JGradientButton("Cancel");
+			cancelButton.setBackground(RED);
 			cancelButton.addActionListener(cancel);
+			cancelButton.setToolTipText("Continue");
+			cancelButton.setToolTipText("Continue playing the game");
 			buttonPanel.add(cancelButton);
 			add(buttonPanel, BorderLayout.SOUTH);
 		}
@@ -228,6 +304,13 @@ public class GUI extends JFrame
 	 */
 	private class QuitGame extends AbstractAction
 	{
+		/**
+		 * Activates when this object receives an action event.
+		 * 
+		 * (non-Javadoc)
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 * @since 1.4.1
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
@@ -246,6 +329,13 @@ public class GUI extends JFrame
 	 */
 	private class Statistics extends AbstractAction
 	{
+		/**
+		 * Activates when this object receives an action event.
+		 * 
+		 * (non-Javadoc)
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 * @since 1.4.1
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
@@ -310,7 +400,7 @@ public class GUI extends JFrame
 		 * Dialog window used for setting the name of a human Player.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.1
+		 * @version 1.4.2
 		 * @since 1.2.0
 		 */
 		private class SetNameWindow extends JDialog
@@ -388,11 +478,15 @@ public class GUI extends JFrame
 				
 				//Button Panel
 				JPanel buttonPanel = new JPanel(new FlowLayout());
-				JButton confirmButton = new JButton("Confirm");
+				JGradientButton confirmButton = new JGradientButton("Confirm");
+				confirmButton.setBackground(GREEN);
 				confirmButton.addActionListener(confirm);
+				confirmButton.setToolTipText("Confirms the name input");
 				buttonPanel.add(confirmButton);
-				JButton clearButton = new JButton("Clear");
+				JGradientButton clearButton = new JGradientButton("Clear");
+				clearButton.setBackground(RED);
 				clearButton.addActionListener(clear);
+				clearButton.setToolTipText("Clears the name input");
 				buttonPanel.add(clearButton);
 				add(buttonPanel, BorderLayout.SOUTH);
 			}
@@ -575,7 +669,7 @@ public class GUI extends JFrame
 			
 			JPanel inputPanel = new JPanel(new GridLayout(6, 1));
 			
-			//Round input panel.
+			//Round input panel
 			JPanel roundPanel = new JPanel(new GridLayout(1, 2));
 			JLabel roundLabel = new JLabel("Please enter the number of rounds");
 			roundLabel.setToolTipText("Must be a postive number greater than 0");
@@ -586,7 +680,7 @@ public class GUI extends JFrame
 			roundInput = new JTextField(10);
 			inputPanel.add(roundInput);
 			
-			//Human input panel.
+			//Human input panel
 			JPanel humanPanel = new JPanel(new GridLayout(1, 2));
 			JLabel humanLabel = new JLabel("Please enter the number of human players");
 			humanLabel.setToolTipText("Must be at least 1 and total players less than " 
@@ -598,7 +692,7 @@ public class GUI extends JFrame
 			humanInput = new JTextField(10);
 			inputPanel.add(humanInput);
 			
-			//CPU input panel.
+			//CPU input panel
 			JPanel cpuPanel = new JPanel(new GridLayout(1, 2));
 			JLabel cpuLabel = new JLabel("Please enter the number of CPU players");
 			cpuLabel.setToolTipText("Must be at least 0 and total players less than " 
@@ -610,15 +704,19 @@ public class GUI extends JFrame
 			cpuInput = new JTextField(10);
 			inputPanel.add(cpuInput);
 			
-			//Button Panel.
+			//Button Panel
 			JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
 					REDUCED_BUTTON_HGAP, REDUCED_BUTTON_VGAP));
 			
-			JButton confirmButton = new JButton("Confirm");
+			JGradientButton confirmButton = new JGradientButton("Confirm");
+			confirmButton.setBackground(GREEN);
 			confirmButton.addActionListener(confirm);
+			confirmButton.setToolTipText("Confirms all inputs");
 			buttonPanel.add(confirmButton);
-			JButton clearButton = new JButton("Clear");
+			JGradientButton clearButton = new JGradientButton("Clear");
+			clearButton.setBackground(RED);
 			clearButton.addActionListener(clear);
+			clearButton.setToolTipText("Clears all inputs");
 			buttonPanel.add(clearButton);
 			add(inputPanel, BorderLayout.CENTER);
 			add(buttonPanel, BorderLayout.SOUTH);
@@ -645,7 +743,7 @@ public class GUI extends JFrame
 	 * game. Not yet implemented.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.2.0
+	 * @version 1.4.2
 	 * @since 1.2.0
 	 */
 	private class AboutWindow extends JDialog
@@ -663,6 +761,20 @@ public class GUI extends JFrame
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new BorderLayout());
 			add(new JLabel("AVAIBLE IN FUTURE UPDATE"), BorderLayout.CENTER);
+			
+			Action close = new AbstractAction()
+			{
+				@Override
+				public void actionPerformed(ActionEvent arg0) 
+				{
+					dispose();	
+				}
+			};
+			
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap().put(ESC, "ESC");
+			rootPane.getActionMap().put("ESC", close);
 		}
 	}
 	
@@ -671,7 +783,7 @@ public class GUI extends JFrame
 	 * implemented.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.2.0
+	 * @version 1.4.2
 	 * @since 1.2.0
 	 */
 	private class StatisticsWindow extends JDialog
@@ -689,6 +801,20 @@ public class GUI extends JFrame
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new GridLayout(0, 1));
 			add(new JLabel("AVAILABLE IN FUTURE UPDATE"));
+			
+			Action close = new AbstractAction()
+			{
+				@Override
+				public void actionPerformed(ActionEvent arg0) 
+				{
+					dispose();	
+				}
+			};
+			
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap().put(ESC, "ESC");
+			rootPane.getActionMap().put("ESC", close);
 		}
 	}
 	
@@ -696,7 +822,7 @@ public class GUI extends JFrame
 	 * Used to draw a player's hand onto the display.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.0
+	 * @version 1.4.2
 	 * @since 1.2.0
 	 */
 	private class HandPanel extends JPanel
@@ -705,6 +831,8 @@ public class GUI extends JFrame
 		 * An array of labels displaying cards.
 		 */
 		private JLabel[] cards;
+		private int row = 2;
+		private int col = 4;
 		
 		/**
 		 * Constructs a HandPanel with a default layout, blank upon creation.
@@ -714,14 +842,13 @@ public class GUI extends JFrame
 		 */
 		public HandPanel(Hand hand)
 		{
-			int row = 2;
-			int col = 4;
 			setLayout(new GridLayout(row, col));
 			cards = new JLabel[row*col];
 			for(int i = 0; i < cards.length; i++)
 			{
 				JLabel card = new JLabel("");
-				card.setHorizontalAlignment(JLabel.CENTER);				
+				card.setHorizontalAlignment(JLabel.CENTER);	
+				card.setBorder(new MatteBorder(1, 1, 1, 1, Color.RED));
 				cards[i] = card;
 				add(cards[i]);
 			}
@@ -737,11 +864,15 @@ public class GUI extends JFrame
 		public void updatePanel(int index, int handIndex)
 		{
 			Hand hand = table.getPersonAtIndex(index).getHand(handIndex);
-			for(int i = 0; i < cards.length; i++)
+			for(int i = 0; i < row*col; i++)
 			{
 				if(i < hand.getCardsRemaining())
 				{
 					cards[i].setText("" + hand.getCard(i).getValue());
+				}
+				else
+				{
+					cards[i].setText("");
 				}
 			}
 		}
@@ -751,7 +882,7 @@ public class GUI extends JFrame
 	 * Used to draw a players statistics on the screen, including their hand.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.0
+	 * @version 1.4.2
 	 * @since 1.2.0
 	 */
 	private class PlayerPanel extends JPanel
@@ -781,9 +912,17 @@ public class GUI extends JFrame
 		 */
 		private JLabel extra;
 		/**
-		 * Used to display the player's hand onto the screen.
+		 * Array of panel used to display the players hands.
 		 */
-		private HandPanel hand;
+		private HandPanel[] hands;
+		/**
+		 * Panel containing the all of the players hands.
+		 */
+		private JPanel handList;	
+		/**
+		 * Whether the second hand has been added to the hands array.
+		 */
+		private boolean splitHand;
 		
 		/**
 		 * Constructs a PlayerPanel with a default layout.
@@ -805,6 +944,7 @@ public class GUI extends JFrame
 			namePanel.add(nameLabel);
 			JLabel name = new JLabel(player.getName());
 			name.setHorizontalAlignment(JLabel.CENTER);
+			name.setToolTipText("The player's name");
 			namePanel.add(name);
 			statisticsPanel.add(namePanel);
 			
@@ -815,6 +955,7 @@ public class GUI extends JFrame
 			totalMoneyPanel.add(totalMoneyLabel);
 			totalMoney = new JLabel("$" + player.getTotalMoney());
 			totalMoney.setHorizontalAlignment(JLabel.CENTER);
+			totalMoney.setToolTipText(player.getName() + "'s total money");
 			totalMoneyPanel.add(totalMoney);
 			statisticsPanel.add(totalMoneyPanel);
 			
@@ -825,6 +966,7 @@ public class GUI extends JFrame
 			wagerPanel.add(wagerLabel);
 			wager = new JLabel("$" + player.getWager());
 			wager.setHorizontalAlignment(JLabel.CENTER);
+			wager.setToolTipText(player.getName() + "'s wager");
 			wagerPanel.add(wager);
 			statisticsPanel.add(wagerPanel);
 			
@@ -838,6 +980,7 @@ public class GUI extends JFrame
 			scorePanels[0].add(scoreLabels[0]);
 			scores[0] = new JLabel("" + player.getHand(0).getHandScore());
 			scores[0].setHorizontalAlignment(JLabel.CENTER);
+			scores[0].setToolTipText(player.getName() + " hand score");
 			scorePanels[0].add(scores[0]);
 			statisticsPanel.add(scorePanels[0]);
 			
@@ -863,15 +1006,22 @@ public class GUI extends JFrame
 			add(statisticsPanel);
 			
 			//Hand Panel
-			JPanel fullHandPanel = new JPanel(new GridLayout(0, 1));
-			hand = new HandPanel(player.getHand(0));
-			fullHandPanel.add(hand);
-			JScrollPane handScrollPanel = new JScrollPane(fullHandPanel);
-			handScrollPanel.setHorizontalScrollBarPolicy(JScrollPane.
+			JPanel fullHandPanel = new JPanel(new BorderLayout());
+			handList = new JPanel();
+			handList.setLayout(new GridLayout(0, 1));
+			
+			hands = new HandPanel[2];
+			hands[0] = new HandPanel(player.getHand(0));
+			hands[0].setToolTipText("Cards in hand: " + player.getHand(0).getCardsRemaining());
+			handList.add(hands[0]);
+
+			JScrollPane handScrollPane = new JScrollPane(handList);
+			handScrollPane.setHorizontalScrollBarPolicy(JScrollPane.
 					HORIZONTAL_SCROLLBAR_NEVER);
-			handScrollPanel.setVerticalScrollBarPolicy(JScrollPane.
-					VERTICAL_SCROLLBAR_AS_NEEDED);
-			add(handScrollPanel);
+			handScrollPane.setVerticalScrollBarPolicy(JScrollPane.
+					VERTICAL_SCROLLBAR_ALWAYS);
+			fullHandPanel.add(handScrollPane);
+			add(fullHandPanel);
 		}
 		
 		/**
@@ -886,11 +1036,24 @@ public class GUI extends JFrame
 			totalMoney.setText("$" + player.getTotalMoney());
 			wager.setText("$" + player.getWager());
 			scores[0].setText("" + player.getHand(0).getHandScore());
-			if(player.getHand(0).getSplit())
+			if(player.getHand(0).getSplit() && !splitHand)
 			{
 				scoreLabels[0].setText("Hand 1 Score");
 				scoreLabels[1].setText("Hand 2 Score");
 				scores[1].setText("" + player.getHand(1).getHandScore());
+				
+				hands[1] = new HandPanel(player.getHand(0));
+				hands[1].setToolTipText("Cards in hand: " + player.getHand(0).getCardsRemaining());
+				hands[1].setPreferredSize(new Dimension(0, handList.getHeight()));
+				hands[1].setBorder(new MatteBorder(1, 0, 0, 0, Color.DARK_GRAY));
+				hands[1].updatePanel(index, 1);
+				handList.add(hands[1]);
+				splitHand = true;
+			}
+			else if(player.getHand(0).getSplit())
+			{
+				scores[1].setText("" + player.getHand(1).getHandScore());
+				hands[1].updatePanel(index, 1);
 			}
 			
 			if(player.getTookInsurance())
@@ -898,13 +1061,26 @@ public class GUI extends JFrame
 				extraLabel.setText("Insurance");
 				extra.setText("$" + player.getInsurance());
 			}
-			else
-			{
-				extraLabel.setText("");
-				extra.setText("");
-			}
 			
-			hand.updatePanel(index, 0);
+			hands[0].setToolTipText("Cards in hand: " + player.getHand(0).
+					getCardsRemaining());
+			hands[0].updatePanel(index, 0);
+		}
+		
+		public void resetPanel(int index)
+		{
+			Person player = table.getPersonAtIndex(index);
+			scoreLabels[1].setText("");
+			scores[1].setText("");
+			extraLabel.setText("");
+			extra.setText("");
+			hands[0].setToolTipText("Cards in hand: " + player.getHand(0).
+					getCardsRemaining());
+			hands[0].updatePanel(index, 0);
+			splitHand = false;
+			handList.remove(1);
+			handList.revalidate();
+			handList.repaint();
 		}
 	}
 	
@@ -946,6 +1122,7 @@ public class GUI extends JFrame
 			namePanel.add(nameLabel);
 			JLabel name = new JLabel(dealer.getName());
 			name.setHorizontalAlignment(JLabel.CENTER);
+			name.setToolTipText("The dealer's name");
 			namePanel.add(name);
 			statisticsPanel.add(namePanel);
 			add(statisticsPanel);
@@ -957,6 +1134,7 @@ public class GUI extends JFrame
 			scorePanel.add(scoreLabel);
 			score = new JLabel("" + dealer.getHand(0).getHandScore());
 			score.setHorizontalAlignment(JLabel.CENTER);
+			score.setToolTipText("The dealer's score");
 			scorePanel.add(score);
 			statisticsPanel.add(scorePanel);
 			statisticsPanel.add(new JLabel(""));
@@ -964,6 +1142,7 @@ public class GUI extends JFrame
 			//Hand Panel
 			JPanel fullHandPanel = new JPanel(new GridLayout(0, 1));
 			hand = new HandPanel(dealer.getHand(0));
+			hand.setToolTipText("Cards in hand: " + dealer.getHand(0).getCardsRemaining());
 			fullHandPanel.add(hand);
 			JScrollPane handScrollPanel = new JScrollPane(fullHandPanel);
 			handScrollPanel.setHorizontalScrollBarPolicy(JScrollPane.
@@ -981,8 +1160,10 @@ public class GUI extends JFrame
 		 */
 		public void updatePanel(int index)
 		{
-			Person player = table.getPersonAtIndex(index);
-			score.setText("" + player.getHand(0).getHandScore());
+			Person dealer = table.getPersonAtIndex(index);
+			score.setText("" + dealer.getHand(0).getHandScore());
+			hand.setToolTipText("Cards in hand: " + dealer.getHand(0).
+					getCardsRemaining());
 			hand.updatePanel(index, 0);
 		}
 	}
@@ -991,7 +1172,7 @@ public class GUI extends JFrame
 	 * Dialog window used for setting a human's wager.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.1
+	 * @version 1.4.2
 	 * @since 1.2.0
 	 */
 	private class WagerWindow extends JDialog
@@ -1016,7 +1197,8 @@ public class GUI extends JFrame
 			JPanel inputPanel = new JPanel(new GridLayout(2, 1));
 			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
 			JLabel command = new JLabel("Please enter " + name + "'s  wager");
-			command.setToolTipText("Wager must be between" + Table.MINWAGER + " and " + Table.MAXWAGER);
+			command.setToolTipText("Wager must be between $" + Table.MINWAGER 
+					+ " and $" + Table.MAXWAGER);
 			messagePanel.add(command);
 			JLabel error = new JLabel("");
 			messagePanel.add(error);
@@ -1080,11 +1262,15 @@ public class GUI extends JFrame
 			
 			//Button Panel
 			JPanel buttonPanel = new JPanel(new FlowLayout());
-			JButton confirmButton = new JButton("Confirm");
+			JGradientButton confirmButton = new JGradientButton("Confirm");
+			confirmButton.setBackground(GREEN);
 			confirmButton.addActionListener(confirm);
+			confirmButton.setToolTipText("Confirms the wager input");
 			buttonPanel.add(confirmButton);
-			JButton clearButton = new JButton("Clear");
+			JGradientButton clearButton = new JGradientButton("Clear");
+			clearButton.setBackground(RED);
 			clearButton.addActionListener(clear);
+			clearButton.setToolTipText("Clears the wager input");
 			buttonPanel.add(clearButton);
 			add(buttonPanel, BorderLayout.SOUTH);
 		}
@@ -1094,7 +1280,7 @@ public class GUI extends JFrame
 	 * Dialog window used for setting a human's insurance.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.1
+	 * @version 1.4.2
 	 * @since 1.2.0
 	 */
 	private class InsuranceWindow extends JDialog
@@ -1107,7 +1293,8 @@ public class GUI extends JFrame
 		 */
 		public InsuranceWindow(int index)
 		{
-			String name = table.getPersonAtIndex(index).getName();
+			Player player = (Player)table.getPersonAtIndex(index);
+			String name = player.getName();
 			setTitle(name + "'s Insurance");
 			setSize(tinyWindow);
 			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -1118,12 +1305,13 @@ public class GUI extends JFrame
 			//Request for input.
 			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
 			JLabel command = new JLabel("Would you like insurance?");
+			command.setToolTipText("Total money must be at least as as much as "
+					+ "half your wager " + player.getWager() / 2);
 			messagePanel.add(command);
 			JLabel error = new JLabel("");
 			messagePanel.add(error);
 			add(messagePanel, BorderLayout.CENTER);
 			
-			Player player = (Player)table.getPersonAtIndex(index);
 			JTextField input = new JTextField();
 			
 			//Confims the users insurance input and validates it.
@@ -1192,6 +1380,8 @@ public class GUI extends JFrame
 						JPanel inputPanel = new JPanel(new GridLayout(2, 1));
 						JPanel messagePanel = new JPanel(new GridLayout(1, 2));
 						JLabel command = new JLabel("How much would you like?");
+						command.setToolTipText("Can't be greater than half the "
+								+ "wager: " + player.getWager() / 2);
 						messagePanel.add(command);
 						error.setText("");;
 						messagePanel.add(error);
@@ -1202,21 +1392,26 @@ public class GUI extends JFrame
 						
 						//Key bindings
 						JRootPane rootPane = getRootPane();
+						rootPane.getInputMap(WIFW).clear();
+						rootPane.getActionMap().clear();
 						rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
 						rootPane.getActionMap().put("ENTER", confirm);
 						rootPane.getInputMap(WIFW).put(ESC, "ESC");
 						rootPane.getActionMap().put("ESC", clear);
 						
-						//Button panel.
+						//Button panel
 						JPanel buttonPanel = new JPanel(new FlowLayout());
-						JButton confirmButton = new JButton("Confirm");
+						JGradientButton confirmButton = new JGradientButton("Confirm");
+						confirmButton.setBackground(GREEN);
 						confirmButton.addActionListener(confirm);
+						confirmButton.setToolTipText("Confirm the insurance input");
 						buttonPanel.add(confirmButton);
-						JButton clearButton = new JButton("Clear");
+						JGradientButton clearButton = new JGradientButton("Clear");
+						clearButton.setBackground(GREEN);
+						clearButton.setToolTipText("Clears the insurance input");
 						clearButton.addActionListener(clear);
 						buttonPanel.add(clearButton);
 						add(buttonPanel, BorderLayout.SOUTH);
-						
 						
 						getContentPane().revalidate();
 						repaint();
@@ -1243,16 +1438,24 @@ public class GUI extends JFrame
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
 			rootPane.getActionMap().put("ENTER", yes);
-			rootPane.getInputMap(WIDTH).put(ESC, "ESC");
+			rootPane.getInputMap(WIFW).put(ESC, "ESC");
 			rootPane.getActionMap().put("ESC", no);
+			rootPane.getInputMap(WIFW).put(Y, "Y");
+			rootPane.getActionMap().put("Y", yes);
+			rootPane.getInputMap(WIFW).put(N, "N");
+			rootPane.getActionMap().put("N", no);
 			
 			//Button panel
 			JPanel buttonPanel = new JPanel(new FlowLayout());
-			JButton yesButton = new JButton("Yes");
+			JGradientButton yesButton = new JGradientButton("Yes");
+			yesButton.setBackground(GREEN);
 			yesButton.addActionListener(yes);
+			yesButton.setToolTipText("Confirms that the user wants insurance");
 			buttonPanel.add(yesButton);
-			JButton noButton = new JButton("No");
+			JGradientButton noButton = new JGradientButton("No");
+			noButton.setBackground(RED);
 			noButton.addActionListener(no);
+			noButton.setToolTipText("Confirms that the user doesn't wants insurance");
 			buttonPanel.add(noButton);
 			add(buttonPanel, BorderLayout.SOUTH);
 		}
@@ -1262,7 +1465,7 @@ public class GUI extends JFrame
 	 * Dialog window used for playing out a human's turn.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.1
+	 * @version 1.4.2
 	 * @since 1.2.0
 	 */
 	private class TurnWindow extends JDialog
@@ -1280,10 +1483,6 @@ public class GUI extends JFrame
 		 */
 		private JPanel buttonPanel;
 		/**
-		 * Index of the human.
-		 */
-		private int handIndex = 0;
-		/**
 		 * The index of the human.
 		 */
 		private int index;
@@ -1292,18 +1491,32 @@ public class GUI extends JFrame
 		 * Ends the Human's turn with this hand and displays the results.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.1
+		 * @version 1.4.2
 		 * @since 1.4.1
 		 */
 		private class SplitStand extends AbstractAction
 		{
+			private int handIndex;
+			
+			public SplitStand(int handIndex)
+			{
+				this.handIndex = handIndex;
+			}
+			
+			/**
+			 * Activates when this object receives an action event.
+			 * 
+			 * (non-Javadoc)
+			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+			 * @since 1.4.1
+			 */
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
 				Player player = (Player)table.getPersonAtIndex(index);
 				gameLog.setText(gameLog.getText() + "Stands hand " 
 						+ (handIndex + 1) + " with a score of " + player.
-						getHand(0).getHandScore() + "\n");
+						getHand(handIndex).getHandScore() + "\n");
 				nextHand(handIndex);
 			}
 		}
@@ -1312,11 +1525,25 @@ public class GUI extends JFrame
 		 * Deals the human another card to this hand and displays the reuslts.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.1
+		 * @version 1.4.2
 		 * @since 1.4.1
 		 */
 		private class SplitHit extends AbstractAction
 		{
+			private int handIndex;
+			
+			public SplitHit(int handIndex)
+			{
+				this.handIndex = handIndex;
+			}
+			
+			/**
+			 * Activates when this object receives an action event.
+			 * 
+			 * (non-Javadoc)
+			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+			 * @since 1.4.1
+			 */
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
@@ -1342,11 +1569,17 @@ public class GUI extends JFrame
 					//Button Panel
 					buttonPanel.removeAll();
 					buttonPanel.setLayout(new FlowLayout());
-					JButton standButton = new JButton("Stand");
-					standButton.addActionListener(new SplitStand());
+					JGradientButton standButton = new JGradientButton("Stand");
+					standButton.setBackground(LIGHT_BLUE);
+					standButton.addActionListener(new SplitStand(handIndex));
+					standButton.setToolTipText("Ends the player's turn with this "
+							+ "hand");
 					buttonPanel.add(standButton);
-					JButton hitButton = new JButton("Hit");
-					hitButton.addActionListener(new SplitHit());
+					JGradientButton hitButton = new JGradientButton("Hit");
+					hitButton.setBackground(LIGHT_BLUE);
+					hitButton.addActionListener(new SplitHit(handIndex));
+					hitButton.setToolTipText("Deals the player another card to "
+							+ "this hand");
 					buttonPanel.add(hitButton);
 					buttonPanel.revalidate();
 					buttonPanel.repaint();
@@ -1356,7 +1589,7 @@ public class GUI extends JFrame
 				{
 					gameLog.setText(gameLog.getText() + player.getName() 
 						+ " has Blackjack and is forced to stand\n");
-					nextHand(handIndex);
+					nextPlayer(index);
 				}
 				//If the hand's score is greater than Blackjack.
 				else if(player.getBusted())
@@ -1374,11 +1607,25 @@ public class GUI extends JFrame
 		 * displays the results.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.1
+		 * @version 1.4.2
 		 * @since 1.4.1
 		 */
 		private class SplitDoubleDown extends AbstractAction
 		{
+			private int handIndex;
+			
+			public SplitDoubleDown(int handIndex) 
+			{
+				this.handIndex = handIndex;
+			}
+			
+			/**
+			 * Activates when this object receives an action event.
+			 * 
+			 * (non-Javadoc)
+			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+			 * @since 1.4.1
+			 */
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
@@ -1453,7 +1700,7 @@ public class GUI extends JFrame
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					Player player = (Player)table.getPersonAtIndex(0);
+					Player player = (Player)table.getPersonAtIndex(index);
 					gameLog.setText(gameLog.getText() + player.getName() 
 					+ " stands with a score of " + player.getHand(0).
 					getHandScore() + "\n");
@@ -1468,7 +1715,7 @@ public class GUI extends JFrame
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					Player player = (Player)table.getPersonAtIndex(0);
+					Player player = (Player)table.getPersonAtIndex(index);
 					error.setText("");
 					Card card = table.hit(index, 0);
 					player = (Player)table.getPersonAtIndex(index);
@@ -1493,11 +1740,15 @@ public class GUI extends JFrame
 						//Button panel
 						buttonPanel.removeAll();
 						buttonPanel.setLayout(new FlowLayout());
-						JButton standButton = new JButton("Stand");
+						JGradientButton standButton = new JGradientButton("Stand");
+						standButton.setBackground(LIGHT_BLUE);
 						standButton.addActionListener(stand);
+						standButton.setToolTipText("Ends the player's turn");
 						buttonPanel.add(standButton);
-						JButton hitButton = new JButton("Hit");
+						JGradientButton hitButton = new JGradientButton("Hit");
+						hitButton.setBackground(LIGHT_BLUE);
 						hitButton.addActionListener(this);
+						hitButton.setToolTipText("Deals the player another card");
 						buttonPanel.add(hitButton);
 						buttonPanel.revalidate();
 						buttonPanel.repaint();
@@ -1575,7 +1826,7 @@ public class GUI extends JFrame
 					//If the human meet the requirements for a split.
 					if(player.getTotalMoney() >= player.getWager() && (player.
 					   getHand(0).getCard(0).getValue() == player.getHand(0).
-					   getCard(1).getValue() || (player.getHand(0).getCard(0).
+					   getCard(0).getValue() || (player.getHand(0).getCard(0).
 					   getFace() == Face.ACE && player.getHand(0).getCard(1).
 					   getFace() == Face.ACE)))
 					{
@@ -1587,30 +1838,41 @@ public class GUI extends JFrame
 							+ player.getWager() + "\n");
 						playerPanels[index].updatePanel(index);
 						
+						int handIndex = 0;
 						command.setText("What action would you like to take with hand " 
-								+ (handIndex + 1) + "?");
+								+ "1?");
 						
 						//Key bindings
 						JRootPane rootPane = getRootPane();
 						rootPane.getInputMap(WIFW).clear();
 						rootPane.getActionMap().clear();
 						rootPane.getInputMap(WIFW).put(S, "S");
-						rootPane.getActionMap().put("S", new SplitStand());
+						rootPane.getActionMap().put("S", new SplitStand(handIndex));
 						rootPane.getInputMap(WIFW).put(H, "H");
-						rootPane.getActionMap().put("H", new SplitHit());
+						rootPane.getActionMap().put("H", new SplitHit(handIndex));
 						rootPane.getInputMap(WIFW).put(D, "D");
-						rootPane.getActionMap().put("D", new SplitDoubleDown());
+						rootPane.getActionMap().put("D", new SplitDoubleDown(handIndex));
 						
 						//Button panel
 						buttonPanel.removeAll();
-						JButton standButton = new JButton("Stand");
-						standButton.addActionListener(new SplitStand());
+						JGradientButton standButton = new JGradientButton("Stand");
+						standButton.setBackground(LIGHT_BLUE);
+						standButton.addActionListener(new SplitStand(handIndex));
+						standButton.setToolTipText("Ends the player's turn "
+								+ "with this hand");
 						buttonPanel.add(standButton);
-						JButton hitButton = new JButton("Hit");
-						hitButton.addActionListener(new SplitHit());
+						JGradientButton hitButton = new JGradientButton("Hit");
+						hitButton.setBackground(LIGHT_BLUE);
+						hitButton.addActionListener(new SplitHit(handIndex));
+						hitButton.setToolTipText("Deals the player another card "
+								+ "to this hand");
 						buttonPanel.add(hitButton);
-						JButton doubleDownButton = new JButton("Double Down");
-						doubleDownButton.addActionListener(new SplitDoubleDown());
+						JGradientButton doubleDownButton = new JGradientButton("Double Down");
+						doubleDownButton.setBackground(LIGHT_BLUE);
+						doubleDownButton.addActionListener(new SplitDoubleDown(handIndex));
+						doubleDownButton.setToolTipText("Doubles the player's "
+								+ "wager and deals a new card to this hand");
+						
 						buttonPanel.add(doubleDownButton);
 						buttonPanel.repaint();
 						buttonPanel.revalidate();
@@ -1667,20 +1929,33 @@ public class GUI extends JFrame
 			
 			//Button panel
 			buttonPanel = new JPanel(new FlowLayout());
-			JButton standButton = new JButton("Stand");
+			JGradientButton standButton = new JGradientButton("Stand");
+			standButton.setBackground(LIGHT_BLUE);
 			standButton.addActionListener(stand);
+			standButton.setToolTipText("Ends the player's turn");
 			buttonPanel.add(standButton);
-			JButton hitButton = new JButton("Hit");
+			JGradientButton hitButton = new JGradientButton("Hit");
+			hitButton.setBackground(LIGHT_BLUE);
 			hitButton.addActionListener(hit);
+			hitButton.setToolTipText("Deals the player another card");
 			buttonPanel.add(hitButton);
-			JButton doubleDownButton = new JButton("Double Down");
+			JGradientButton doubleDownButton = new JGradientButton("Double Down");
+			doubleDownButton.setBackground(LIGHT_BLUE);
 			doubleDownButton.addActionListener(doubleDown);
+			doubleDownButton.setToolTipText("Doubles the player's wager and "
+					+ "deals them a second card");
 			buttonPanel.add(doubleDownButton);
-			JButton splitButton = new JButton("Split");
+			JGradientButton splitButton = new JGradientButton("Split");
+			splitButton.setBackground(LIGHT_BLUE);
 			splitButton.addActionListener(split);
+			splitButton.setToolTipText("Doubles the player's wager and splits"
+					+ " their hand");
 			buttonPanel.add(splitButton);
-			JButton surrenderButton = new JButton("Surrender");
+			JGradientButton surrenderButton = new JGradientButton("Surrender");
+			surrenderButton.setBackground(LIGHT_BLUE);
 			surrenderButton.addActionListener(surrender);
+			surrenderButton.setToolTipText("The player loses this round and "
+					+ "half their wager is returned");
 			buttonPanel.add(surrenderButton);
 			add(buttonPanel, BorderLayout.SOUTH);
 		}
@@ -1695,7 +1970,6 @@ public class GUI extends JFrame
 		private void nextHand(int handIndex)
 		{
 			Hand[] hands = table.getPersonAtIndex(index).getHands();
-			
 			//If there is a hand remaining, rebuild the window.
 			if(handIndex + 1 < hands.length)
 			{
@@ -1706,20 +1980,37 @@ public class GUI extends JFrame
 				
 				//Key bindings
 				JRootPane rootPane = getRootPane();
+				rootPane.getInputMap(WIFW).clear();
+				rootPane.getActionMap().clear();
+				rootPane.getInputMap(WIFW).put(S, "S");
+				rootPane.getActionMap().put("S", new SplitStand(handIndex));
+				rootPane.getInputMap(WIFW).put(H, "H");
+				rootPane.getActionMap().put("H", new SplitHit(handIndex));
 				rootPane.getInputMap(WIFW).put(D, "D");
-				rootPane.getActionMap().put("D", new SplitDoubleDown());
+				rootPane.getActionMap().put("D", new SplitDoubleDown(handIndex));
 				
 				//Button Panel
 				buttonPanel.removeAll();
-				JButton standButton = new JButton("Stand");
-				standButton.addActionListener(new SplitStand());
+				JGradientButton standButton = new JGradientButton("Stand");
+				standButton.setBackground(LIGHT_BLUE);
+				standButton.addActionListener(new SplitStand(handIndex));
+				standButton.setToolTipText("Ends the player's turn with this "
+						+ "hand");
 				buttonPanel.add(standButton);
-				JButton hitButton = new JButton("Hit");
-				hitButton.addActionListener(new SplitHit());
+				JGradientButton hitButton = new JGradientButton("Hit");
+				hitButton.setBackground(LIGHT_BLUE);
+				hitButton.addActionListener(new SplitHit(handIndex));
+				hitButton.setToolTipText("Deals the player another card to this "
+						+ "hand");
 				buttonPanel.add(hitButton);
-				JButton doubleDownButton = new JButton("Double Down");
-				doubleDownButton.addActionListener(new SplitDoubleDown());
+				JGradientButton doubleDownButton = new JGradientButton("Double Down");
+				doubleDownButton.setBackground(LIGHT_BLUE);
+				doubleDownButton.addActionListener(new SplitDoubleDown(handIndex));
+				doubleDownButton.setToolTipText("Doubles the player's wager and "
+						+ "deals them another card");
 				buttonPanel.add(doubleDownButton);
+				buttonPanel.repaint();
+				buttonPanel.revalidate();
 			}
 			//If not go to the next player.
 			else
@@ -1755,10 +2046,9 @@ public class GUI extends JFrame
 			setLayout(new BorderLayout());
 			
 			//Request for input.
-			JPanel messagePanel = new JPanel(new FlowLayout());
 			JLabel command = new JLabel("Would you like to play again?");
-			messagePanel.add(command);
-			add(messagePanel, BorderLayout.CENTER);
+			command.setHorizontalAlignment(JLabel.CENTER);
+			add(command, BorderLayout.CENTER);
 			
 			//Confirms that the user wants to play another set of rounds.
 			Action yes = new AbstractAction() 
@@ -1787,8 +2077,12 @@ public class GUI extends JFrame
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
 			rootPane.getActionMap().put("ENTER", yes);
+			rootPane.getInputMap(WIFW).put(Y, "Y");
+			rootPane.getActionMap().put("Y", yes);
 			rootPane.getInputMap(WIFW).put(ESC, "ESC");
 			rootPane.getActionMap().put("ESC", new QuitGame());
+			rootPane.getInputMap(WIFW).put(N, "N");
+			rootPane.getActionMap().put("N", new QuitGame());
 			rootPane.getInputMap(WIFW).put(M, "M");
 			rootPane.getActionMap().put("M", menu);
 			rootPane.getInputMap(WIFW).put(S, "S");
@@ -1798,21 +2092,32 @@ public class GUI extends JFrame
 			
 			//Button panel
 			JPanel buttonPanel = new JPanel(new FlowLayout());
-			JButton yesButton = new JButton("Yes");
+			JGradientButton yesButton = new JGradientButton("Yes");
+			yesButton.setBackground(GREEN);
 			yesButton.addActionListener(yes);
+			yesButton.setToolTipText("Restarts the game");
 			buttonPanel.add(yesButton);
-			JButton noButton = new JButton("No");
+			JGradientButton noButton = new JGradientButton("No");
+			noButton.setBackground(RED);
 			noButton.addActionListener(new QuitGame());
+			noButton.setToolTipText("Ends the game");
 			buttonPanel.add(noButton);
-			JButton menuButton = new JButton("Return to Menu");
+			JGradientButton menuButton = new JGradientButton("Return to Title "
+					+ "Screen");
+			menuButton.setBackground(LIGHT_BLUE);
 			menuButton.setActionCommand("Menu");
 			menuButton.addActionListener(menu);
+			menuButton.setToolTipText("Goes back to the title screen");
 			buttonPanel.add(menuButton);
-			JButton statisticsButton = new JButton("Statistics");
+			JGradientButton statisticsButton = new JGradientButton("Statistics");
+			statisticsButton.setBackground(LIGHT_BLUE);
 			statisticsButton.addActionListener(new Statistics());
+			statisticsButton.setToolTipText("Opens the Statistics window");
 			buttonPanel.add(statisticsButton);
-			JButton aboutButton = new JButton("About");
+			JGradientButton aboutButton = new JGradientButton("About");
+			aboutButton.setBackground(LIGHT_BLUE);
 			aboutButton.addActionListener(new About());
+			aboutButton.setToolTipText("Opens the About window");
 			buttonPanel.add(aboutButton);
 			
 			add(buttonPanel, BorderLayout.SOUTH);
@@ -1870,7 +2175,7 @@ public class GUI extends JFrame
 		rootPane.getActionMap().put("S", statistics);
 		
 		//Background colour
-		Color orange = new Color(243, 101, 37);
+
 		getContentPane().setBackground(orange);
 		
 		//Title
@@ -1885,18 +2190,24 @@ public class GUI extends JFrame
 				TITLE_BUTTON_HGAP, TITLE_BUTTON_VGAP));
 		buttonPanel.setBackground(Color.DARK_GRAY);
 		buttonPanel.setPreferredSize(new Dimension(WIDTH, TITLE_BUTTON_PANEL_HEIGHT));
-		JButton playButton = new JButton("Start Game");
+		JGradientButton playButton = new JGradientButton("Start Game");
+		playButton.setBackground(LIGHT_BLUE);
 		playButton.addActionListener(startGame);
+		playButton.setToolTipText("Starts the game");
 		playButton.setPreferredSize(buttonSize);
 		playButton.setFont(buttonFont);
 		buttonPanel.add(playButton);
-		JButton quitButton = new JButton("Quit Game");
+		JGradientButton quitButton = new JGradientButton("Quit Game");
+		quitButton.setBackground(LIGHT_BLUE);
 		quitButton.addActionListener(new QuitGame());
+		quitButton.setToolTipText("Ends the game");
 		quitButton.setPreferredSize(buttonSize);
 		quitButton.setFont(buttonFont);
 		buttonPanel.add(quitButton);
-		JButton aboutButton = new JButton("About");
+		JGradientButton aboutButton = new JGradientButton("About");
+		aboutButton.setBackground(LIGHT_BLUE);
 		aboutButton.addActionListener(new About());
+		aboutButton.setToolTipText("Opens the About window");
 		aboutButton.setPreferredSize(buttonSize);
 		aboutButton.setFont(buttonFont);
 		buttonPanel.add(aboutButton);
@@ -1927,12 +2238,15 @@ public class GUI extends JFrame
 		JMenu menu = new JMenu("Menu");
 		JMenuItem aboutButton = new JMenuItem("About");
 		aboutButton.addActionListener(new About());
+		aboutButton.setToolTipText("Opens the About window");
 		menu.add(aboutButton);
 		JMenuItem statsButton = new JMenuItem("Statistics");
 		statsButton.addActionListener(new Statistics());
+		statsButton.setToolTipText("Opens the statistics windows");
 		menu.add(statsButton);
 		JMenuItem quitButton = new JMenuItem("Quit Game");
 		quitButton.addActionListener(new QuitGame());
+		quitButton.setToolTipText("Ends the game");
 		menu.add(quitButton);
 		menuBar.add(menu);
 		setJMenuBar(menuBar);
@@ -2444,7 +2758,7 @@ public class GUI extends JFrame
 			//If the Person is a Player, update their panel.
 			if(table.getPersonAtIndex(i) instanceof Player)
 			{
-				playerPanels[i].updatePanel(i);
+				playerPanels[i].resetPanel(i);
 			}
 			//If the Person is a Dealer, update their panel.
 			else
