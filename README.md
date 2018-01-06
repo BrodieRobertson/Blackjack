@@ -145,7 +145,7 @@ Future Features
 4. Prompt the user for their name.
 
 Console Version I/O 1.0.0
-Known Bugs
+<br>Known Bugs
 1. Ace values do not change to 1 if 11 would put the player over 21.
 2. When 1 is fixed aces will be treated as different cards in a split because there values differ.
 3. If a player does not have enough money to make a wager, the game will perpetually be locked in initialBet.
