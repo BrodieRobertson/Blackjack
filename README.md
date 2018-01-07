@@ -1,4 +1,20 @@
 # Blackjack Changelog
+GUI Beta 1.4.3
+<br>Change Log:
+1. Every text element has had it's font changed and error messages are now red.
+2. Some windows have been resized to better accommodate the modified text text size.
+3. All button panels except for the title screen have been increaed in size.
+4. I finally implemented the statistics window, and it shows basically everything that I couldd think of keeping track of.
+5. The number of decks change based on how many players are in the game.
+6. Smoothed out some bugs that I hadn't previously noticed.
+
+Future Features:
+1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
+2. Complete the about window which will show the game version and people who worked on the game.
+3. Print the log to file when the game is over.
+4. Slow down the game to allow for the user to understand what is happening without reading the log.
+5. Dynamically generate CPU characters initial bets, insurance, and round descisions.
+
 GUI Beta 1.4.2
 <br>Change Log:
 1. All buttons replaced with custom JButtons with gradients.
@@ -6,17 +22,17 @@ GUI Beta 1.4.2
 3. Hand panel now actually shows the second hand.
 4. Player panel resets after a round where a player split their hand.
 5. A few mistakes within the gamelog have been addressed.
+6. Almost every element has a tool tip.
 
 Future Features:
 1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
 2. Updated elements for components that are already displayed.
-3. Tool tips everywhere that makes sense.
-4. Complete the about window which will show the game version and people who worked on the game.
-5. Print the log to file when the game is over.
-6. Decide how many decks should be used based on the number of players.
-7. Slow down the game to allow for the user to understand what is happening without reading the log.
-8. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
-9. Dynamically generate CPU characters initial bets, insurance, and round descisions.
+3. Complete the about window which will show the game version and people who worked on the game.
+4. Print the log to file when the game is over.
+5. Decide how many decks should be used based on the number of players.
+6. Slow down the game to allow for the user to understand what is happening without reading the log.
+7. Complete the statistics window which will show tthe currrent money of each player, how much they've wagered and a bunch of other things.
+8. Dynamically generate CPU characters initial bets, insurance, and round descisions.
 
 GUI Beta 1.4.1
 <br>Note:
