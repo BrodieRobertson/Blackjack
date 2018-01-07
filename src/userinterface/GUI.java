@@ -17,6 +17,7 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -31,9 +32,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.border.MatteBorder;
 
 import card.Card;
+import card.Deck;
+import card.DeckException;
 import card.Face;
 import card.Hand;
 import logic.*;
@@ -44,7 +48,7 @@ import player.*;
  * the logic layer.
  * 
  * @author Brodie Robertson
- * @version 1.4.1
+ * @version 1.4.3
  * @since 1.2.0
  */
 public class GUI extends JFrame 
@@ -58,21 +62,9 @@ public class GUI extends JFrame
 	 */
 	public static final int HEIGHT = 1080;
 	/**
-	 * Height of the main window button panel.
-	 */
-	public static final int TITLE_BUTTON_PANEL_HEIGHT = 80;
-	/**
-	 * Vertical gap between buttons on the main button panel.
-	 */
-	public static final int TITLE_BUTTON_VGAP = TITLE_BUTTON_PANEL_HEIGHT / 4;
-	/**
-	 * Horizontal gap between buttons on the main button panel.
-	 */
-	public static final int TITLE_BUTTON_HGAP = TITLE_BUTTON_PANEL_HEIGHT / 4;
-	/**
 	 * Height of tiny window button panel.
 	 */
-	public static final int TINY_BUTTON_PANEL_HEIGHT = 60;
+	public static final int TINY_BUTTON_PANEL_HEIGHT = 50;
 	/**
 	 * Vertical gap between buttons on tiny window button panels.
 	 */
@@ -81,6 +73,10 @@ public class GUI extends JFrame
 	 * Horizontal gap between buttons on tiny window button panels.
 	 */
 	public static final int TINY_BUTTON_HGAP = TINY_BUTTON_PANEL_HEIGHT / 4;
+	/**
+	 * Size of small windows which don't require many elements.
+	 */
+	private static final Dimension TINY_WINDOW = new Dimension(660, 150);
 	/**
 	 * Height reduced window button panel.
 	 */
@@ -93,6 +89,35 @@ public class GUI extends JFrame
 	 * Horizontal gap between buttons on reduced window button panels.
 	 */
 	public static final int REDUCED_BUTTON_HGAP = REDUCED_BUTTON_PANEL_HEIGHT / 4;
+	/**
+	 * Size of small windows which require more elements than the tiny window.
+	 */
+	private static final Dimension REDUCED_WINDOW = new Dimension(500, 400);
+	/**
+	 * Font for windows that only have a label except for the title screen.
+	 */
+	private static final Font SINGLE_TEXT_FONT = new Font("Calibri", Font.BOLD, 24);
+	/**
+	 * Font for headings on the main screen.
+	 */
+	private static final Font MAIN_HEADING_FONT = new Font("Calibri", Font.BOLD, 18);
+	/**
+	 * Font for general text on the main screen.
+	 */
+	private static final Font MAIN_TEXT_FONT = new Font("Calibri", Font.PLAIN, 16);
+	/**
+	 * Font for every button except for the title screen.
+	 */
+	private static final Font BUTTON_FONT = new Font("Trebuchet MS", 
+			Font.BOLD, 13);
+	/**
+	 * Size of all buttons except for the title screen.
+	 */
+	private static final Dimension BUTTON_SIZE = new Dimension(115, 30);
+	/**
+	 * Font for general text.
+	 */
+	private static final Font TEXT_FONT = new Font("Calibri", Font.BOLD, 14);
 	/**
 	 * Shorthand of JComponent constant WHEN_IN_FOCUSED_WINDOW
 	 */
@@ -107,29 +132,11 @@ public class GUI extends JFrame
 			P = KeyStroke.getKeyStroke(KeyEvent.VK_P, 0), U = KeyStroke.getKeyStroke(KeyEvent.VK_U, 0),
 			M = KeyStroke.getKeyStroke(KeyEvent.VK_M, 0), Y = KeyStroke.getKeyStroke(KeyEvent.VK_Y, 0),
 			N = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0);
-	
 	/**
 	 * 
 	 */
-	public static final Color orange = new Color(243, 101, 37), GREEN = new Color(0, 220, 0), 
-			RED = new Color(235, 0, 0), LIGHT_BLUE = new Color(45, 177, 255);
-	
-	/**
-	 * Font used for all buttons in the game.
-	 */
-	private Font buttonFont = new Font("Verdana", Font.BOLD, 15);
-	/**
-	 * Size of all the buttons in the game.
-	 */
-	private Dimension buttonSize = new Dimension(130, TITLE_BUTTON_PANEL_HEIGHT/2);
-	/**
-	 * Size of small windows which don't require many elements.
-	 */
-	private Dimension tinyWindow = new Dimension(600, 150);
-	/**
-	 * Size of small windows which require more elements than the tiny window.
-	 */
-	private Dimension reducedWindow = new Dimension(500, 400);
+	public static final Color GREEN = new Color(0, 220, 0), RED = new Color(235, 0, 0), 
+			LIGHT_BLUE = new Color(45, 177, 255), LIGHT_GRAY = new Color(249, 249, 250);
 	/**
 	 * Array of panels containing each player's game relevant statistics.
 	 */
@@ -225,7 +232,7 @@ public class GUI extends JFrame
 	 * Dialog window used for confirming the conclusion of the program.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.2
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class CloseWindow extends JDialog
@@ -238,7 +245,7 @@ public class GUI extends JFrame
 		public CloseWindow()
 		{
 			setTitle("Are you sure?");
-			setSize(tinyWindow);
+			setSize(new Dimension(400, TINY_WINDOW.height));
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new BorderLayout());
@@ -246,6 +253,7 @@ public class GUI extends JFrame
 			setResizable(false);
 			
 			JLabel message = new JLabel("Are you sure you want to exit?");
+			message.setFont(SINGLE_TEXT_FONT);
 			message.setHorizontalAlignment(JLabel.CENTER);
 			add(message, BorderLayout.CENTER);
 			
@@ -278,14 +286,20 @@ public class GUI extends JFrame
 			
 			//Button Panel
 			JPanel buttonPanel = new JPanel();
-			buttonPanel.setLayout(new FlowLayout());
+			buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 
+					TINY_BUTTON_HGAP, TINY_BUTTON_VGAP));
+			buttonPanel.setPreferredSize(new Dimension(getWidth(), TINY_BUTTON_PANEL_HEIGHT));
 			buttonPanel.setBackground(Color.DARK_GRAY);
 			JGradientButton confirmButton = new JGradientButton("Confirm");
+			confirmButton.setFont(BUTTON_FONT);
+			confirmButton.setPreferredSize(BUTTON_SIZE);
 			confirmButton.setBackground(GREEN);
 			confirmButton.addActionListener(confirm);
 			confirmButton.setToolTipText("Closes the game");
 			buttonPanel.add(confirmButton);
 			JGradientButton cancelButton = new JGradientButton("Cancel");
+			cancelButton.setFont(BUTTON_FONT);
+			cancelButton.setPreferredSize(BUTTON_SIZE);
 			cancelButton.setBackground(RED);
 			cancelButton.addActionListener(cancel);
 			cancelButton.setToolTipText("Continue");
@@ -366,7 +380,7 @@ public class GUI extends JFrame
 	 * Dialog window used for setting the games options.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.1
+	 * @version 1.4.3
 	 * @since 1.0.0
 	 */
 	private class GameSettingsWindow extends JDialog
@@ -400,7 +414,7 @@ public class GUI extends JFrame
 		 * Dialog window used for setting the name of a human Player.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.2
+		 * @version 1.4.3
 		 * @since 1.2.0
 		 */
 		private class SetNameWindow extends JDialog
@@ -415,7 +429,7 @@ public class GUI extends JFrame
 			 */
 			public SetNameWindow(String title, int index, int maxIndex)
 			{
-				setSize(tinyWindow);
+				setSize(TINY_WINDOW);
 				setTitle(title);
 				setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 				setResizable(false);
@@ -425,10 +439,14 @@ public class GUI extends JFrame
 				//Request for input
 				JPanel inputPanel = new JPanel(new GridLayout(2, 1));
 				JPanel messagePanel = new JPanel(new GridLayout(1, 2));
-				JLabel command = new JLabel("Please enter the name of this player");
+				JLabel command = new JLabel("Enter the name of this player");
+				command.setFont(TEXT_FONT);
 				command.setToolTipText("Must contain at least 1 character");
 				messagePanel.add(command);
 				JLabel error = new JLabel("");
+				error.setFont(TEXT_FONT);
+				error.setHorizontalAlignment(SwingConstants.CENTER);
+				error.setForeground(Color.RED);
 				messagePanel.add(error);
 				inputPanel.add(messagePanel);
 				JTextField input = new JTextField(30);
@@ -477,14 +495,20 @@ public class GUI extends JFrame
 				rootPane.getActionMap().put("ESC", clear);
 				
 				//Button Panel
-				JPanel buttonPanel = new JPanel(new FlowLayout());
+				JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
+						TINY_BUTTON_HGAP, TINY_BUTTON_VGAP));
+				buttonPanel.setPreferredSize(new Dimension(getWidth(), TINY_BUTTON_PANEL_HEIGHT));
 				JGradientButton confirmButton = new JGradientButton("Confirm");
+				confirmButton.setFont(BUTTON_FONT);
 				confirmButton.setBackground(GREEN);
+				confirmButton.setPreferredSize(BUTTON_SIZE);
 				confirmButton.addActionListener(confirm);
 				confirmButton.setToolTipText("Confirms the name input");
 				buttonPanel.add(confirmButton);
 				JGradientButton clearButton = new JGradientButton("Clear");
+				clearButton.setFont(BUTTON_FONT);
 				clearButton.setBackground(RED);
+				clearButton.setPreferredSize(BUTTON_SIZE);
 				clearButton.addActionListener(clear);
 				clearButton.setToolTipText("Clears the name input");
 				buttonPanel.add(clearButton);
@@ -524,7 +548,7 @@ public class GUI extends JFrame
 		public GameSettingsWindow()
 		{
 			setTitle("Game Settings");
-			setSize(reducedWindow);
+			setSize(REDUCED_WINDOW);
 			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			setResizable(false);
 			setModalityType(ModalityType.APPLICATION_MODAL);
@@ -537,6 +561,7 @@ public class GUI extends JFrame
 				public void actionPerformed(ActionEvent e) 
 				{
 					int humanPlayers;
+					int cpuPlayers;
 					table = new Table();
 					roundError.setText("");
 					humanError.setText("");
@@ -573,7 +598,6 @@ public class GUI extends JFrame
 					
 					try
 					{
-						int cpuPlayers;
 						String hInput = humanInput.getText();
 						String cInput = cpuInput.getText();
 						try
@@ -643,6 +667,15 @@ public class GUI extends JFrame
 					}
 					
 					dispose();
+					try 
+					{
+						table.createDeck(humanPlayers + cpuPlayers);
+					} 
+					catch (DeckException ex) 
+					{
+						ex.printStackTrace();
+						System.exit(0);
+					}
 					
 					SetNameWindow window = new SetNameWindow("Player " + 1 
 							+ " name", 0, humanPlayers);
@@ -671,10 +704,14 @@ public class GUI extends JFrame
 			
 			//Round input panel
 			JPanel roundPanel = new JPanel(new GridLayout(1, 2));
-			JLabel roundLabel = new JLabel("Please enter the number of rounds");
+			JLabel roundLabel = new JLabel("Enter the number of rounds");
+			roundLabel.setFont(TEXT_FONT);
 			roundLabel.setToolTipText("Must be a postive number greater than 0");
 			roundPanel.add(roundLabel);
 			roundError = new JLabel("");
+			roundError.setFont(TEXT_FONT);
+			roundError.setForeground(Color.RED);
+			roundError.setHorizontalAlignment(SwingConstants.CENTER);
 			roundPanel.add(roundError);
 			inputPanel.add(roundPanel);
 			roundInput = new JTextField(10);
@@ -682,11 +719,15 @@ public class GUI extends JFrame
 			
 			//Human input panel
 			JPanel humanPanel = new JPanel(new GridLayout(1, 2));
-			JLabel humanLabel = new JLabel("Please enter the number of human players");
+			JLabel humanLabel = new JLabel("Enter the number of human players");
+			humanLabel.setFont(TEXT_FONT);
 			humanLabel.setToolTipText("Must be at least 1 and total players less than " 
 					+ Table.MAXNUMPLAYERS);
 			humanPanel.add(humanLabel);
 			humanError = new JLabel("");
+			humanError.setFont(TEXT_FONT);
+			humanError.setForeground(Color.RED);
+			humanError.setHorizontalAlignment(SwingConstants.CENTER);
 			humanPanel.add(humanError);
 			inputPanel.add(humanPanel);
 			humanInput = new JTextField(10);
@@ -694,11 +735,15 @@ public class GUI extends JFrame
 			
 			//CPU input panel
 			JPanel cpuPanel = new JPanel(new GridLayout(1, 2));
-			JLabel cpuLabel = new JLabel("Please enter the number of CPU players");
+			JLabel cpuLabel = new JLabel("Enter the number of CPU players");
+			cpuLabel.setFont(TEXT_FONT);
 			cpuLabel.setToolTipText("Must be at least 0 and total players less than " 
 					+ Table.MAXNUMPLAYERS);
 			cpuPanel.add(cpuLabel);
 			cpuError = new JLabel("");
+			cpuError.setFont(TEXT_FONT);
+			cpuError.setForeground(Color.RED);
+			cpuError.setHorizontalAlignment(SwingConstants.CENTER);
 			cpuPanel.add(cpuError);
 			inputPanel.add(cpuPanel);
 			cpuInput = new JTextField(10);
@@ -707,13 +752,18 @@ public class GUI extends JFrame
 			//Button Panel
 			JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
 					REDUCED_BUTTON_HGAP, REDUCED_BUTTON_VGAP));
-			
+			buttonPanel.setPreferredSize(new Dimension(getWidth(), 
+					REDUCED_BUTTON_PANEL_HEIGHT));
 			JGradientButton confirmButton = new JGradientButton("Confirm");
+			confirmButton.setFont(BUTTON_FONT);
+			confirmButton.setPreferredSize(BUTTON_SIZE);
 			confirmButton.setBackground(GREEN);
 			confirmButton.addActionListener(confirm);
 			confirmButton.setToolTipText("Confirms all inputs");
 			buttonPanel.add(confirmButton);
 			JGradientButton clearButton = new JGradientButton("Clear");
+			clearButton.setFont(BUTTON_FONT);
+			clearButton.setPreferredSize(BUTTON_SIZE);
 			clearButton.setBackground(RED);
 			clearButton.addActionListener(clear);
 			clearButton.setToolTipText("Clears all inputs");
@@ -743,7 +793,7 @@ public class GUI extends JFrame
 	 * game. Not yet implemented.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.2
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class AboutWindow extends JDialog
@@ -756,7 +806,7 @@ public class GUI extends JFrame
 		public AboutWindow()
 		{
 			setTitle("About");
-			setSize(reducedWindow);
+			setSize(REDUCED_WINDOW);
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new BorderLayout());
@@ -779,11 +829,10 @@ public class GUI extends JFrame
 	}
 	
 	/**
-	 * Statistics window displaying the statistics of the current game. Not yet
-	 * implemented.
+	 * Statistics window displaying the statistics of the current game.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.2
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class StatisticsWindow extends JDialog
@@ -796,11 +845,10 @@ public class GUI extends JFrame
 		public StatisticsWindow()
 		{
 			setTitle("Game Statistics");
-			setSize(reducedWindow);
+			setSize(REDUCED_WINDOW);
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			setModalityType(ModalityType.APPLICATION_MODAL);
-			setLayout(new GridLayout(0, 1));
-			add(new JLabel("AVAILABLE IN FUTURE UPDATE"));
+			setLayout(new BorderLayout());
 			
 			Action close = new AbstractAction()
 			{
@@ -815,6 +863,195 @@ public class GUI extends JFrame
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap().put(ESC, "ESC");
 			rootPane.getActionMap().put("ESC", close);
+			final Dimension breakSize = new Dimension(getWidth(), 
+					REDUCED_WINDOW.height / 15);
+			
+			JPanel statistics = new JPanel();
+			statistics.setLayout(new BoxLayout(statistics, BoxLayout.Y_AXIS));
+				
+			JLabel gameStatistics = new JLabel("Overall Game Statistics:");
+			gameStatistics.setFont(MAIN_HEADING_FONT);
+			statistics.add(gameStatistics);
+			
+			JLabel minWager  = new JLabel("Minimum Wager: $" + Table.MINWAGER);
+			minWager.setFont(MAIN_TEXT_FONT);
+			statistics.add(minWager);
+
+			JLabel maxWager = new JLabel("Maximum Wager: $" + Table.MAXWAGER);
+			maxWager.setFont(MAIN_TEXT_FONT);
+			statistics.add(maxWager);
+			
+			JLabel minNumPlayer = new JLabel("Minimum Players: " + Table.MINNUMPLAYERS);
+			minNumPlayer.setFont(MAIN_TEXT_FONT);
+			statistics.add(minNumPlayer);
+			
+			JLabel maxNumPlayer = new JLabel("Maximum Players: " + Table.MAXNUMPLAYERS);
+			maxNumPlayer.setFont(MAIN_TEXT_FONT);
+			statistics.add(maxNumPlayer);
+		
+			JLabel numPlayer = new JLabel("Number of Players: " 
+			+ (table.getPlayers().length - 1));
+			numPlayer.setFont(MAIN_TEXT_FONT);
+			statistics.add(numPlayer);
+			
+			JLabel cardsInFullDeck = new JLabel("Cards in Full Deck: " 
+					+ (table.getDeck().getNumOfDecks() * Deck.DECKSIZE));
+			cardsInFullDeck.setFont(MAIN_TEXT_FONT);
+			statistics.add(cardsInFullDeck);
+			
+			JLabel cardsLeftinDeck = new JLabel("Cards Remaining in Deck: " 
+			+ table.getDeck().getCardsRemaining());
+			cardsLeftinDeck.setFont(MAIN_TEXT_FONT);
+			statistics.add(cardsLeftinDeck);
+			
+			JLabel currentRound = new JLabel("Current Round: " + (table.
+					getCurrentRound()));
+			currentRound.setFont(MAIN_TEXT_FONT);
+			statistics.add(currentRound);
+			
+			Person[] players = table.getPlayers();
+			for(int i = 0; i < players.length; i++)
+			{
+				if(players[i] instanceof Player)
+				{
+					Player player = (Player)players[i];
+					JLabel statBreak = new JLabel("");
+					statBreak.setMinimumSize(breakSize);
+					statBreak.setMaximumSize(breakSize);
+					statBreak.setPreferredSize(breakSize);
+					statistics.add(statBreak);
+					
+					JLabel header = new JLabel("Player " + (i + 1) + " Statistics:");
+					header.setFont(MAIN_HEADING_FONT);
+					statistics.add(header);
+					
+					JLabel name = new JLabel("Name: " + player.getName());
+					name.setFont(MAIN_TEXT_FONT);
+					statistics.add(name);
+					
+					if(player.getBankrupt())
+					{
+						JLabel bankrupt = new JLabel("Bankrupt");
+						bankrupt.setFont(MAIN_TEXT_FONT);
+						statistics.add(bankrupt);
+					}
+						
+					JLabel currentWager = new JLabel("Current Wager: $" 
+							+ player.getWager());
+					currentWager.setFont(MAIN_TEXT_FONT);
+					statistics.add(currentWager);
+					
+					if(!player.getHand(0).getSplit())
+					{
+						JLabel handScore = new JLabel("Hand Score: " + 
+								player.getHand(0).getHandScore());
+						handScore.setFont(MAIN_TEXT_FONT);
+						statistics.add(handScore);
+						
+						JLabel cardsHeld = new JLabel("Cards Held: " + 
+								player.getHand(0).getCardsRemaining());
+						cardsHeld.setFont(MAIN_TEXT_FONT);
+						statistics.add(cardsHeld);
+					}
+					else
+					{
+						Hand[] hands = player.getHands();
+						for(int j = 0; j < hands.length; j++)
+						{
+							JLabel handScore = new JLabel("Hand " +	(i + 1) 
+									+ "Score " + hands[i].getHandScore());
+							handScore.setFont(MAIN_TEXT_FONT);
+							statistics.add(handScore);
+							
+							JLabel cardsHeld = new JLabel("Cards Held in Hand " 
+									+ (i + 1) + ":");
+							cardsHeld.setFont(MAIN_TEXT_FONT);
+							statistics.add(cardsHeld);
+						}
+					}
+					
+					JLabel startingMoney = new JLabel("Starting Money: $" + Player.STARTING_MONEY);
+					startingMoney.setFont(MAIN_TEXT_FONT);
+					statistics.add(startingMoney);
+					
+					JLabel totalMoney = new JLabel("Total Money: $" 
+							+ player.getTotalMoney());
+					totalMoney.setFont(MAIN_TEXT_FONT);
+					statistics.add(totalMoney);
+					
+					JLabel totalWinnings = new JLabel("Total Winnings: $" 
+							+ player.getTotalWinnings());
+					totalWinnings.setFont(MAIN_TEXT_FONT);
+					statistics.add(totalWinnings);
+					
+					JLabel totalWagers = new JLabel("Total Wagers: $" 
+							+ player.getTotalWager());
+					totalWagers.setFont(MAIN_TEXT_FONT);
+					statistics.add(totalWagers);
+					
+					JLabel totalInsurance = new JLabel("Total Insurance: $" 
+							+ player.getTotalInsurance());
+					totalInsurance.setFont(MAIN_TEXT_FONT);
+					statistics.add(totalInsurance);
+					
+					JLabel win = new JLabel("Wins: " + player.getWin());
+					win.setFont(MAIN_TEXT_FONT);
+					statistics.add(win);
+					
+					JLabel loss = new JLabel("Losses: " + player.getLoss());
+					loss.setFont(MAIN_TEXT_FONT);
+					statistics.add(loss);
+					
+					JLabel push = new JLabel("Pushes: " + player.getPush());
+					push.setFont(MAIN_TEXT_FONT);
+					statistics.add(push);
+					
+					JLabel blackjack = new JLabel("Blackjack: " + player.
+							getBlackjack());
+					blackjack.setFont(MAIN_TEXT_FONT);
+					statistics.add(blackjack);
+					
+					JLabel bust = new JLabel("Busts: " + player.getBust());
+					bust.setFont(MAIN_TEXT_FONT);
+					statistics.add(bust);
+					
+					JLabel surrender = new JLabel("Surrenders: " + player.getSurrender());
+					surrender.setFont(MAIN_TEXT_FONT);
+					statistics.add(surrender);
+				}
+				else
+				{
+					Person dealer = players[i];
+					JLabel statBreak = new JLabel("");
+					statBreak.setMinimumSize(breakSize);
+					statBreak.setMaximumSize(breakSize);
+					statBreak.setPreferredSize(breakSize);
+					statistics.add(statBreak);
+					
+					JLabel header = new JLabel("Dealer Statistics");
+					header.setFont(MAIN_HEADING_FONT);
+					statistics.add(header);
+					
+					JLabel name = new JLabel("Name: " + dealer.getName());
+					name.setFont(MAIN_TEXT_FONT);
+					statistics.add(name);
+					
+					JLabel handScore = new JLabel("Hand Score: " + dealer.
+							getHand(0).getHandScore());
+					handScore.setFont(MAIN_TEXT_FONT);
+					statistics.add(handScore);
+					
+					JLabel cardsHeld = new JLabel("Cards Held: " + dealer.
+							getHand(0).getCardsRemaining());
+					cardsHeld.setFont(MAIN_TEXT_FONT);
+					statistics.add(cardsHeld);
+				}
+			}
+
+			JScrollPane scrollPane = new JScrollPane(statistics);
+			scrollPane.setHorizontalScrollBarPolicy(JScrollPane.
+					HORIZONTAL_SCROLLBAR_NEVER);
+			add(scrollPane);
 		}
 	}
 	
@@ -882,7 +1119,7 @@ public class GUI extends JFrame
 	 * Used to draw a players statistics on the screen, including their hand.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.2
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class PlayerPanel extends JPanel
@@ -940,9 +1177,11 @@ public class GUI extends JFrame
 			//Name
 			JPanel namePanel = new JPanel(new GridLayout(2, 1));
 			JLabel nameLabel = new JLabel("Name");
+			nameLabel.setFont(MAIN_HEADING_FONT);
 			nameLabel.setHorizontalAlignment(JLabel.CENTER);
 			namePanel.add(nameLabel);
 			JLabel name = new JLabel(player.getName());
+			name.setFont(MAIN_TEXT_FONT);
 			name.setHorizontalAlignment(JLabel.CENTER);
 			name.setToolTipText("The player's name");
 			namePanel.add(name);
@@ -951,9 +1190,11 @@ public class GUI extends JFrame
 			//Total Money
 			JPanel totalMoneyPanel = new JPanel(new GridLayout(2, 1));
 			JLabel totalMoneyLabel = new JLabel("Total Money");
+			totalMoneyLabel.setFont(MAIN_HEADING_FONT);
 			totalMoneyLabel.setHorizontalAlignment(JLabel.CENTER);
 			totalMoneyPanel.add(totalMoneyLabel);
 			totalMoney = new JLabel("$" + player.getTotalMoney());
+			totalMoney.setFont(MAIN_TEXT_FONT);
 			totalMoney.setHorizontalAlignment(JLabel.CENTER);
 			totalMoney.setToolTipText(player.getName() + "'s total money");
 			totalMoneyPanel.add(totalMoney);
@@ -962,9 +1203,11 @@ public class GUI extends JFrame
 			//Wager
 			JPanel wagerPanel = new JPanel(new GridLayout(2, 1));
 			JLabel wagerLabel = new JLabel("Wager");
+			wagerLabel.setFont(MAIN_HEADING_FONT);
 			wagerLabel.setHorizontalAlignment(JLabel.CENTER);
 			wagerPanel.add(wagerLabel);
 			wager = new JLabel("$" + player.getWager());
+			wager.setFont(MAIN_TEXT_FONT);
 			wager.setHorizontalAlignment(JLabel.CENTER);
 			wager.setToolTipText(player.getName() + "'s wager");
 			wagerPanel.add(wager);
@@ -976,9 +1219,11 @@ public class GUI extends JFrame
 			scores = new JLabel[2];
 			scorePanels[0] = new JPanel(new GridLayout(2, 1));
 			scoreLabels[0] = new JLabel("Hand Score");
+			scoreLabels[0].setFont(MAIN_HEADING_FONT);
 			scoreLabels[0].setHorizontalAlignment(JLabel.CENTER);
 			scorePanels[0].add(scoreLabels[0]);
 			scores[0] = new JLabel("" + player.getHand(0).getHandScore());
+			scores[0].setFont(MAIN_TEXT_FONT);
 			scores[0].setHorizontalAlignment(JLabel.CENTER);
 			scores[0].setToolTipText(player.getName() + " hand score");
 			scorePanels[0].add(scores[0]);
@@ -987,9 +1232,11 @@ public class GUI extends JFrame
 			//Extra
 			JPanel extraPanel = new JPanel(new GridLayout(2, 1));
 			extraLabel = new JLabel("");
+			extraLabel.setFont(MAIN_HEADING_FONT);
 			extraLabel.setHorizontalAlignment(JLabel.CENTER);
 			extraPanel.add(extraLabel);
 			extra = new JLabel("");
+			extra.setFont(MAIN_TEXT_FONT);
 			extra.setHorizontalAlignment(JLabel.CENTER);
 			extraPanel.add(extra);
 			statisticsPanel.add(extraPanel);
@@ -997,9 +1244,11 @@ public class GUI extends JFrame
 			//Second Hand Score
 			scorePanels[1] = new JPanel(new GridLayout(2, 1));
 			scoreLabels[1] = new JLabel("");
+			scoreLabels[1].setFont(MAIN_HEADING_FONT);
 			scoreLabels[1].setHorizontalAlignment(JLabel.CENTER);
 			scorePanels[1].add(scoreLabels[1]);
 			scores[1] = new JLabel("");
+			scores[1].setFont(MAIN_TEXT_FONT);
 			scores[1].setHorizontalAlignment(JLabel.CENTER);
 			scorePanels[1].add(scores[1]);
 			statisticsPanel.add(scorePanels[1]);
@@ -1069,18 +1318,22 @@ public class GUI extends JFrame
 		
 		public void resetPanel(int index)
 		{
-			Person player = table.getPersonAtIndex(index);
-			scoreLabels[1].setText("");
-			scores[1].setText("");
 			extraLabel.setText("");
 			extra.setText("");
-			hands[0].setToolTipText("Cards in hand: " + player.getHand(0).
-					getCardsRemaining());
+			scores[0].setText("0");
+			hands[0].setToolTipText("Cards in hand: " + 0);
 			hands[0].updatePanel(index, 0);
 			splitHand = false;
-			handList.remove(1);
-			handList.revalidate();
-			handList.repaint();
+			if(hands[1] != null)
+			{
+				hands[1] = null;
+				scoreLabels[1].setText("");
+				scores[1].setText("");
+				handList.remove(1);
+				handList.revalidate();
+				handList.repaint();
+			}
+
 		}
 	}
 	
@@ -1088,7 +1341,7 @@ public class GUI extends JFrame
 	 * Used to draw the dealer's statistics onto the display.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.0
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class DealerPanel extends JPanel
@@ -1118,9 +1371,11 @@ public class GUI extends JFrame
 			//Name
 			JPanel namePanel = new JPanel(new GridLayout(2, 1));
 			JLabel nameLabel = new JLabel("Name");
+			nameLabel.setFont(MAIN_HEADING_FONT);
 			nameLabel.setHorizontalAlignment(JLabel.CENTER);
 			namePanel.add(nameLabel);
 			JLabel name = new JLabel(dealer.getName());
+			name.setFont(MAIN_TEXT_FONT);
 			name.setHorizontalAlignment(JLabel.CENTER);
 			name.setToolTipText("The dealer's name");
 			namePanel.add(name);
@@ -1130,9 +1385,11 @@ public class GUI extends JFrame
 			//Hand Score
 			JPanel scorePanel = new JPanel(new GridLayout(2, 1));
 			JLabel scoreLabel = new JLabel("Hand Score");
+			scoreLabel.setFont(MAIN_HEADING_FONT);
 			scoreLabel.setHorizontalAlignment(JLabel.CENTER);
 			scorePanel.add(scoreLabel);
 			score = new JLabel("" + dealer.getHand(0).getHandScore());
+			score.setFont(MAIN_TEXT_FONT);
 			score.setHorizontalAlignment(JLabel.CENTER);
 			score.setToolTipText("The dealer's score");
 			scorePanel.add(score);
@@ -1172,7 +1429,7 @@ public class GUI extends JFrame
 	 * Dialog window used for setting a human's wager.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.2
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class WagerWindow extends JDialog
@@ -1187,7 +1444,7 @@ public class GUI extends JFrame
 		{
 			String name = table.getPersonAtIndex(index).getName();
 			setTitle(name + "'s Wager");
-			setSize(tinyWindow);
+			setSize(TINY_WINDOW);
 			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			setResizable(false);
 			setModalityType(ModalityType.MODELESS);
@@ -1196,11 +1453,15 @@ public class GUI extends JFrame
 			//Request for input.
 			JPanel inputPanel = new JPanel(new GridLayout(2, 1));
 			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
-			JLabel command = new JLabel("Please enter " + name + "'s  wager");
+			JLabel command = new JLabel("Enter " + name + "'s  wager");
+			command.setFont(TEXT_FONT);
 			command.setToolTipText("Wager must be between $" + Table.MINWAGER 
 					+ " and $" + Table.MAXWAGER);
 			messagePanel.add(command);
 			JLabel error = new JLabel("");
+			error.setFont(TEXT_FONT);
+			error.setForeground(Color.RED);
+			error.setHorizontalAlignment(SwingConstants.CENTER);
 			messagePanel.add(error);
 			inputPanel.add(messagePanel);
 			JTextField input = new JTextField(30);
@@ -1261,13 +1522,20 @@ public class GUI extends JFrame
 			rootPane.getActionMap().put("ESC", clear);
 			
 			//Button Panel
-			JPanel buttonPanel = new JPanel(new FlowLayout());
+			JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
+					TINY_BUTTON_HGAP, TINY_BUTTON_VGAP));
+			buttonPanel.setPreferredSize(new Dimension(getWidth(), 
+					TINY_BUTTON_PANEL_HEIGHT));
 			JGradientButton confirmButton = new JGradientButton("Confirm");
+			confirmButton.setFont(BUTTON_FONT);
+			confirmButton.setPreferredSize(BUTTON_SIZE);
 			confirmButton.setBackground(GREEN);
 			confirmButton.addActionListener(confirm);
 			confirmButton.setToolTipText("Confirms the wager input");
 			buttonPanel.add(confirmButton);
 			JGradientButton clearButton = new JGradientButton("Clear");
+			clearButton.setFont(BUTTON_FONT);
+			clearButton.setPreferredSize(BUTTON_SIZE);
 			clearButton.setBackground(RED);
 			clearButton.addActionListener(clear);
 			clearButton.setToolTipText("Clears the wager input");
@@ -1280,7 +1548,7 @@ public class GUI extends JFrame
 	 * Dialog window used for setting a human's insurance.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.2
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class InsuranceWindow extends JDialog
@@ -1296,7 +1564,7 @@ public class GUI extends JFrame
 			Player player = (Player)table.getPersonAtIndex(index);
 			String name = player.getName();
 			setTitle(name + "'s Insurance");
-			setSize(tinyWindow);
+			setSize(TINY_WINDOW);
 			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			setResizable(false);
 			setModalityType(ModalityType.MODELESS);
@@ -1305,14 +1573,22 @@ public class GUI extends JFrame
 			//Request for input.
 			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
 			JLabel command = new JLabel("Would you like insurance?");
+			command.setFont(TEXT_FONT);
 			command.setToolTipText("Total money must be at least as as much as "
 					+ "half your wager " + player.getWager() / 2);
 			messagePanel.add(command);
 			JLabel error = new JLabel("");
+			error.setFont(TEXT_FONT);
+			error.setForeground(Color.RED);
+			error.setHorizontalAlignment(SwingConstants.CENTER);
 			messagePanel.add(error);
 			add(messagePanel, BorderLayout.CENTER);
 			
 			JTextField input = new JTextField();
+			JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
+					TINY_BUTTON_HGAP, TINY_BUTTON_VGAP));
+			buttonPanel.setPreferredSize(new Dimension(getWidth(), 
+					TINY_BUTTON_PANEL_HEIGHT));
 			
 			//Confims the users insurance input and validates it.
 			Action confirm = new AbstractAction() 
@@ -1372,21 +1648,15 @@ public class GUI extends JFrame
 						return;
 					}
 					else
-					{
-						getContentPane().removeAll();;
-						setLayout(new BorderLayout());
-						
+					{	
 						//Request for input.
 						JPanel inputPanel = new JPanel(new GridLayout(2, 1));
-						JPanel messagePanel = new JPanel(new GridLayout(1, 2));
-						JLabel command = new JLabel("How much would you like?");
+						command.setText("How much would you like?");
 						command.setToolTipText("Can't be greater than half the "
 								+ "wager: " + player.getWager() / 2);
-						messagePanel.add(command);
-						error.setText("");;
-						messagePanel.add(error);
+						error.setText("");
+						input.setText("");
 						inputPanel.add(messagePanel);
-						input.setText("");;
 						inputPanel.add(input);
 						add(inputPanel, BorderLayout.CENTER);
 						
@@ -1400,21 +1670,25 @@ public class GUI extends JFrame
 						rootPane.getActionMap().put("ESC", clear);
 						
 						//Button panel
-						JPanel buttonPanel = new JPanel(new FlowLayout());
+						buttonPanel.removeAll();
 						JGradientButton confirmButton = new JGradientButton("Confirm");
+						confirmButton.setFont(BUTTON_FONT);
+						confirmButton.setPreferredSize(BUTTON_SIZE);
 						confirmButton.setBackground(GREEN);
 						confirmButton.addActionListener(confirm);
 						confirmButton.setToolTipText("Confirm the insurance input");
 						buttonPanel.add(confirmButton);
 						JGradientButton clearButton = new JGradientButton("Clear");
-						clearButton.setBackground(GREEN);
+						clearButton.setFont(BUTTON_FONT);
+						clearButton.setPreferredSize(BUTTON_SIZE);
+						clearButton.setBackground(RED);
 						clearButton.setToolTipText("Clears the insurance input");
 						clearButton.addActionListener(clear);
 						buttonPanel.add(clearButton);
 						add(buttonPanel, BorderLayout.SOUTH);
 						
-						getContentPane().revalidate();
-						repaint();
+						buttonPanel.revalidate();
+						buttonPanel.repaint();
 						gameLog.setText(gameLog.getText() + player.getName() 
 						+ " takes insurance\n");
 					}
@@ -1446,13 +1720,16 @@ public class GUI extends JFrame
 			rootPane.getActionMap().put("N", no);
 			
 			//Button panel
-			JPanel buttonPanel = new JPanel(new FlowLayout());
 			JGradientButton yesButton = new JGradientButton("Yes");
+			yesButton.setFont(BUTTON_FONT);
+			yesButton.setPreferredSize(BUTTON_SIZE);
 			yesButton.setBackground(GREEN);
 			yesButton.addActionListener(yes);
 			yesButton.setToolTipText("Confirms that the user wants insurance");
 			buttonPanel.add(yesButton);
 			JGradientButton noButton = new JGradientButton("No");
+			noButton.setFont(BUTTON_FONT);
+			noButton.setPreferredSize(BUTTON_SIZE);
 			noButton.setBackground(RED);
 			noButton.addActionListener(no);
 			noButton.setToolTipText("Confirms that the user doesn't wants insurance");
@@ -1465,7 +1742,7 @@ public class GUI extends JFrame
 	 * Dialog window used for playing out a human's turn.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.2
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class TurnWindow extends JDialog
@@ -1525,7 +1802,7 @@ public class GUI extends JFrame
 		 * Deals the human another card to this hand and displays the reuslts.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.2
+		 * @version 1.4.3
 		 * @since 1.4.1
 		 */
 		private class SplitHit extends AbstractAction
@@ -1568,14 +1845,15 @@ public class GUI extends JFrame
 					
 					//Button Panel
 					buttonPanel.removeAll();
-					buttonPanel.setLayout(new FlowLayout());
 					JGradientButton standButton = new JGradientButton("Stand");
+					standButton.setFont(BUTTON_FONT);
 					standButton.setBackground(LIGHT_BLUE);
 					standButton.addActionListener(new SplitStand(handIndex));
 					standButton.setToolTipText("Ends the player's turn with this "
 							+ "hand");
 					buttonPanel.add(standButton);
 					JGradientButton hitButton = new JGradientButton("Hit");
+					hitButton.setFont(BUTTON_FONT);
 					hitButton.setBackground(LIGHT_BLUE);
 					hitButton.addActionListener(new SplitHit(handIndex));
 					hitButton.setToolTipText("Deals the player another card to "
@@ -1679,7 +1957,7 @@ public class GUI extends JFrame
 		{
 			String name = table.getPersonAtIndex(index).getName();
 			setTitle(name + "'s Turn");
-			setSize(tinyWindow);
+			setSize(TINY_WINDOW);
 			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			setResizable(false);
 			setModalityType(ModalityType.MODELESS);
@@ -1689,8 +1967,12 @@ public class GUI extends JFrame
 			//Request for action
 			JPanel messagePanel = new JPanel(new GridLayout(1, 2));
 			command = new JLabel("What action would you like to take?");
+			command.setFont(TEXT_FONT);
 			messagePanel.add(command);
 			error = new JLabel("");
+			error.setFont(TEXT_FONT);
+			error.setForeground(Color.RED);
+			error.setHorizontalAlignment(SwingConstants.CENTER);
 			messagePanel.add(error);
 			add(messagePanel, BorderLayout.CENTER);
 			
@@ -1739,13 +2021,16 @@ public class GUI extends JFrame
 						
 						//Button panel
 						buttonPanel.removeAll();
-						buttonPanel.setLayout(new FlowLayout());
 						JGradientButton standButton = new JGradientButton("Stand");
+						standButton.setFont(BUTTON_FONT);
+						standButton.setPreferredSize(BUTTON_SIZE);
 						standButton.setBackground(LIGHT_BLUE);
 						standButton.addActionListener(stand);
 						standButton.setToolTipText("Ends the player's turn");
 						buttonPanel.add(standButton);
 						JGradientButton hitButton = new JGradientButton("Hit");
+						hitButton.setFont(BUTTON_FONT);
+						hitButton.setPreferredSize(BUTTON_SIZE);
 						hitButton.setBackground(LIGHT_BLUE);
 						hitButton.addActionListener(this);
 						hitButton.setToolTipText("Deals the player another card");
@@ -1826,7 +2111,7 @@ public class GUI extends JFrame
 					//If the human meet the requirements for a split.
 					if(player.getTotalMoney() >= player.getWager() && (player.
 					   getHand(0).getCard(0).getValue() == player.getHand(0).
-					   getCard(0).getValue() || (player.getHand(0).getCard(0).
+					   getCard(1).getValue() || (player.getHand(0).getCard(0).
 					   getFace() == Face.ACE && player.getHand(0).getCard(1).
 					   getFace() == Face.ACE)))
 					{
@@ -1856,18 +2141,24 @@ public class GUI extends JFrame
 						//Button panel
 						buttonPanel.removeAll();
 						JGradientButton standButton = new JGradientButton("Stand");
+						standButton.setFont(BUTTON_FONT);
+						standButton.setPreferredSize(BUTTON_SIZE);
 						standButton.setBackground(LIGHT_BLUE);
 						standButton.addActionListener(new SplitStand(handIndex));
 						standButton.setToolTipText("Ends the player's turn "
 								+ "with this hand");
 						buttonPanel.add(standButton);
 						JGradientButton hitButton = new JGradientButton("Hit");
+						hitButton.setFont(BUTTON_FONT);
+						hitButton.setPreferredSize(BUTTON_SIZE);
 						hitButton.setBackground(LIGHT_BLUE);
 						hitButton.addActionListener(new SplitHit(handIndex));
 						hitButton.setToolTipText("Deals the player another card "
 								+ "to this hand");
 						buttonPanel.add(hitButton);
 						JGradientButton doubleDownButton = new JGradientButton("Double Down");
+						doubleDownButton.setFont(BUTTON_FONT);
+						doubleDownButton.setPreferredSize(BUTTON_SIZE);
 						doubleDownButton.setBackground(LIGHT_BLUE);
 						doubleDownButton.addActionListener(new SplitDoubleDown(handIndex));
 						doubleDownButton.setToolTipText("Doubles the player's "
@@ -1928,30 +2219,43 @@ public class GUI extends JFrame
 			rootPane.getActionMap().put("U", surrender);
 			
 			//Button panel
-			buttonPanel = new JPanel(new FlowLayout());
+			buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
+					TINY_BUTTON_HGAP, TINY_BUTTON_VGAP));
+			buttonPanel.setSize(new Dimension(getWidth(), 
+					TINY_BUTTON_PANEL_HEIGHT));
 			JGradientButton standButton = new JGradientButton("Stand");
+			standButton.setFont(BUTTON_FONT);
+			standButton.setPreferredSize(BUTTON_SIZE);
 			standButton.setBackground(LIGHT_BLUE);
 			standButton.addActionListener(stand);
 			standButton.setToolTipText("Ends the player's turn");
 			buttonPanel.add(standButton);
 			JGradientButton hitButton = new JGradientButton("Hit");
+			hitButton.setFont(BUTTON_FONT);
+			hitButton.setPreferredSize(BUTTON_SIZE);
 			hitButton.setBackground(LIGHT_BLUE);
 			hitButton.addActionListener(hit);
 			hitButton.setToolTipText("Deals the player another card");
 			buttonPanel.add(hitButton);
 			JGradientButton doubleDownButton = new JGradientButton("Double Down");
+			doubleDownButton.setFont(BUTTON_FONT);
+			doubleDownButton.setPreferredSize(BUTTON_SIZE);
 			doubleDownButton.setBackground(LIGHT_BLUE);
 			doubleDownButton.addActionListener(doubleDown);
 			doubleDownButton.setToolTipText("Doubles the player's wager and "
 					+ "deals them a second card");
 			buttonPanel.add(doubleDownButton);
 			JGradientButton splitButton = new JGradientButton("Split");
+			splitButton.setFont(BUTTON_FONT);
+			splitButton.setPreferredSize(BUTTON_SIZE);
 			splitButton.setBackground(LIGHT_BLUE);
 			splitButton.addActionListener(split);
 			splitButton.setToolTipText("Doubles the player's wager and splits"
 					+ " their hand");
 			buttonPanel.add(splitButton);
 			JGradientButton surrenderButton = new JGradientButton("Surrender");
+			surrenderButton.setFont(BUTTON_FONT);
+			surrenderButton.setPreferredSize(BUTTON_SIZE);
 			surrenderButton.setBackground(LIGHT_BLUE);
 			surrenderButton.addActionListener(surrender);
 			surrenderButton.setToolTipText("The player loses this round and "
@@ -1992,18 +2296,21 @@ public class GUI extends JFrame
 				//Button Panel
 				buttonPanel.removeAll();
 				JGradientButton standButton = new JGradientButton("Stand");
+				standButton.setFont(BUTTON_FONT);
 				standButton.setBackground(LIGHT_BLUE);
 				standButton.addActionListener(new SplitStand(handIndex));
 				standButton.setToolTipText("Ends the player's turn with this "
 						+ "hand");
 				buttonPanel.add(standButton);
 				JGradientButton hitButton = new JGradientButton("Hit");
+				hitButton.setFont(BUTTON_FONT);
 				hitButton.setBackground(LIGHT_BLUE);
 				hitButton.addActionListener(new SplitHit(handIndex));
 				hitButton.setToolTipText("Deals the player another card to this "
 						+ "hand");
 				buttonPanel.add(hitButton);
 				JGradientButton doubleDownButton = new JGradientButton("Double Down");
+				doubleDownButton.setFont(BUTTON_FONT);
 				doubleDownButton.setBackground(LIGHT_BLUE);
 				doubleDownButton.addActionListener(new SplitDoubleDown(handIndex));
 				doubleDownButton.setToolTipText("Doubles the player's wager and "
@@ -2026,7 +2333,7 @@ public class GUI extends JFrame
 	 * completed.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.1
+	 * @version 1.4.3
 	 * @since 1.2.0
 	 */
 	private class EndGameWindow extends JDialog
@@ -2039,14 +2346,15 @@ public class GUI extends JFrame
 		public EndGameWindow()
 		{
 			setTitle("End Game");
-			setSize(tinyWindow);
+			setSize(TINY_WINDOW);
 			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			setResizable(false);
-			setModalityType(ModalityType.APPLICATION_MODAL);
+			setModalityType(ModalityType.MODELESS);
 			setLayout(new BorderLayout());
 			
 			//Request for input.
 			JLabel command = new JLabel("Would you like to play again?");
+			command.setFont(SINGLE_TEXT_FONT);
 			command.setHorizontalAlignment(JLabel.CENTER);
 			add(command, BorderLayout.CENTER);
 			
@@ -2057,13 +2365,14 @@ public class GUI extends JFrame
 				public void actionPerformed(ActionEvent e) 
 				{
 					dispose();
+					clearScreen();
 					GameSettingsWindow window = new GameSettingsWindow();
 					window.setVisible(true);
 				}
 			};
 			
 			//Confirms that the user wants to return to the main menu.
-			Action menu = new AbstractAction() 
+			Action titleScreen = new AbstractAction() 
 			{
 				@Override
 				public void actionPerformed(ActionEvent e) 
@@ -2084,37 +2393,48 @@ public class GUI extends JFrame
 			rootPane.getInputMap(WIFW).put(N, "N");
 			rootPane.getActionMap().put("N", new QuitGame());
 			rootPane.getInputMap(WIFW).put(M, "M");
-			rootPane.getActionMap().put("M", menu);
+			rootPane.getActionMap().put("M", titleScreen);
 			rootPane.getInputMap(WIFW).put(S, "S");
 			rootPane.getActionMap().put("S", new Statistics());
 			rootPane.getInputMap(WIFW).put(A, "A");
 			rootPane.getActionMap().put("A", new About());
 			
 			//Button panel
-			JPanel buttonPanel = new JPanel(new FlowLayout());
+			JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
+					TINY_BUTTON_HGAP,  TINY_BUTTON_VGAP));
+			buttonPanel.setPreferredSize(new Dimension(getWidth(), 
+					TINY_BUTTON_PANEL_HEIGHT));
 			JGradientButton yesButton = new JGradientButton("Yes");
+			yesButton.setFont(BUTTON_FONT);
+			yesButton.setPreferredSize(BUTTON_SIZE);
 			yesButton.setBackground(GREEN);
 			yesButton.addActionListener(yes);
 			yesButton.setToolTipText("Restarts the game");
 			buttonPanel.add(yesButton);
 			JGradientButton noButton = new JGradientButton("No");
+			noButton.setFont(BUTTON_FONT);
+			noButton.setPreferredSize(BUTTON_SIZE);
 			noButton.setBackground(RED);
 			noButton.addActionListener(new QuitGame());
 			noButton.setToolTipText("Ends the game");
 			buttonPanel.add(noButton);
-			JGradientButton menuButton = new JGradientButton("Return to Title "
-					+ "Screen");
-			menuButton.setBackground(LIGHT_BLUE);
-			menuButton.setActionCommand("Menu");
-			menuButton.addActionListener(menu);
-			menuButton.setToolTipText("Goes back to the title screen");
-			buttonPanel.add(menuButton);
+			JGradientButton titleButton = new JGradientButton("Title Screen");
+			titleButton.setFont(BUTTON_FONT);
+			titleButton.setPreferredSize(BUTTON_SIZE);
+			titleButton.setBackground(LIGHT_BLUE);
+			titleButton.addActionListener(titleScreen);
+			titleButton.setToolTipText("Goes back to the title screen");
+			buttonPanel.add(titleButton);
 			JGradientButton statisticsButton = new JGradientButton("Statistics");
+			statisticsButton.setFont(BUTTON_FONT);
+			statisticsButton.setPreferredSize(BUTTON_SIZE);
 			statisticsButton.setBackground(LIGHT_BLUE);
 			statisticsButton.addActionListener(new Statistics());
 			statisticsButton.setToolTipText("Opens the Statistics window");
 			buttonPanel.add(statisticsButton);
 			JGradientButton aboutButton = new JGradientButton("About");
+			aboutButton.setFont(BUTTON_FONT);
+			aboutButton.setPreferredSize(BUTTON_SIZE);
 			aboutButton.setBackground(LIGHT_BLUE);
 			aboutButton.addActionListener(new About());
 			aboutButton.setToolTipText("Opens the About window");
@@ -2174,8 +2494,15 @@ public class GUI extends JFrame
 		rootPane.getInputMap(WIFW).put(S, "S");
 		rootPane.getActionMap().put("S", statistics);
 		
+		final Color orange = new Color(243, 101, 37);
+		final int buttonPanelHeight = 80;
+		final int buttonVGap = buttonPanelHeight / 4;
+		final int buttonHGap = buttonPanelHeight / 5;
+		final Font buttonFont = new Font("Trebuchet MS", Font.BOLD, 18);
+		final Dimension buttonSize = new Dimension(130, 
+				buttonPanelHeight/2);
+		
 		//Background colour
-
 		getContentPane().setBackground(orange);
 		
 		//Title
@@ -2187,9 +2514,9 @@ public class GUI extends JFrame
 		
 		//Button panel
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
-				TITLE_BUTTON_HGAP, TITLE_BUTTON_VGAP));
+				buttonHGap, buttonVGap));
 		buttonPanel.setBackground(Color.DARK_GRAY);
-		buttonPanel.setPreferredSize(new Dimension(WIDTH, TITLE_BUTTON_PANEL_HEIGHT));
+		buttonPanel.setPreferredSize(new Dimension(WIDTH, buttonPanelHeight));
 		JGradientButton playButton = new JGradientButton("Start Game");
 		playButton.setBackground(LIGHT_BLUE);
 		playButton.addActionListener(startGame);
@@ -2226,8 +2553,7 @@ public class GUI extends JFrame
 	{
 		getContentPane().removeAll();
 		setLayout(new BorderLayout());
-		Color lightGray = new Color(249, 249, 250);
-		getContentPane().setBackground(lightGray);
+		getContentPane().setBackground(LIGHT_GRAY);
 		
 		JRootPane rootPane = getRootPane();
 		rootPane.getInputMap(WIFW).remove(ENTER);
@@ -2236,15 +2562,19 @@ public class GUI extends JFrame
 		//Menu Bar
 		JMenuBar menuBar = new JMenuBar();
 		JMenu menu = new JMenu("Menu");
+		menu.setFont(MAIN_HEADING_FONT);
 		JMenuItem aboutButton = new JMenuItem("About");
+		aboutButton.setFont(MAIN_TEXT_FONT);
 		aboutButton.addActionListener(new About());
 		aboutButton.setToolTipText("Opens the About window");
 		menu.add(aboutButton);
 		JMenuItem statsButton = new JMenuItem("Statistics");
+		statsButton.setFont(MAIN_TEXT_FONT);
 		statsButton.addActionListener(new Statistics());
 		statsButton.setToolTipText("Opens the statistics windows");
 		menu.add(statsButton);
 		JMenuItem quitButton = new JMenuItem("Quit Game");
+		quitButton.setFont(MAIN_TEXT_FONT);
 		quitButton.addActionListener(new QuitGame());
 		quitButton.setToolTipText("Ends the game");
 		menu.add(quitButton);
@@ -2270,8 +2600,10 @@ public class GUI extends JFrame
 		//Log Panel
 		JPanel logPanel = new JPanel(new BorderLayout());
 		JLabel gameLogHeader = new JLabel("Game Log");
+		gameLogHeader.setFont(MAIN_HEADING_FONT);
 		logPanel.add(gameLogHeader, BorderLayout.NORTH);
 		gameLog = new JTextArea();
+		gameLog.setFont(MAIN_TEXT_FONT);
 		gameLog.setLineWrap(true);
 		gameLog.setEditable(false);
 		JScrollPane scrolledGameLog = new JScrollPane(gameLog);
@@ -2742,7 +3074,32 @@ public class GUI extends JFrame
 			playerPanels[i].updatePanel(i);
 		}
 		
-		resetTableForNewRound();
+		nextRound();
+	}
+	
+	/**
+	 * Checks if there are any rounds remaining.
+	 * 
+	 * @since 1.3.0
+	 */
+	private void nextRound()
+	{		
+		//If there are rounds remaining and any player's who aren't bankrupt.
+		if(table.getCurrentRound() + 1 <= table.getTotalRounds() && 
+				table.checkIfAnyPlayerNotBankrupt())
+		{
+			resetTableForNewRound();
+			table.setCurrentRound(table.getCurrentRound() + 1);
+			gameLog.setText(gameLog.getText() + "\n");
+			currentRound();
+			intialWager(0);
+		}
+		//If there are no rounds remaining or every player is bankrupt.
+		else
+		{
+			EndGameWindow window = new EndGameWindow();
+			window.setVisible(true);
+		}
 	}
 	
 	/**
@@ -2766,33 +3123,18 @@ public class GUI extends JFrame
 				dealerPanel.updatePanel(i);
 			}
 		}
-		
-		nextRound();
 	}
 	
 	/**
-	 * Checks if there are any rounds remaining.
+	 * Clears all elements off the screen
 	 * 
-	 * @since 1.3.0
+	 * @since 1.4.3
 	 */
-	private void nextRound()
+	private void clearScreen()
 	{
-		table.setCompletedRounds(table.getCompletedRounds() + 1);
-		
-		//If there are rounds remaining and any player's who aren't bankrupt.
-		if(table.getCurrentRound() + 1 <= table.getTotalRounds() && 
-				table.checkIfAnyPlayerNotBankrupt())
-		{
-			table.setCurrentRound(table.getCurrentRound() + 1);
-			gameLog.setText(gameLog.getText() + "\n");
-			currentRound();
-			intialWager(0);
-		}
-		//If there are no rounds remaining or every player is bankrupt.
-		else
-		{
-			EndGameWindow window = new EndGameWindow();
-			window.setVisible(true);
-		}
+		getContentPane().removeAll();
+		setJMenuBar(null);
+		revalidate();
+		repaint();
 	}
 }

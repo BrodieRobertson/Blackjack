@@ -8,7 +8,7 @@ import player.*;
  * The logic layer for the game, manages all of the back end data manipulation.
  * 
  * @author Brodie Robertson
- * @version 1.4.0
+ * @version 1.4.3
  * @since 1.0.0
  */
 public class Table 
@@ -53,20 +53,6 @@ public class Table
 	 * The absolute total number of rounds.
 	 */
 	private int totalRounds;
-	/**
-	 * The number of completed rounds.
-	 */
-	private int completedRounds;
-	
-	/**
-	 * Constructs a Table with a single deck. Will be changed in future update.
-	 * 
-	 * @since 1.0.0
-	 */
-	public Table()
-	{
-		deck = new Deck(1);
-	}
 	
 	/**
 	 * Creates an array of player's with the parameters specified.
@@ -123,37 +109,10 @@ public class Table
 		players[playerIndex] = new Dealer("Dealer");
 	}
 	
-	/**
-	private void displayGameStats()
+	public void createDeck(int deckSize) throws DeckException
 	{
-		//Displays the final statistics after the end of the game.
-		System.out.println("Overall Game Statistics:");
-		System.out.println("Minimum Wager: " + MINWAGER);
-		System.out.println("Maximum Wager: " + MAXWAGER);
-		System.out.println("Number of players: " + (players.length - 1));
-		System.out.println("Completed Rounds: " + (completedRounds + 1));
-		for(int i = 0; i < players.length - 1; i++)
-		{
-			Player player = (Player)players[i];
-			System.out.println();
-			System.out.println("Name: " + player.getName());
-			if(player.getBankrupt())
-			{
-				System.out.println("Bankrupt");
-			}
-			System.out.println("Money Remaining: " + player.getTotalMoney());
-			System.out.println("Total Winnings: " + player.getTotalWinnings());
-			System.out.println("Total Wagers: " + player.getTotalWager());
-			System.out.println("Total Insurance: " + player.getTotalInsurance());
-			System.out.println("Wins: " + player.getWin());
-			System.out.println("Losses: " + player.getLoss());
-			System.out.println("Pushes: " + player.getPush());
-			System.out.println("Blackjacks: " + player.getBlackjack());
-			System.out.println("Busts: " + player.getBust());
-			System.out.println("Surrenders: " + player.getSurrender());
-		}
+		deck = new Deck(deckSize);
 	}
-	*/
 	
 	/**
 	 * Checks if all of the player's have gone bankrupt.
@@ -172,54 +131,7 @@ public class Table
 		}
 		return false;
 	}
-	
-	/**
-	 * Gets the number of completed rounds.
-	 * 
-	 * @return The number of completed rounds.
-	 * @since 1.4.0
-	 */
-	public int getCompletedRounds()
-	{
-		return completedRounds;
-	}
-	
-	/**
-	 * Sets the number of completed rounds.
-	 * 
-	 * @param completedRounds The number of completed rounds.
-	 * @since 1.4.0
-	 */
-	public void setCompletedRounds(int completedRounds)
-	{
-		try
-		{
-			if(completedRounds < 0)
-			{
-				throw new TableException("Completed round can't be less than 0: " 
-						+ completedRounds);
-			}
-			
-			if(completedRounds > totalRounds)
-			{
-				throw new TableException("Completed round can't be greater than "
-						+ "the total rounds: " + completedRounds);
-			}
-			
-			if(completedRounds > currentRound)
-			{
-				throw new TableException("Completed round can't be greater than " 
-						+ "than the current round: " + currentRound);
-			}
-		}
-		catch(TableException ex)
-		{
-			ex.printStackTrace();
-			System.exit(0);
-		}
-		
-		this.completedRounds = completedRounds;
-	}
+
 	
 	/**
 	 * Gets the current round.
@@ -282,7 +194,7 @@ public class Table
 	{
 		if(totalRounds <= 0)
 		{
-			throw new TableException("Total Rounds less than or equal to 0");
+			throw new TableException("Invalid number of rounds: " + totalRounds);
 		}
 			
 		this.totalRounds = totalRounds;
@@ -307,16 +219,16 @@ public class Table
 	 */
 	public Person[] getPlayers()
 	{
-		Person[] temp = new Person[players.length];
+		Person[] copy = new Person[players.length];
 		for(int i = 0; i < players.length; i++)
 		{
 			if(players[i] != null)
 			{
-				temp[i] = (Person) players[i].clone();
+				copy[i] = (Person) players[i].clone();
 			}
 		}
 		
-		return temp;
+		return copy;
 	}
 	
 	/**

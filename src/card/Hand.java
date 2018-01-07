@@ -385,7 +385,6 @@ public class Hand implements Cloneable
 					if(cards[i].getValue() == 11)
 					{
 						cards[i].setValue();
-						score -= 10;
 					}
 				}
 				i++;
@@ -401,7 +400,7 @@ public class Hand implements Cloneable
 			{
 				if(cards[i] != null && cards[i].getFaceUp())
 				{
-					if(cards[i].getValue() == 1 )
+					if(cards[i].getValue() == 1)
 					{
 						cards[i].setValue();
 						score += 10;

@@ -8,7 +8,7 @@ import java.util.Random;
  * French playing cards but supports up to 8.
  * 
  * @author Brodie Robertson
- * @version 1.0.0
+ * @version 1.4.3
  * @since 1.0.0
  */
 public class Deck implements Cloneable
@@ -24,15 +24,15 @@ public class Deck implements Cloneable
 	/**
 	 * The size of a standard deck.
 	 */
-	private static final int DECKSIZE = 52;
+	public static final int DECKSIZE = 52;
 	/**
 	 * The minimum number of decks.
 	 */
-	private static final int MINNUMOFDECKS = 1;
+	public static final int MINNUMOFDECKS = 1;
 	/**
 	 * The maximum number of decks.
 	 */
-	private static final int MAXNUMOFDECKS = 8;
+	public static final int MAXNUMOFDECKS = 8;
 	
 	/**
 	 * Constructs a deck with a specified number of decks.
@@ -40,7 +40,7 @@ public class Deck implements Cloneable
 	 * @param numOfDecks The number of standard decks in the deck.
 	 * @since 1.0.0
 	 */
-	public Deck(int numOfDecks)
+	public Deck(int numOfDecks) throws DeckException
 	{
 		setNumOfDecks(numOfDecks);
 		createDeck();
@@ -68,11 +68,12 @@ public class Deck implements Cloneable
 			System.exit(0);
 		}
 		
-		cards = new Card[this.cards.length];
+		cards = new Card[other.cards.length];
 		for(int i = 0; i < cards.length; i++)
 		{
 			cards[i] = new Card(other.cards[i]);
 		}
+		numOfDecks = other.numOfDecks;
 	}
 	
 	/**
@@ -229,19 +230,11 @@ public class Deck implements Cloneable
 	 * @param The number of standard decks in the the deck.
 	 * @since 1.0.0
 	 */
-	private void setNumOfDecks(int numOfDecks)
+	private void setNumOfDecks(int numOfDecks) throws DeckException
 	{
-		try
+		if(numOfDecks < MINNUMOFDECKS || numOfDecks > MAXNUMOFDECKS)
 		{
-			if(numOfDecks < MINNUMOFDECKS || numOfDecks > MAXNUMOFDECKS)
-			{
-				throw new DeckException("Invalid number of decks: " + numOfDecks);
-			}
-		}
-		catch(DeckException e)
-		{
-			e.printStackTrace();
-			System.exit(0);
+			throw new DeckException("Invalid number of decks: " + numOfDecks);
 		}
 		
 		this.numOfDecks = numOfDecks;
@@ -271,6 +264,16 @@ public class Deck implements Cloneable
 		cards[cards.length - 1] = null;
 		decreaseDeckSize();
 		return card;
+	}
+	
+	/**
+	 * Gets the number of cards remaining the deck.
+	 * 
+	 * @return Number of cards remaining in the deck.
+	 */
+	public int getCardsRemaining()
+	{
+		return cards.length;
 	}
 	
 	/**

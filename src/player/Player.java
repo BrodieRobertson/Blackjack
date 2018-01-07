@@ -93,7 +93,7 @@ public abstract class Player extends Person implements Cloneable
 	/**
 	 * The player's starting money.
 	 */
-	private static final int STARTING_MONEY = 1000;
+	public static final int STARTING_MONEY = 1000;
 	
 	/**
 	 * Constructs the Player with a set of default values.
