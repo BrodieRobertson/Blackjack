@@ -1,4 +1,19 @@
 # Blackjack Changelog
+GUI Beta 1.5.0
+<br>Note:
+I'm finally on the home stretch, the features list is getting shorter and shorter and I'm happy to see it that way, at the rate I'm going I should be done by the middle of this week and then I can start working on a new project. I've left the 2 most annnoying features till the end, it should be obvious but I'm referring to drawing the cards yes I know I could use images but that's no fun and the other is deciding how a CPU player should act.
+
+Change Log:
+1. About window finally implemented, shows the version number and the credits the people who worked on the game i.e me unless someone decides to give the game a test.
+2. CPU turns slowed down so that the usr can follow what is happening on screen.
+3. Some methods that we based around for loops, such as round results have been broken down and use a logic gate to move to the next player to make it easier to slow down with a timer.
+
+Future Features:
+1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
+2. Print the log to file when the game is over.
+3. Dynamically generate CPU characters initial bets, insurance, and round descisions.
+4. Allow the use to modify the game speed.
+
 GUI Beta 1.4.3
 <br>Change Log:
 1. Every text element has had it's font changed and error messages are now red.
