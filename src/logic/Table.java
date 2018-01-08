@@ -8,7 +8,7 @@ import player.*;
  * The logic layer for the game, manages all of the back end data manipulation.
  * 
  * @author Brodie Robertson
- * @version 1.4.3
+ * @version 1.5.0
  * @since 1.0.0
  */
 public class Table 
@@ -281,24 +281,30 @@ public class Table
 	 * 
 	 * @since 1.0.0
 	 */
-	public void deal()
+	public void deal(int index)
 	{
+		try 
+		{
+			validatePersonIndex(index);
+		} 
+		catch (TableException ex) 
+		{
+			ex.printStackTrace();
+			System.exit(0);
+		}
 		final int startingCards = 2;
 		//Deals 1 card to each player and then deals the 2nd.
 		for(int i = 0; i < startingCards; i++)
 		{
-			for(int j = 0; j < players.length; j++)
+			Card card = deck.getCard();
+			//If the card being added is the dealer's second card, flip it.
+			if(index == players.length - 1 && players[index].getHand(0).
+					getCardsRemaining() == 1)
 			{
-				Card card = deck.getCard();
-				//If the card being added is the dealer's second card, flip it.
-				if(j == players.length - 1 && players[j].getHand(0).
-						getCardsRemaining() == 1)
-				{
-					card.flipCard();
-				}
-						
-				players[j].addToHand(card, 0);
+				card.flipCard();
 			}
+						
+			players[index].addToHand(card, 0);
 		}
 	}
 	

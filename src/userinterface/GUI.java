@@ -11,12 +11,14 @@ import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -33,7 +35,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.border.MatteBorder;
+import javax.swing.plaf.basic.BasicGraphicsUtils;
 
 import card.Card;
 import card.Deck;
@@ -48,7 +52,7 @@ import player.*;
  * the logic layer.
  * 
  * @author Brodie Robertson
- * @version 1.4.3
+ * @version 1.5.0
  * @since 1.2.0
  */
 public class GUI extends JFrame 
@@ -124,7 +128,7 @@ public class GUI extends JFrame
 	public static final int WIFW = JComponent.WHEN_IN_FOCUSED_WINDOW;
 
 	/**
-	 * Every KeyStroke used for one or more key bindings.
+	 * Every KeyStroke that has been resued.
 	 */
 	private static final KeyStroke ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), ESC = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
 			A = KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), S = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0),
@@ -133,10 +137,18 @@ public class GUI extends JFrame
 			M = KeyStroke.getKeyStroke(KeyEvent.VK_M, 0), Y = KeyStroke.getKeyStroke(KeyEvent.VK_Y, 0),
 			N = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0);
 	/**
-	 * 
+	 * Every Color that has been reused.
 	 */
 	public static final Color GREEN = new Color(0, 220, 0), RED = new Color(235, 0, 0), 
 			LIGHT_BLUE = new Color(45, 177, 255), LIGHT_GRAY = new Color(249, 249, 250);
+	/**
+	 * Delay between CPU turns and some game log updates.
+	 */
+	private int turnDelay = 1000;
+	/**
+	 * Timer to delay CPU turns and some game log updates.
+	 */
+	private Timer timer;
 	/**
 	 * Array of panels containing each player's game relevant statistics.
 	 */
@@ -359,10 +371,10 @@ public class GUI extends JFrame
 	}
 	
 	/**
-	 * Opens a AboutWIndow to show the user various statistics about the game's
+	 * Opens a AboutWindow to show the user various statistics about the game's
 	 * creation.
 	 * 
-	 * @author Brodie Robertsonn
+	 * @author Brodie Robertson
 	 * @version 1.4.1
 	 * @since 1.4.1
 	 */
@@ -790,10 +802,10 @@ public class GUI extends JFrame
 	
 	/**
 	 * Dialog window displaying general statistics about the creation of the
-	 * game. Not yet implemented.
+	 * game.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.3
+	 * @version 1.5.0
 	 * @since 1.2.0
 	 */
 	private class AboutWindow extends JDialog
@@ -806,11 +818,10 @@ public class GUI extends JFrame
 		public AboutWindow()
 		{
 			setTitle("About");
-			setSize(REDUCED_WINDOW);
+			setSize(new Dimension(325, 200));
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new BorderLayout());
-			add(new JLabel("AVAIBLE IN FUTURE UPDATE"), BorderLayout.CENTER);
 			
 			Action close = new AbstractAction()
 			{
@@ -825,6 +836,51 @@ public class GUI extends JFrame
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap().put(ESC, "ESC");
 			rootPane.getActionMap().put("ESC", close);
+			final Dimension breakSize = new Dimension(REDUCED_WINDOW.width, 
+					REDUCED_WINDOW.height / 15);
+			final Font headingFont = new Font("Calibri", Font.BOLD, 20);
+			JPanel about = new JPanel();
+			about.setLayout(new BoxLayout(about, BoxLayout.Y_AXIS));
+			
+			JLabel title = new JLabel("Blackjack");
+			title.setVerticalAlignment(JLabel.TOP);
+			title.setAlignmentX(CENTER_ALIGNMENT);
+			title.setFont(headingFont);
+			about.add(title);
+			
+			JLabel version = new JLabel("Version: Beta 1.5.0");
+			version.setVerticalAlignment(JLabel.TOP);
+			version.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+			version.setFont(MAIN_HEADING_FONT);
+			about.add(version);
+			
+			JLabel lastUpdated = new JLabel("Last Updated: 8/1/2017");
+			lastUpdated.setVerticalAlignment(JLabel.TOP);
+			lastUpdated.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+			lastUpdated.setFont(MAIN_HEADING_FONT);
+			about.add(lastUpdated);
+			
+			JLabel breakLabel = new JLabel("");
+			breakLabel.setMinimumSize(breakSize);
+			breakLabel.setMaximumSize(breakSize);
+			breakLabel.setPreferredSize(breakSize);
+			breakLabel.setVerticalAlignment(JLabel.TOP);
+			breakLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+			about.add(breakLabel);
+			
+			JLabel developed = new JLabel("Developed by Brodie Robertson");
+			developed.setVerticalAlignment(JLabel.TOP);
+			developed.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+			developed.setFont(MAIN_HEADING_FONT);
+			about.add(developed);
+			
+			JLabel tested = new JLabel("Tested by Brodie Robertson");
+			tested.setVerticalAlignment(JLabel.TOP);
+			tested.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+			tested.setFont(MAIN_HEADING_FONT);
+			about.add(tested);
+			
+			add(about, BorderLayout.NORTH);
 		}
 	}
 	
@@ -1059,7 +1115,7 @@ public class GUI extends JFrame
 	 * Used to draw a player's hand onto the display.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.2
+	 * @version 1.5.0
 	 * @since 1.2.0
 	 */
 	private class HandPanel extends JPanel
@@ -1105,7 +1161,14 @@ public class GUI extends JFrame
 			{
 				if(i < hand.getCardsRemaining())
 				{
-					cards[i].setText("" + hand.getCard(i).getValue());
+					if(hand.getCard(i).getFaceUp())
+					{
+						cards[i].setText("" + hand.getCard(i).getValue());
+					}
+					else
+					{
+						cards[i].setText("FD");
+					}
 				}
 				else
 				{
@@ -1292,7 +1355,8 @@ public class GUI extends JFrame
 				scores[1].setText("" + player.getHand(1).getHandScore());
 				
 				hands[1] = new HandPanel(player.getHand(0));
-				hands[1].setToolTipText("Cards in hand: " + player.getHand(0).getCardsRemaining());
+				hands[1].setToolTipText("Cards in hand: " + player.getHand(0).
+						getCardsRemaining());
 				hands[1].setPreferredSize(new Dimension(0, handList.getHeight()));
 				hands[1].setBorder(new MatteBorder(1, 0, 0, 0, Color.DARK_GRAY));
 				hands[1].updatePanel(index, 1);
@@ -1333,7 +1397,6 @@ public class GUI extends JFrame
 				handList.revalidate();
 				handList.repaint();
 			}
-
 		}
 	}
 	
@@ -2657,7 +2720,7 @@ public class GUI extends JFrame
 	/**
 	 * Sets the wager of a player at a specified index.
 	 * 
-	 * @param index The index of the player.
+	 * @param index The index of the Player.
 	 * @since 1.2.0
 	 */
 	private void intialWager(int index)
@@ -2675,12 +2738,21 @@ public class GUI extends JFrame
 			//If the player is a CPU the table handles the wager.
 			else if(player instanceof CPU)
 			{
-				double wager = table.setCPUWager(index);
-				gameLog.setText(gameLog.getText() + player.getName() + 
-						"'s wager is $" + wager + "\n");
-				playerPanels[index].updatePanel(index);
-				
-				nextWager(index);
+				ActionListener cpuTurn = new ActionListener() 
+				{
+					@Override
+					public void actionPerformed(ActionEvent e) 
+					{
+						double wager = table.setCPUWager(index);
+						gameLog.setText(gameLog.getText() + player.getName() + 
+								"'s wager is $" + wager + "\n");
+						playerPanels[index].updatePanel(index);
+						nextWager(index);	
+					}
+				};
+				timer = new Timer(turnDelay, cpuTurn);
+				timer.setRepeats(false);
+				timer.start();
 			}
 		}
 		//If the player is go to the next player.
@@ -2694,7 +2766,7 @@ public class GUI extends JFrame
 	 * Checks if there are any more wagers to set, if not goes to the next 
 	 * stage of the game.
 	 * 
-	 * @param index The index of the Player.
+	 * @param index The index of the Person.
 	 * @since 1.2.0
 	 */
 	private void nextWager(int index)
@@ -2708,32 +2780,64 @@ public class GUI extends JFrame
 		else
 		{
 			gameLog.setText(gameLog.getText() + "\nDealing Cards to Players:\n");
-			initialDeal();
+			gameLog.setText(gameLog.getText() + "All player's are dealt 2 cards\n");
+			initialDeal(0);
 		}
 	}
 	
 	/**
-	 * Deals 2 cards to each person in the game.
+	 * Deals 2 cards to a person at a specified index.
 	 * 
+	 * @param index The index of the Person
 	 * @since 1.2.0
 	 */
-	private void initialDeal()
+	private void initialDeal(int index)
 	{
-		table.deal();
-		Person[] players = table.getPlayers();
-		gameLog.setText(gameLog.getText() + "All player's are dealt 2 cards\n");
-		for(int i = 0; i < players.length; i++)
-		{
-			//If the person is a Player.
-			if(players[i] instanceof Player)
+		table.deal(index);
+		Person person = table.getPersonAtIndex(index);
+		ActionListener deal = new ActionListener() 
+		{	
+			@Override
+			public void actionPerformed(ActionEvent e) 
 			{
-				Player player = (Player)players[i];
-				//If the Player is not bankrupt.
-				if(!player.getBankrupt())
+				//If the person is a Player.
+				if(person instanceof Player)
 				{
-					gameLog.setText(gameLog.getText() + player.getName() 
+					Player player = (Player)person;
+					//If the Player is not bankrupt.
+					if(!player.getBankrupt())
+					{
+						gameLog.setText(gameLog.getText() + player.getName() 
+							+ " was dealt a ");
+						Card[] cards = player.getHand(0).getCards();
+						//For each card in the hand.
+						for(int j = 0; j < cards.length; j++)
+						{
+							gameLog.setText(gameLog.getText() + cards[j]);
+							if(j < cards.length - 1)
+							{
+								gameLog.setText(gameLog.getText() + " and a ");
+							}
+						}
+						gameLog.setText(gameLog.getText() + "\n");
+						
+						player = (Player)table.getPersonAtIndex(index);
+						//If the player has Blackjack
+						if(player.getHand(0).getHandScore() == Table.BLACKJACK)
+						{
+							gameLog.setText(gameLog.getText() + player.getName() 
+								+ " has Blackjack\n");
+						}
+						playerPanels[index].updatePanel(index);
+					}
+				}
+				//If the person is the Dealer.
+				else
+				{
+					Person dealer = person;
+					gameLog.setText(gameLog.getText() + dealer.getName() 
 						+ " was dealt a ");
-					Card[] cards = player.getHand(0).getCards();
+					Card[] cards = dealer.getHand(0).getCards();
 					//For each card in the hand.
 					for(int j = 0; j < cards.length; j++)
 					{
@@ -2745,63 +2849,70 @@ public class GUI extends JFrame
 					}
 					gameLog.setText(gameLog.getText() + "\n");
 					
-					player = (Player)table.getPersonAtIndex(i);
+					dealer = table.getPersonAtIndex(index);
 					//If the player has Blackjack
-					if(player.getHand(0).getHandScore() == Table.BLACKJACK)
+					if(dealer.getHand(0).getHandScore() == Table.BLACKJACK)
 					{
-						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " has Blackjack\n");
-					}
-					playerPanels[i].updatePanel(i);
-				}
-			}
-			//If the person is the Dealer.
-			else
-			{
-				Person dealer = players[i];
-				gameLog.setText(gameLog.getText() + dealer.getName() 
-					+ " was dealt a ");
-				Card[] cards = dealer.getHand(0).getCards();
-				//For each card in the hand.
-				for(int j = 0; j < cards.length; j++)
-				{
-					gameLog.setText(gameLog.getText() + cards[j]);
-					if(j < cards.length - 1)
-					{
-						gameLog.setText(gameLog.getText() + " and a ");
-					}
-				}
-				gameLog.setText(gameLog.getText() + "\n");
-				
-				dealer = table.getPersonAtIndex(i);
-				//If the player has Blackjack
-				if(dealer.getHand(0).getHandScore() == Table.BLACKJACK)
-				{
-					gameLog.setText(gameLog.getText() + dealer.getName() 
+						gameLog.setText(gameLog.getText() + dealer.getName() 
 						+ " has Blackjack\n");
+					}
+					dealerPanel.updatePanel(index);
 				}
-				dealerPanel.updatePanel(i);
+				nextDeal(index);
 			}
-		}
+		};
 		
-		//If the dealer's first card is an Ace,begin insurance round.
-		if(players[players.length - 1].getHand(0).getHandScore() == 11)
+		timer = new Timer(turnDelay, deal);
+		timer.setRepeats(false);
+		timer.start();
+	}
+	
+	/**
+	 * Decks if there are any players who haven't been dealt cards and then
+	 * either begins the insurance wager collection or the player turns.
+	 * 
+	 * @param index Index of the Person.
+	 * @since 1.5.0
+	 */
+	private void nextDeal(int index)
+	{
+		if(index + 1 < table.getPlayers().length)
 		{
-			gameLog.setText(gameLog.getText() + "\nInsurance:\n");
-			insurance(0);
+			initialDeal(index + 1);
 		}
-		//If not begin the first player turn.
 		else
 		{
-			gameLog.setText(gameLog.getText() + "\nPlayer Turns:\n");
-			playerTurn(0);
+			ActionListener nextStage = new ActionListener() 
+			{
+				@Override
+				public void actionPerformed(ActionEvent e) 
+				{
+					Person[] people = table.getPlayers();
+					//If the dealer's first card is an Ace,begin insurance round.
+					if(people[people.length - 1].getHand(0).getHandScore() == 11)
+					{
+						gameLog.setText(gameLog.getText() + "\nInsurance:\n");
+						insurance(0);
+					}
+					//If not begin the first player turn.
+					else
+					{
+						gameLog.setText(gameLog.getText() + "\nPlayer Turns:\n");
+						playerTurn(0);
+					}
+				}
+			};
+			
+			timer = new Timer(turnDelay, nextStage);
+			timer.setRepeats(false);
+			timer.start();
 		}
 	}
 	
 	/**
 	 * Sets the insurance of a player at a specified index.
 	 * 
-	 * @param index Index of the player.
+	 * @param index Index of the Player.
 	 * @since 1.2.0
 	 */
 	private void insurance(int index)
@@ -2821,24 +2932,34 @@ public class GUI extends JFrame
 			//If the player is a CPU the table handles the insurance.
 			else if(player instanceof CPU)
 			{
-				double insurance = table.setCPUInsurance(index);
-				player = (Player)table.getPersonAtIndex(index);
-				//If the CPU took insurance.
-				if(player.getTookInsurance())
+				ActionListener cpuInsurance = new ActionListener() 
 				{
-					playerPanels[index].updatePanel(index);
-					gameLog.setText(gameLog.getText() + player.getName() + 
-							" has $" + insurance + " of insurance\n");
-				}
-				//If the CPU doesn't take insurance.
-				else
-				{
-					gameLog.setText(gameLog.getText() + 
-							player.getName() + " doesn't take insurance\n");
-				}
+					@Override
+					public void actionPerformed(ActionEvent e) 
+					{
+						double insurance = table.setCPUInsurance(index);
+						//If the CPU took insurance.
+						if(player.getTookInsurance())
+						{
+							playerPanels[index].updatePanel(index);
+							gameLog.setText(gameLog.getText() + player.getName() + 
+									" has $" + insurance + " of insurance\n");
+						}
+						//If the CPU doesn't take insurance.
+						else
+						{
+							gameLog.setText(gameLog.getText() + 
+									player.getName() + " doesn't take insurance\n");
+						}
+						
+						playerPanels[index].updatePanel(index);
+						nextInsurance(index);
+					}
+				};
 				
-				playerPanels[index].updatePanel(index);
-				nextInsurance(index);
+				timer = new Timer(turnDelay, cpuInsurance);
+				timer.setRepeats(false);
+				timer.start();
 			} 
 		}
 		//If the player is bankrupt, or has a score greater than or equal to 
@@ -2873,12 +2994,24 @@ public class GUI extends JFrame
 					Player player = (Player)table.getPersonAtIndex(i);
 					if(player.getBankrupt())
 					{
-						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " has gone bankrupt\n");
+						ActionListener bankrupt = new ActionListener() 
+						{
+							
+							@Override
+							public void actionPerformed(ActionEvent e) 
+							{
+								gameLog.setText(gameLog.getText() + player.getName() 
+								+ " has gone bankrupt\n");
+							}
+						};
+						
+						timer = new Timer(turnDelay, bankrupt);
+						timer.setRepeats(false);
+						timer.start();
 					}
 				}
 				
-				resetTableForNewRound();
+				nextRound();
 			}
 			//If the insurance bet was not successful
 			else
@@ -2908,11 +3041,23 @@ public class GUI extends JFrame
 			gameLog.setText(gameLog.getText() + dealer.getName() 
 					+ " has Blackjack\n");
 			dealerPanel.updatePanel(finalIndex);
-				
+			
 			for(int i = 0; i < players.length - 1; i++)
 			{
-				gameLog.setText(gameLog.getText() + table.insurancePayout(i));
-				playerPanels[i].updatePanel(i);
+				final int j = i;
+				ActionListener insuranceResult = new ActionListener() 
+				{
+					@Override
+					public void actionPerformed(ActionEvent e) 
+					{
+						gameLog.setText(gameLog.getText() + table.insurancePayout(j));
+						playerPanels[j].updatePanel(j);
+					}
+				};
+				
+				timer = new Timer(turnDelay, insuranceResult);
+				timer.setRepeats(false);
+				timer.start();
 			}
 			return true;
 		}
@@ -2934,26 +3079,6 @@ public class GUI extends JFrame
 				
 			}
 			return false;
-		}
-	}
-	
-	/**
-	 * Checks if there are any player's left to have a turn.
-	 * 
-	 * @param index Index of the player.
-	 * @since 1.3.0
-	 */
-	private void nextPlayer(int index)
-	{
-		//If there are any more Player's left.
-		if(index + 1 < table.getPlayers().length - 1)
-		{
-			playerTurn(index + 1);
-		}
-		//If not run the Dealer's turn.
-		else
-		{
-			dealerTurn();
 		}
 	}
 	
@@ -2980,11 +3105,23 @@ public class GUI extends JFrame
 			//If the Player is a CPU the table handles the player's turn.
 			else if(player instanceof CPU)
 			{
-				gameLog.setText(gameLog.getText() + player.getName() + " "
-						+ "stands with a score of " + table.getPersonAtIndex
-						(index).getHand(0).getHandScore() + "\n");
-				playerPanels[index].updatePanel(index);
-				nextPlayer(index);
+				ActionListener cpuTurn = new ActionListener() 
+				{
+					
+					@Override
+					public void actionPerformed(ActionEvent e) 
+					{
+						gameLog.setText(gameLog.getText() + player.getName() + " "
+								+ "stands with a score of " + table.getPersonAtIndex
+								(index).getHand(0).getHandScore() + "\n");
+						playerPanels[index].updatePanel(index);
+						nextPlayer(index);
+					}
+				};
+				
+				timer = new Timer(turnDelay, cpuTurn);
+				timer.setRepeats(false);
+				timer.start();
 			}
 		}
 		//If the Player is bankrupt or the Player's score is greater than or
@@ -3002,79 +3139,151 @@ public class GUI extends JFrame
 	 */
 	private void dealerTurn()
 	{
-		int finalIndex = table.getPlayers().length - 1;
+		final int finalIndex = table.getPlayers().length - 1;
 		table.flipDealersCard();
-		Person dealer = table.getPersonAtIndex(finalIndex);
-		gameLog.setText(gameLog.getText() + "It's now " 
-				+ dealer.getName() + "'s turn\n");
-		gameLog.setText(gameLog.getText() + dealer.getName() + "'s face "
-				+ "down card was " + dealer.getHand(0).getCard(1) + " and"
-				+ " they now have a score of " + dealer.getHand(0).
-				getHandScore() + "\n");
+
+		ActionListener dealerStart = new ActionListener() 
+		{
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				Person dealer = table.getPersonAtIndex(finalIndex);
+				gameLog.setText(gameLog.getText() + "It's now " 
+						+ dealer.getName() + "'s turn\n");
+				gameLog.setText(gameLog.getText() + dealer.getName() + "'s face "
+						+ "down card was " + dealer.getHand(0).getCard(1) + " and"
+						+ " they now have a score of " + dealer.getHand(0).
+						getHandScore() + "\n");	
+				dealerPanel.updatePanel(finalIndex);
+			}
+		};
+		timer = new Timer(turnDelay, dealerStart);
+		timer.setRepeats(false);
+		timer.start();
 		
 		Card[] cards = table.addToDealersHand();
 		
 		//If the dealer is dealt any cards, add them to the game log.
 		if(cards.length > 0)
 		{
-			gameLog.setText(gameLog.getText() + dealer.getName() 
-				+ " adds a ");
-			for(int i = 0; i < cards.length; i++)
+			ActionListener hit = new ActionListener() 
 			{
-				gameLog.setText(gameLog.getText() + cards[i]);
-				if(i < cards.length - 1)
+				Person dealer = table.getPersonAtIndex(finalIndex);
+				@Override
+				public void actionPerformed(ActionEvent e) 
 				{
-					gameLog.setText(gameLog.getText() + ", ");
+					gameLog.setText(gameLog.getText() + dealer.getName() 
+						+ " adds a ");
+					for(int i = 0; i < cards.length; i++)
+					{
+						gameLog.setText(gameLog.getText() + cards[i]);
+						if(i < cards.length - 1)
+						{
+							gameLog.setText(gameLog.getText() + ", ");
+						}
+					}
+					
+					dealer = table.getPersonAtIndex(finalIndex);
+					gameLog.setText(gameLog.getText() + " and now has a score of " 
+							+ dealer.getHand(0).getHandScore() + "\n");
+					dealerPanel.updatePanel(finalIndex);
 				}
-			}
+			};
 			
-			dealer = table.getPersonAtIndex(finalIndex);
-			gameLog.setText(gameLog.getText() + " and now has a score of " 
-					+ dealer.getHand(0).getHandScore() + "\n");
+			timer = new Timer(turnDelay, hit);
+			timer.setRepeats(false);
+			timer.start();
 		}
-		dealerPanel.updatePanel(finalIndex);
+		
 		gameLog.setText(gameLog.getText() + "\nRound Results:\n");
-		roundResults();
+		roundResults(0);
 	}
 	
 	/**
-	 * Determines the results of the round for each Player.
+	 * Checks if there are any player's left to have a turn.
 	 * 
+	 * @param index Index of the player.
 	 * @since 1.3.0
 	 */
-	private void roundResults()
+	private void nextPlayer(int index)
 	{
-		for(int i = 0; i < table.getPlayers().length - 1; i++)
+		//If there are any more Player's left.
+		if(index + 1 < table.getPlayers().length - 1)
 		{
-			gameLog.setText(gameLog.getText() + table.roundResult(i) + "\n");
-			Player player = (Player)table.getPersonAtIndex(i);
-			
-			//If the player has gone bankrupt.
-			if(player.getBankrupt())
-			{
-				gameLog.setText(gameLog.getText() + player.getName() 
-					+ " has gone bankrupt\n");
-			}
-			//If the player has not gone bankrupt.
-			else
-			{
-				//If the Player has a standard win.
-				if(player.getHasWin())
-				{
-					gameLog.setText(gameLog.getText() + player.getName() + " wins $" 
-							+ player.getCurrentWin() + "\n");
-				}
-				//If the Player has Blackjack.
-				else if(player.getHasBlackjack())
-				{
-					gameLog.setText(gameLog.getText() + player.getName() + " wins $"
-							+ player.getCurrentBlackjack() + "\n");
-				}
-			}
-			playerPanels[i].updatePanel(i);
+			playerTurn(index + 1);
 		}
+		//If not run the Dealer's turn.
+		else
+		{
+			dealerTurn();
+		}
+	}
+	
+	/**
+	 * Determines the results of the round for a Player at a specified index.
+	 * 
+	 * @param index Index of the Player.
+	 * @since 1.3.0
+	 */
+	private void roundResults(int index)
+	{
+		ActionListener result = new ActionListener() 
+		{
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				gameLog.setText(gameLog.getText() + table.roundResult(index) + "\n");
+				Player player = (Player)table.getPersonAtIndex(index);
+				
+				//If the player has gone bankrupt.
+				if(player.getBankrupt())
+				{
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " has gone bankrupt\n");
+				}
+				//If the player has not gone bankrupt.
+				else
+				{
+					//If the Player has a standard win.
+					if(player.getHasWin())
+					{
+						gameLog.setText(gameLog.getText() + player.getName() 
+							+ " wins $" + player.getCurrentWin() + "\n");
+					}
+					//If the Player has Blackjack.
+					else if(player.getHasBlackjack())
+					{
+						gameLog.setText(gameLog.getText() + player.getName()
+							+ " wins $"+ player.getCurrentBlackjack() + "\n");
+					}
+				}
+				playerPanels[index].updatePanel(index);	
+				nextResult(index);
+			}
+		};
 		
-		nextRound();
+		timer = new Timer(turnDelay, result);
+		timer.setRepeats(false);
+		timer.start();
+	}
+	
+	/**
+	 * Checks if there are any players who need to receive their results if
+	 * there aren't the game moves to the next round.
+	 * 
+	 * @param index Index of the Player.
+	 * @since 1.5.0
+	 */
+	private void nextResult(int index)
+	{
+		if(index + 1 < table.getPlayers().length - 1)
+		{
+			roundResults(index + 1);
+		}
+		else
+		{
+			nextRound();
+		}
 	}
 	
 	/**
