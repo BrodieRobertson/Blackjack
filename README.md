@@ -1,4 +1,17 @@
 # Blackjack Changelog
+GUI Beta 1.6.0
+<br>Note:
+I intend to have this project out of beta by tomorrow whether that means it'll be completed wiill be dependent upon how much I feel like I can deal with looking at this code any longer.
+
+Change Log:
+1. CPU's now make different turn actions depending on the cards they hold and the amount of money they have, I'm Blackjack expert so they're probably all bad actions but that's not the point.
+2. The game speed can be modified via a slider window.
+
+Future Features:
+1. GUI elements for every component of the game, for the cards and deck they will be drawn on screen.
+2. Print the log to file when the game is over.
+3. Dynamically generate CPU characters initial bets, insurance.
+
 GUI Beta 1.5.0
 <br>Note:
 I'm finally on the home stretch, the features list is getting shorter and shorter and I'm happy to see it that way, at the rate I'm going I should be done by the middle of this week and then I can start working on a new project. I've left the 2 most annnoying features till the end, it should be obvious but I'm referring to drawing the cards yes I know I could use images but that's no fun and the other is deciding how a CPU player should act.
