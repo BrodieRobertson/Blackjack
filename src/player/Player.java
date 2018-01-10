@@ -1,5 +1,7 @@
 package player;
 
+import card.Face;
+
 /**
  * Abstract definition of a player providing the necessary methods for use 
  * with the table.
@@ -846,5 +848,17 @@ public abstract class Player extends Person implements Cloneable
 	public void setHasBlackjack(boolean hasBlackjack)
 	{
 		this.hasBlackjack = hasBlackjack;
+	}
+	
+	public boolean canSplit()
+	{
+		if(getHand(0).getCards().length == 2 && 
+			(getHand(0).getCard(0).getFace() == getHand(0).getCard(1).getFace() || 
+			getHand(0).getCard(0).getValue() == getHand(0).getCard(1).getValue())
+			&& getTotalMoney() >= getWager())
+		{
+			return true;
+		}
+		return false;
 	}
 }

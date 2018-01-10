@@ -624,11 +624,11 @@ public class Table
 	 * @param handIndex The index of the hand.
 	 * @since 1.0.0
 	 */
-	public Card hit(int newIndex, int handIndex)
+	public Card hit(int index, int handIndex)
 	{
 		try 
 		{
-			validatePersonIndex(newIndex);
+			validatePersonIndex(index);
 		} 
 		catch (TableException ex) 
 		{
@@ -636,7 +636,7 @@ public class Table
 			System.exit(0);
 		}
 		
-		Player player = (Player)players[newIndex];
+		Player player = (Player)players[index];
 		Card card = player.addToHand(deck.getCard(), handIndex);
 		
 		if(player.getHand(handIndex).getHandScore() > BLACKJACK)

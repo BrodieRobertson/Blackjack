@@ -10,6 +10,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Point;
+import java.awt.RenderingHints.Key;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -18,7 +19,6 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -31,13 +31,15 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.border.MatteBorder;
-import javax.swing.plaf.basic.BasicGraphicsUtils;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import card.Card;
 import card.Deck;
@@ -52,7 +54,7 @@ import player.*;
  * the logic layer.
  * 
  * @author Brodie Robertson
- * @version 1.5.0
+ * @version 1.6.0
  * @since 1.2.0
  */
 public class GUI extends JFrame 
@@ -128,14 +130,14 @@ public class GUI extends JFrame
 	public static final int WIFW = JComponent.WHEN_IN_FOCUSED_WINDOW;
 
 	/**
-	 * Every KeyStroke that has been resued.
+	 * Every KeyStroke that has been reused.
 	 */
 	private static final KeyStroke ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), ESC = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
 			A = KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), S = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0),
 			H = KeyStroke.getKeyStroke(KeyEvent.VK_H, 0), D = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0),
 			P = KeyStroke.getKeyStroke(KeyEvent.VK_P, 0), U = KeyStroke.getKeyStroke(KeyEvent.VK_U, 0),
 			M = KeyStroke.getKeyStroke(KeyEvent.VK_M, 0), Y = KeyStroke.getKeyStroke(KeyEvent.VK_Y, 0),
-			N = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0);
+			N = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0), G = KeyStroke.getKeyStroke(KeyEvent.VK_G, 0);
 	/**
 	 * Every Color that has been reused.
 	 */
@@ -186,7 +188,8 @@ public class GUI extends JFrame
 	    }
 
 	    /**
-	     * 
+	     * Paints the JGradientButton with a gradient or solid colour depending
+	     * on whether it is being pressed.
 	     * 
 	     * (non-Javadoc)
 	     * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
@@ -279,22 +282,12 @@ public class GUI extends JFrame
 				}
 			};
 			
-			//Disposes of the CloseWindow.
-			Action cancel = new AbstractAction() 
-			{	
-				@Override
-				public void actionPerformed(ActionEvent e) 
-				{
-					dispose();
-				}
-			};
-			
 			//Key bindings
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
 			rootPane.getActionMap().put("ENTER", confirm);
 			rootPane.getInputMap(WIFW).put(ESC, "ESC");
-			rootPane.getActionMap().put("ESC", cancel);
+			rootPane.getActionMap().put("ESC", new Close());
 			
 			//Button Panel
 			JPanel buttonPanel = new JPanel();
@@ -313,11 +306,34 @@ public class GUI extends JFrame
 			cancelButton.setFont(BUTTON_FONT);
 			cancelButton.setPreferredSize(BUTTON_SIZE);
 			cancelButton.setBackground(RED);
-			cancelButton.addActionListener(cancel);
+			cancelButton.addActionListener(new Close());
 			cancelButton.setToolTipText("Continue");
 			cancelButton.setToolTipText("Continue playing the game");
 			buttonPanel.add(cancelButton);
 			add(buttonPanel, BorderLayout.SOUTH);
+		}
+	}
+	
+	/**
+	 * Closes the current window.
+	 * 
+	 * @author Brodie Robertson
+	 * @version 1.6.0
+	 * @since 1.6.0
+	 */
+	private class Close extends AbstractAction
+	{
+		/**
+		 * Activates when this object receives an action event.
+		 * 
+		 * (non-Javadoc)
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 * @since 1.6.0
+		 */
+		@Override
+		public void actionPerformed(ActionEvent arg0) 
+		{
+			dispose();	
 		}
 	}
 	
@@ -380,12 +396,44 @@ public class GUI extends JFrame
 	 */
 	private class About extends AbstractAction
 	{
+		/**
+		 * Activates when this object receives an action event.
+		 * 
+		 * (non-Javadoc)
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 * 
+		 * @since 1.4.1
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
 			AboutWindow window = new AboutWindow();
 			window.setVisible(true);
 		}	
+	}
+	
+	/**
+	 * Opens a GameSpeedWindow to change how fast CPU turns occur.
+	 * 
+	 * @author Brodie Robertson
+	 * @version 1.6.0
+	 * @since 1.6.0
+	 */
+	private class GameSpeed extends AbstractAction
+	{
+		/**
+		 * Activates when this object receives an action event.
+		 * 
+		 * (non-Javadoc)
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 * @since 1.6.0
+		 */
+		@Override
+		public void actionPerformed(ActionEvent arg0) 
+		{
+			GameSpeedWindow window = new GameSpeedWindow();
+			window.setVisible(true);
+		}
 	}
 	
 	/**
@@ -805,7 +853,7 @@ public class GUI extends JFrame
 	 * game.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.5.0
+	 * @version 1.6.0
 	 * @since 1.2.0
 	 */
 	private class AboutWindow extends JDialog
@@ -823,19 +871,11 @@ public class GUI extends JFrame
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new BorderLayout());
 			
-			Action close = new AbstractAction()
-			{
-				@Override
-				public void actionPerformed(ActionEvent arg0) 
-				{
-					dispose();	
-				}
-			};
-			
 			//Key bindings
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap().put(ESC, "ESC");
-			rootPane.getActionMap().put("ESC", close);
+			rootPane.getActionMap().put("ESC", new Close());
+			
 			final Dimension breakSize = new Dimension(REDUCED_WINDOW.width, 
 					REDUCED_WINDOW.height / 15);
 			final Font headingFont = new Font("Calibri", Font.BOLD, 20);
@@ -885,10 +925,10 @@ public class GUI extends JFrame
 	}
 	
 	/**
-	 * Statistics window displaying the statistics of the current game.
+	 * Dialog window displaying the statistics of the current game.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.3
+	 * @version 1.6.0
 	 * @since 1.2.0
 	 */
 	private class StatisticsWindow extends JDialog
@@ -906,19 +946,11 @@ public class GUI extends JFrame
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new BorderLayout());
 			
-			Action close = new AbstractAction()
-			{
-				@Override
-				public void actionPerformed(ActionEvent arg0) 
-				{
-					dispose();	
-				}
-			};
 			
 			//Key bindings
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap().put(ESC, "ESC");
-			rootPane.getActionMap().put("ESC", close);
+			rootPane.getActionMap().put("ESC", new Close());
 			final Dimension breakSize = new Dimension(getWidth(), 
 					REDUCED_WINDOW.height / 15);
 			
@@ -1112,6 +1144,85 @@ public class GUI extends JFrame
 	}
 	
 	/**
+	 * Dialog window allowing the player to change the speed of the game.
+	 * 
+	 * @author Brodie Robertson
+	 * @version 1.6.0
+	 * @since 1.6.0
+	 */
+	private class GameSpeedWindow extends JDialog
+	{
+		/**
+		 * Modifies the turn delay when the slider is moved.
+		 * 
+		 * @author Brodie Robertson
+		 * @since 1.6.0
+		 */
+		private class SliderMoved implements ChangeListener
+		{
+			/**
+			 * Activates when this object recieves a ChangeEvent.
+			 * 
+			 * (non-Javadoc)
+			 * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
+			 * @since 1.6.0
+			 */
+			@Override
+			public void stateChanged(ChangeEvent e) 
+			{
+				JSlider source = (JSlider)e.getSource();
+				if(source.getValueIsAdjusting())
+				{
+					turnDelay = source.getValue();
+				}
+			}
+		}
+		
+		/**
+		 * Constructs a GameSpeedWindow with a default layout.
+		 * 
+		 * @since 1.6.0
+		 */
+		public GameSpeedWindow()
+		{
+			setTitle("Game Speed");
+			setSize(new Dimension(REDUCED_WINDOW.width, 125));
+			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+			setModalityType(ModalityType.APPLICATION_MODAL);
+			setLayout(new BorderLayout());
+			
+			//Key bindings
+			JRootPane rootPane = getRootPane();
+			rootPane.getInputMap().put(ESC, "ESC");
+			rootPane.getActionMap().put("ESC", new Close());
+			
+			JPanel gameSpeed = new JPanel();
+			gameSpeed.setLayout(new BoxLayout(gameSpeed, BoxLayout.Y_AXIS));
+			JLabel header = new JLabel("Game Speed");
+			
+			header.setAlignmentX(CENTER_ALIGNMENT);
+			header.setFont(MAIN_HEADING_FONT);
+			gameSpeed.add(header);
+			
+			final int maxTurnDelay = 3000;
+			final int minTurnDelay = 500;
+			
+			JSlider gameSpeedSlider = new JSlider(JSlider.HORIZONTAL, minTurnDelay, 
+					maxTurnDelay, turnDelay);
+			gameSpeedSlider.addChangeListener(new SliderMoved());
+			gameSpeedSlider.setSnapToTicks(true);
+			gameSpeedSlider.setMajorTickSpacing(500);
+			gameSpeedSlider.setMinorTickSpacing(100);
+			gameSpeedSlider.setPaintLabels(true);
+			gameSpeedSlider.setPaintTicks(true);
+			gameSpeedSlider.setFont(MAIN_TEXT_FONT);
+			gameSpeed.add(gameSpeedSlider);
+			
+			add(gameSpeed);
+		}
+	}
+	
+	/**
 	 * Used to draw a player's hand onto the display.
 	 * 
 	 * @author Brodie Robertson
@@ -1124,7 +1235,13 @@ public class GUI extends JFrame
 		 * An array of labels displaying cards.
 		 */
 		private JLabel[] cards;
+		/**
+		 * Number of rows in a hand panel.
+		 */
 		private int row = 2;
+		/**
+		 * Number of columns in a hand panel.
+		 */
 		private int col = 4;
 		
 		/**
@@ -1374,12 +1491,22 @@ public class GUI extends JFrame
 				extraLabel.setText("Insurance");
 				extra.setText("$" + player.getInsurance());
 			}
+			else
+			{
+				extraLabel.setText("");
+				extra.setText("");
+			}
 			
 			hands[0].setToolTipText("Cards in hand: " + player.getHand(0).
 					getCardsRemaining());
 			hands[0].updatePanel(index, 0);
 		}
 		
+		/**
+		 * Resets the panel to a default state.
+		 * 
+		 * @param index Index of the player
+		 */
 		public void resetPanel(int index)
 		{
 			extraLabel.setText("");
@@ -1862,7 +1989,7 @@ public class GUI extends JFrame
 		}
 		
 		/**
-		 * Deals the human another card to this hand and displays the reuslts.
+		 * Deals the human another card to this hand and displays the reslts.
 		 * 
 		 * @author Brodie Robertson
 		 * @version 1.4.3
@@ -2546,16 +2673,13 @@ public class GUI extends JFrame
 			}
 		};
 		
-		About about = new About();
-		Statistics statistics = new Statistics();
-		
 		JRootPane rootPane = getRootPane();
 		rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
 		rootPane.getActionMap().put("ENTER", startGame);
 		rootPane.getInputMap(WIFW).put(A, "A");
-		rootPane.getActionMap().put("A", about);
+		rootPane.getActionMap().put("A", new About());
 		rootPane.getInputMap(WIFW).put(S, "S");
-		rootPane.getActionMap().put("S", statistics);
+		rootPane.getActionMap().put("S", new Statistics());
 		
 		final Color orange = new Color(243, 101, 37);
 		final int buttonPanelHeight = 80;
@@ -2618,14 +2742,22 @@ public class GUI extends JFrame
 		setLayout(new BorderLayout());
 		getContentPane().setBackground(LIGHT_GRAY);
 		
+		//Key Bindings
 		JRootPane rootPane = getRootPane();
 		rootPane.getInputMap(WIFW).remove(ENTER);
 		rootPane.getActionMap().remove(ENTER);
+		rootPane.getInputMap(WIFW).put(G, "G");
+		rootPane.getActionMap().put("G", new GameSpeed());
 		
 		//Menu Bar
 		JMenuBar menuBar = new JMenuBar();
 		JMenu menu = new JMenu("Menu");
 		menu.setFont(MAIN_HEADING_FONT);
+		JMenuItem gameSpeedButton = new JMenuItem("Game Speed");
+		gameSpeedButton.setFont(MAIN_TEXT_FONT);
+		gameSpeedButton.addActionListener(new GameSpeed());
+		gameSpeedButton.setToolTipText("Opens the Game Speed window");
+		menu.add(gameSpeedButton);
 		JMenuItem aboutButton = new JMenuItem("About");
 		aboutButton.setFont(MAIN_TEXT_FONT);
 		aboutButton.addActionListener(new About());
@@ -2938,18 +3070,19 @@ public class GUI extends JFrame
 					public void actionPerformed(ActionEvent e) 
 					{
 						double insurance = table.setCPUInsurance(index);
+						Player cpu = (Player)table.getPersonAtIndex(index);
 						//If the CPU took insurance.
-						if(player.getTookInsurance())
+						if(cpu.getTookInsurance())
 						{
 							playerPanels[index].updatePanel(index);
-							gameLog.setText(gameLog.getText() + player.getName() + 
+							gameLog.setText(gameLog.getText() + cpu.getName() + 
 									" has $" + insurance + " of insurance\n");
 						}
 						//If the CPU doesn't take insurance.
 						else
 						{
 							gameLog.setText(gameLog.getText() + 
-									player.getName() + " doesn't take insurance\n");
+									cpu.getName() + " doesn't take insurance\n");
 						}
 						
 						playerPanels[index].updatePanel(index);
@@ -3104,22 +3237,8 @@ public class GUI extends JFrame
 			}
 			//If the Player is a CPU the table handles the player's turn.
 			else if(player instanceof CPU)
-			{
-				ActionListener cpuTurn = new ActionListener() 
-				{
-					
-					@Override
-					public void actionPerformed(ActionEvent e) 
-					{
-						gameLog.setText(gameLog.getText() + player.getName() + " "
-								+ "stands with a score of " + table.getPersonAtIndex
-								(index).getHand(0).getHandScore() + "\n");
-						playerPanels[index].updatePanel(index);
-						nextPlayer(index);
-					}
-				};
-				
-				timer = new Timer(turnDelay, cpuTurn);
+			{	
+				timer = new Timer(turnDelay, new CpuTurn(index));
 				timer.setRepeats(false);
 				timer.start();
 			}
@@ -3129,6 +3248,196 @@ public class GUI extends JFrame
 		else
 		{
 			nextPlayer(index);
+		}
+	}
+	
+	/**
+	 * Plays out the turn of a CPU at a specified index.
+	 * 
+	 * @author Brodie Robertson
+	 * @version 1.6.0
+	 * @since 1.6.0
+	 */
+	private class CpuTurn implements ActionListener
+	{
+		/**
+		 * Index of the CPU.
+		 */
+		private int index;
+		
+		/**
+		 * Constructs a CpuTurn with a specified index.
+		 * 
+		 * @param index Index of the CPU.
+		 * @since 1.6.0
+		 */
+		public CpuTurn(int index) 
+		{
+			this.index = index;
+		}
+		
+		/**
+		 * Activates when this object receives an action event.
+		 * 
+		 * (non-Javadoc)
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 * @since 1.6.0
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			Player player = (Player)table.getPersonAtIndex(index);
+			
+			//If the player can split and has an an ace a 9 or a card with a
+			//value of 10.
+			if(player.canSplit() && (player.getHand(0).getCard(0).getValue() == 10 
+					|| player.getHand(0).getCard(0).getValue() == 9
+					|| player.getHand(0).getCard(0).getFace() == Face.ACE))
+			{
+				table.split(index);
+				player = (Player)table.getPersonAtIndex(index);
+				gameLog.setText(gameLog.getText() + player.getName() 
+					+ " splits their hand and their wager increase to " 
+					+ player.getWager() + "\n");
+				playerPanels[index].updatePanel(index);
+				
+				for(int i = 0; i < player.getHands().length; i++)
+				{
+					while(player.getHand(i).getHandScore() < 17)
+					{
+						Card card = table.hit(index, 0);
+						player = (Player)table.getPersonAtIndex(index);
+						gameLog.setText(gameLog.getText() + player.getName() 
+							+ " hits and is dealt a " + card + " to hand " + 
+							(i + 1) + "\n");
+						playerPanels[index].updatePanel(index);
+					}
+					
+					int handScore = player.getHand(i).getHandScore();
+					//If the CPU has Blackjack.
+					if(handScore == Table.BLACKJACK)
+					{
+						gameLog.setText(gameLog.getText() + player.getName()
+						+ " has Blackjack and is forced to stand\n");
+						return;
+					}
+					//If the CPU has gone bust.
+					else if(player.getBusted())
+					{
+						gameLog.setText(gameLog.getText() + player.getName() 
+						+ " busts\n");
+						return;
+					}
+					//Else the player stands.
+					else
+					{
+						gameLog.setText(gameLog.getText() + "Stands hand " 
+							+ (i + 1) + " with a score of " + handScore + "\n");
+					}
+					playerPanels[index].updatePanel(index);
+				}
+			}
+			//If the CPU doesn't split.
+			else
+			{
+				//If the CPU's score is less than or equal to 10, hit.
+				if(player.getHand(0).getHandScore() <= 10)
+				{
+					hit();
+				}
+				//If the the CPU's score is from 11 - 14.
+				else if(player.getHand(0).getHandScore() >= 11 && 
+						player.getHand(0).getHandScore() <= 14)
+				{
+					//If the player can afford to double down then do do so.
+					if(player.getTotalMoney() >= player.getWager())
+					{
+						Card card = table.doubleDown(index, 0);
+						player = (Player)table.getPersonAtIndex(index);
+						gameLog.setText(gameLog.getText() + player.getName() 
+							+ " doubles down and their wager has increased to " 
+							+ player.getWager() + "\n");
+						gameLog.setText(gameLog.getText() + player.getName() 
+							+ " is dealt a " + card + "\n");
+						gameLog.setText(gameLog.getText() + player.getName() 
+							+ " now has a score of " + player.getHand(0).
+							getHandScore() + "\n");
+						
+						if(player.getBusted())
+						{
+							gameLog.setText(gameLog.getText() 
+									+ player.getName() + " has gone bust\n");
+						}
+						playerPanels[index].updatePanel(index);
+					}
+					//Otherwise hit.
+					else
+					{
+						hit();
+					}
+				}
+				//If the CPU's score equals 15 then surrender.
+				else if(player.getHand(0).getHandScore() == 15)
+				{
+					double returnedAmount = table.surrender(index);
+					gameLog.setText(gameLog.getText() + player.getName()
+						+ " surrenders and half of their wager is returned\n");
+					gameLog.setText(gameLog.getText() + player.getName() 
+						+ " regains $" + returnedAmount + "\n");
+					playerPanels[index].updatePanel(index);
+				}
+				//If the CPU's score is 16 or greater than stand.
+				else if(player.getHand(0).getHandScore() >= 16)
+				{
+					gameLog.setText(gameLog.getText() + player.getName() 
+					+ " stands with a score of " + table.getPersonAtIndex
+					(index).getHand(0).getHandScore() + "\n");
+					playerPanels[index].updatePanel(index);
+				}
+			}
+			playerPanels[index].updatePanel(index);
+			nextPlayer(index);
+		}
+		
+		/**
+		 * Deals the CPU a new card.
+		 * 
+		 * @since 1.6.0
+		 */
+		private void hit()
+		{
+			Player player = (Player)table.getPersonAtIndex(index);
+			
+			//While the CPU's score is less than 17 hit.
+			while(player.getHand(0).getHandScore() < 17)
+			{
+				Card card = table.hit(index, 0);
+				player = (Player)table.getPersonAtIndex(index);
+				gameLog.setText(gameLog.getText() + player.getName() 
+						+ " hits and is dealt a " + card + "\n");
+				playerPanels[index].updatePanel(index);
+			}
+			
+			int handScore = player.getHand(0).getHandScore();
+			//If the CPU's score equals Blackjack stand
+			if(handScore == Table.BLACKJACK)
+			{
+				gameLog.setText(gameLog.getText() + player.getName()
+				+ " has Blackjack and is forced to stand\n");
+			}
+			//If the CPU has gone bust.
+			else if(player.getBusted())
+			{
+				gameLog.setText(gameLog.getText() + player.getName() 
+				+ " busts\n");
+			}
+			//Else stand.
+			else
+			{
+				gameLog.setText(gameLog.getText() + player.getName() 
+				+ " stands with a score of " + handScore + "\n");
+			}
+			playerPanels[index].updatePanel(index);
 		}
 	}
 	
@@ -3168,10 +3477,10 @@ public class GUI extends JFrame
 		{
 			ActionListener hit = new ActionListener() 
 			{
-				Person dealer = table.getPersonAtIndex(finalIndex);
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
+					Person dealer = table.getPersonAtIndex(finalIndex);
 					gameLog.setText(gameLog.getText() + dealer.getName() 
 						+ " adds a ");
 					for(int i = 0; i < cards.length; i++)
