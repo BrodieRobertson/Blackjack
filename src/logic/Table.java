@@ -1,4 +1,5 @@
 package logic;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import card.*;
@@ -8,7 +9,7 @@ import player.*;
  * The logic layer for the game, manages all of the back end data manipulation.
  * 
  * @author Brodie Robertson
- * @version 1.5.0
+ * @version 1.7.0
  * @since 1.0.0
  */
 public class Table 
@@ -52,7 +53,11 @@ public class Table
 	/**
 	 * The absolute total number of rounds.
 	 */
-	private int totalRounds;
+	private int totalRounds;	
+	/**
+	 * Formats doubles to to contain 2 digits after the decimal.
+	 */
+	private static final DecimalFormat df = new DecimalFormat("#.00");
 	
 	/**
 	 * Creates an array of player's with the parameters specified.
@@ -292,6 +297,7 @@ public class Table
 			ex.printStackTrace();
 			System.exit(0);
 		}
+
 		final int startingCards = 2;
 		//Deals 1 card to each player and then deals the 2nd.
 		for(int i = 0; i < startingCards; i++)
@@ -301,7 +307,7 @@ public class Table
 			if(index == players.length - 1 && players[index].getHand(0).
 					getCardsRemaining() == 1)
 			{
-				card.flipCard();
+				card.setFaceUp(false);
 			}
 						
 			players[index].addToHand(card, 0);
@@ -343,7 +349,7 @@ public class Table
 		}
 		else
 		{
-			throw new TableException("Invalid wager: " + wager);
+			throw new TableException("Invalid wager: " + df.format(wager));
 		}
 	}
 	
@@ -370,9 +376,28 @@ public class Table
 			System.exit(0);
 		}
 		
-		double wager = 50;
-		boolean validWager = false;
 		Player player = (Player)players[index];
+		
+		//Sets the wager to 1/15 of their total money.
+		double wager = player.getTotalMoney() / 15;
+		
+		//If that's less than the MINWAGER use the MINWAGER instead.
+		if(wager < MINWAGER)
+		{
+			try 
+			{
+				player.setWager(MINWAGER);
+			} 
+			catch (PlayerException ex) 
+			{
+				ex.printStackTrace();
+				System.exit(0);
+			}
+			
+			return MINWAGER;
+		}
+		
+		boolean validWager = false;
 		while(!validWager)
 		{
 			//Valid wager if it's between the min an max wager and wager less 
@@ -443,7 +468,7 @@ public class Table
 			}
 			else
 			{
-				throw new TableException("Invalid insurance: " + insurance);
+				throw new TableException("Invalid insurance: " + df.format(insurance));
 			}
 		}
 		//Throws exception if the Player already has Blackjack.
@@ -535,7 +560,7 @@ public class Table
 		//If the dealer's 2nd card's value is 10, flip it.
 		if(dealerHand.getCard(1).getValue() == 10)
 		{
-			players[players.length - 1].flipCardInHand(1, 0);
+			players[players.length - 1].flipCardInHand(1, 0, true);
 			return true;
 		}
 		return false;
@@ -584,7 +609,7 @@ public class Table
 					e.printStackTrace();
 					System.exit(0);
 				}
-				return "Push: " + player.getName() + "'s wager is returned\n";
+				return player.getName() + " pushes and their wager is returned\n";
 			}
 			//If the player does not have Blackjack
 			else
@@ -746,7 +771,7 @@ public class Table
 	 */
 	public void flipDealersCard()
 	{
-		players[players.length - 1].flipCardInHand(1, 0);
+		players[players.length - 1].flipCardInHand(1, 0, true);
 	}
 	
 	/**
@@ -799,7 +824,7 @@ public class Table
 				{
 					double push = player.getWager();
 					pushPayout(player);
-					return player.getName() + " pushes and regains $" + push;
+					return player.getName() + " pushes and regains $" + df.format(push);
 				}
 				//If the player's score is 21
 				else if (hands[0].getHandScore() == BLACKJACK) 
@@ -835,7 +860,7 @@ public class Table
 					double push = player.getWager();
 					pushPayout(player);
 					return player.getName() + " pushes with hand " + (bestHandIndex + 1) 
-							+ " and regains $" + push;
+							+ " and regains $" + df.format(push);
 				}
 
 				//If the player's score is equal to or less than 21
@@ -864,7 +889,7 @@ public class Table
 				{
 					double push = player.getWager();
 					pushPayout(player);
-					return player.getName() + " pushes and regains $" + push;
+					return player.getName() + " pushes and regains $" + df.format(push);
 				}
 				//If the player's score is less than 21
 				else 
@@ -901,7 +926,7 @@ public class Table
 					double push = player.getWager();
 					pushPayout(player);
 					return player.getName() + " pushes with hand " + (bestHandIndex + 1) 
-							+ " and regains $" + push;
+							+ " and regains $" + df.format(push);
 				}
 				//If the player's score is less than 21
 				else 
@@ -943,7 +968,7 @@ public class Table
 				{
 					double push = player.getWager();
 					pushPayout(player);
-					return player.getName() + " pushes and regains $" + push;
+					return player.getName() + " pushes and regains $" + df.format(push);
 				}
 				//If the player's score is less than the dealer's score
 				else 
@@ -996,7 +1021,7 @@ public class Table
 					double push = player.getWager();
 					pushPayout(player);
 					return player.getName() + " pushes with hand " + (bestHandIndex + 1) 
-							+ " and regains $" + push;
+							+ " and regains $" + df.format(push);
 				}
 				//If the player's score is less than the dealer's score
 				else

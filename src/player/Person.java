@@ -316,10 +316,10 @@ public abstract class Person implements Cloneable
 	 * @param handIndex The index of the specified card.
 	 * @since 1.0.0
 	 */
-	public void flipCardInHand(int cardIndex, int handIndex)
+	public void flipCardInHand(int cardIndex, int handIndex, boolean faceUp)
 	{
 		validateHandIndex(handIndex);
-		hands[handIndex].flipCardInHand(cardIndex);
+		hands[handIndex].flipCardInHand(cardIndex, faceUp);
 	}
 	
 	/**

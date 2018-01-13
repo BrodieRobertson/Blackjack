@@ -9,7 +9,7 @@ import logic.Table;
  * hand.
  * 
  * @author Brodie Robertson
- * @version 1.0.0
+ * @version 1.7.0
  * @since 1.0.0
  */
 public class Hand implements Cloneable
@@ -199,6 +199,38 @@ public class Hand implements Cloneable
 		
 		increaseHandSize();
 		cards[cards.length - 1] = new Card(card);
+		
+		//If the hand score is greater than Blackjack or less than Blackjack.
+		if(getHandScore() > Table.BLACKJACK || getHandScore() < Table.BLACKJACK)
+		{
+			int aceCount = 0;
+			int score = getHandScore();
+			for(int i = 0; i < cards.length; i++)
+			{
+				if(cards[i].getFace() == Face.ACE && cards[i] != null)
+				{
+					aceCount++;
+				}
+			}
+			
+			int j = 0;
+			while(j < cards.length && aceCount > 0)
+			{
+				if(score + 10 < Table.BLACKJACK && cards[j].getValue() == 1)
+				{
+					cards[j].setValue();
+					score += 10;
+					aceCount--;
+				}
+				else if(score > Table.BLACKJACK && cards[j].getValue() == 11)
+				{
+					cards[j].setValue();
+					score -= 10;
+					aceCount--;
+				}
+				j++;
+			}
+		}
 	}
 	
 	/**
@@ -361,52 +393,11 @@ public class Hand implements Cloneable
 	public int getHandScore()
 	{
 		int score = 0;
-		boolean aceFound = false;
 		for(int i = 0; i < cards.length; i++)
 		{
 			if(cards[i] != null && cards[i].getFaceUp())
 			{
 				score += cards[i].getValue();
-				if(cards[i].getFace() == Face.ACE)
-				{
-					aceFound = true;
-				}
-			}
-		}
-		
-		//If the hand has an ace and the score is greater than blackjack.
-		if(score > Table.BLACKJACK && aceFound)
-		{
-			int i = 0;
-			while(i < cards.length && score > Table.BLACKJACK)
-			{
-				if(cards[i] != null && cards[i].getFaceUp())
-				{
-					if(cards[i].getValue() == 11)
-					{
-						cards[i].setValue();
-					}
-				}
-				i++;
-			}
-		}
-		
-		//If the hand has an ace and the score is less than blackjack.
-		if(score < Table.BLACKJACK && aceFound)
-		{
-			int i = 0;
-			while((i < cards.length && score < Table.BLACKJACK) && score + 10 <=
-					Table.BLACKJACK) 
-			{
-				if(cards[i] != null && cards[i].getFaceUp())
-				{
-					if(cards[i].getValue() == 1)
-					{
-						cards[i].setValue();
-						score += 10;
-					}
-				}
-				i++;
 			}
 		}
 		
@@ -420,7 +411,7 @@ public class Hand implements Cloneable
 	 * @param index The index of the card.
 	 * @since 1.0.0
 	 */
-	public void flipCardInHand(int index)
+	public void flipCardInHand(int index, boolean faceUp)
 	{
 		try
 		{
@@ -435,6 +426,6 @@ public class Hand implements Cloneable
 			System.exit(0);
 		}
 		
-		cards[index].flipCard();
+		cards[index].setFaceUp(faceUp);
 	}
 }

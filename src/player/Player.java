@@ -1,13 +1,11 @@
 package player;
 
-import card.Face;
-
 /**
  * Abstract definition of a player providing the necessary methods for use 
  * with the table.
  * 
  * @author Brodie Robertson
- * @version 1.4.0
+ * @version 1.6.0
  * @since 1.0.0
  */
 public abstract class Player extends Person implements Cloneable
@@ -771,9 +769,9 @@ public abstract class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * Gets whether the player has a standard win.
+	 * Gets whether the Player has a standard win.
 	 * 
-	 * @return Whether the player has a standard win.
+	 * @return Whether the Player has a standard win.
 	 * @since 1.3.0
 	 */
 	public boolean getHasWin()
@@ -782,9 +780,9 @@ public abstract class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * Sets whether the player has a standard win.
+	 * Sets whether the Player has a standard win.
 	 * 
-	 * @param hasWin Whether the player has a standard win.
+	 * @param hasWin Whether the Player has a standard win.
 	 * @since 1.3.0
 	 */
 	public void setHasWin(boolean hasWin)
@@ -793,9 +791,9 @@ public abstract class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * Gets player's current Blackjack winnings.
+	 * Gets Player's current Blackjack winnings.
 	 * 
-	 * @return Whether the player has Blackjack.
+	 * @return Whether the Player has Blackjack.
 	 * @since 1.3.0
 	 */
 	public double getCurrentBlackjack()
@@ -804,7 +802,7 @@ public abstract class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * Sets the player's current Blackjack winnings.
+	 * Sets the Player's current Blackjack winnings.
 	 * 
 	 * @param currentBlackjack 
 	 * @since 1.3.0
@@ -829,9 +827,9 @@ public abstract class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * Gets whether the player currently has Blackjack.
+	 * Gets whether the Player currently has Blackjack.
 	 * 
-	 * @return Whether the player currently has Blackjack.
+	 * @return Whether the Player currently has Blackjack.
 	 * @since 1.3.0
 	 */
 	public boolean getHasBlackjack()
@@ -840,9 +838,9 @@ public abstract class Player extends Person implements Cloneable
 	}
 	
 	/**
-	 * Sets whether the player currently has Blackjack.
+	 * Sets whether the Player currently has Blackjack.
 	 * 
-	 * @param hasBlackjack Whether the player currently has Blackjack.
+	 * @param hasBlackjack Whether the Player currently has Blackjack.
 	 * @since 1.3.0
 	 */
 	public void setHasBlackjack(boolean hasBlackjack)
@@ -850,6 +848,12 @@ public abstract class Player extends Person implements Cloneable
 		this.hasBlackjack = hasBlackjack;
 	}
 	
+	/**
+	 * Checks whether the Player can split their hand.
+	 * 
+	 * @return Whether the Player can split their hand.
+	 * @since 1.6.0
+	 */
 	public boolean canSplit()
 	{
 		if(getHand(0).getCards().length == 2 && 

@@ -4,7 +4,7 @@ package card;
  * A card is an object with a data representation of a French playing card.
  * 
  * @author Brodie Robertson
- * @version 1.0.0
+ * @version 1.7.0
  * @since 1.0.0
  */
 public class Card implements Cloneable
@@ -29,6 +29,17 @@ public class Card implements Cloneable
 	 * Whether the card is face up or not.
 	 */
 	private boolean faceUp = true;
+	
+	/**
+	 * Constructs a blank face down card.
+	 * 
+	 * @since 1.7.0
+	 */
+	public Card()
+	{
+		super();
+		faceUp = false;
+	}
 	
 	/**
 	 * Constructs a card with values representing the attributes of a card.
@@ -284,15 +295,8 @@ public class Card implements Cloneable
 	 * 
 	 * @since 1.0.0
 	 */
-	public void flipCard()
+	public void setFaceUp(boolean faceUp)
 	{
-		if(faceUp)
-		{
-			faceUp = false;
-		}
-		else
-		{
-			faceUp = true;
-		}
+		this.faceUp = faceUp;
 	}
 }

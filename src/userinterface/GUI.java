@@ -10,12 +10,15 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Point;
-import java.awt.RenderingHints.Key;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.text.DecimalFormat;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -42,10 +45,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import card.Card;
+import card.Colour;
 import card.Deck;
 import card.DeckException;
 import card.Face;
 import card.Hand;
+import card.Suit;
 import logic.*;
 import player.*;
 
@@ -54,7 +59,7 @@ import player.*;
  * the logic layer.
  * 
  * @author Brodie Robertson
- * @version 1.6.0
+ * @version 1.7.0
  * @since 1.2.0
  */
 public class GUI extends JFrame 
@@ -137,16 +142,17 @@ public class GUI extends JFrame
 			H = KeyStroke.getKeyStroke(KeyEvent.VK_H, 0), D = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0),
 			P = KeyStroke.getKeyStroke(KeyEvent.VK_P, 0), U = KeyStroke.getKeyStroke(KeyEvent.VK_U, 0),
 			M = KeyStroke.getKeyStroke(KeyEvent.VK_M, 0), Y = KeyStroke.getKeyStroke(KeyEvent.VK_Y, 0),
-			N = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0), G = KeyStroke.getKeyStroke(KeyEvent.VK_G, 0);
+			N = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0), G = KeyStroke.getKeyStroke(KeyEvent.VK_G, 0),
+			L = KeyStroke.getKeyStroke(KeyEvent.VK_L, 0);
 	/**
 	 * Every Color that has been reused.
 	 */
 	public static final Color GREEN = new Color(0, 220, 0), RED = new Color(235, 0, 0), 
-			LIGHT_BLUE = new Color(45, 177, 255), LIGHT_GRAY = new Color(249, 249, 250);
+			LIGHT_BLUE = new Color(45, 177, 255), LIGHT_GRAY = new Color(128, 133, 137);
 	/**
 	 * Delay between CPU turns and some game log updates.
 	 */
-	private int turnDelay = 1000;
+	private int turnDelay = 500;
 	/**
 	 * Timer to delay CPU turns and some game log updates.
 	 */
@@ -164,9 +170,17 @@ public class GUI extends JFrame
 	 */
 	private JTextArea gameLog;
 	/**
+	 * GUI element showing the back of a card and how many cards are left in the deck.
+	 */
+	private GUICard deck;
+	/**
 	 * The logic layer for the game.
 	 */
 	private Table table;
+	/**
+	 * Formats doubles to to contain 2 digits after the decimal.
+	 */
+	private static final DecimalFormat df = new DecimalFormat("0.00");
 	
 	/**
 	 * @author Brodie Robertson
@@ -185,6 +199,7 @@ public class GUI extends JFrame
 	        super(text);
 	        setContentAreaFilled(false);
 	        setFocusPainted(false);
+	        setBorder(new MatteBorder(1, 1, 1, 1, Color.BLACK));
 	    }
 
 	    /**
@@ -206,13 +221,11 @@ public class GUI extends JFrame
 	    		g2.fillRect(0, 0, getWidth(), getHeight());
 	    		g2.dispose();
 	    		
-	    		super.paintComponent(g);
 	    	}
 	    	//If the button is only enabled set to a gradient.
 	    	else if(getModel().isEnabled())
 	    	{
-		        Graphics2D g2 = (Graphics2D)g.create();
-		        
+		        Graphics2D g2 = (Graphics2D)g.create();        
 		        g2.setPaint(new GradientPaint(new Point(0, 0), getBackground(),
 		                new Point(0, getHeight()/3), Color.WHITE));
 		        g2.fillRect(0, 0, getWidth(), getHeight()/3);
@@ -220,9 +233,8 @@ public class GUI extends JFrame
 		        		Color.WHITE, new Point(0, getHeight()), getBackground()));
 		        g2.fillRect(0, getHeight()/3, getWidth(), getHeight());
 		        g2.dispose();
-
-		        super.paintComponent(g);
 	    	}
+    		super.paintComponent(g);
 	    }
 	}
 	
@@ -853,7 +865,7 @@ public class GUI extends JFrame
 	 * game.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.6.0
+	 * @version 1.7.0
 	 * @since 1.2.0
 	 */
 	private class AboutWindow extends JDialog
@@ -888,7 +900,7 @@ public class GUI extends JFrame
 			title.setFont(headingFont);
 			about.add(title);
 			
-			JLabel version = new JLabel("Version: Beta 1.5.0");
+			JLabel version = new JLabel("Version: Beta 1.7.0");
 			version.setVerticalAlignment(JLabel.TOP);
 			version.setAlignmentX(JLabel.CENTER_ALIGNMENT);
 			version.setFont(MAIN_HEADING_FONT);
@@ -928,7 +940,7 @@ public class GUI extends JFrame
 	 * Dialog window displaying the statistics of the current game.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.6.0
+	 * @version 1.7.0
 	 * @since 1.2.0
 	 */
 	private class StatisticsWindow extends JDialog
@@ -946,7 +958,6 @@ public class GUI extends JFrame
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new BorderLayout());
 			
-			
 			//Key bindings
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap().put(ESC, "ESC");
@@ -961,27 +972,33 @@ public class GUI extends JFrame
 			gameStatistics.setFont(MAIN_HEADING_FONT);
 			statistics.add(gameStatistics);
 			
-			JLabel minWager  = new JLabel("Minimum Wager: $" + Table.MINWAGER);
+			//Minimum Wager
+			JLabel minWager  = new JLabel("Minimum Wager: $" + df.format(Table.MINWAGER));
 			minWager.setFont(MAIN_TEXT_FONT);
 			statistics.add(minWager);
 
-			JLabel maxWager = new JLabel("Maximum Wager: $" + Table.MAXWAGER);
+			//Maximum Wager
+			JLabel maxWager = new JLabel("Maximum Wager: $" + df.format(Table.MAXWAGER));
 			maxWager.setFont(MAIN_TEXT_FONT);
 			statistics.add(maxWager);
 			
+			//Minimum Players
 			JLabel minNumPlayer = new JLabel("Minimum Players: " + Table.MINNUMPLAYERS);
 			minNumPlayer.setFont(MAIN_TEXT_FONT);
 			statistics.add(minNumPlayer);
 			
+			//Minimum Players
 			JLabel maxNumPlayer = new JLabel("Maximum Players: " + Table.MAXNUMPLAYERS);
 			maxNumPlayer.setFont(MAIN_TEXT_FONT);
 			statistics.add(maxNumPlayer);
 		
+			//Number of Players
 			JLabel numPlayer = new JLabel("Number of Players: " 
 			+ (table.getPlayers().length - 1));
 			numPlayer.setFont(MAIN_TEXT_FONT);
 			statistics.add(numPlayer);
 			
+			//Cards in Deck
 			JLabel cardsInFullDeck = new JLabel("Cards in Full Deck: " 
 					+ (table.getDeck().getNumOfDecks() * Deck.DECKSIZE));
 			cardsInFullDeck.setFont(MAIN_TEXT_FONT);
@@ -992,6 +1009,7 @@ public class GUI extends JFrame
 			cardsLeftinDeck.setFont(MAIN_TEXT_FONT);
 			statistics.add(cardsLeftinDeck);
 			
+			//Current Round
 			JLabel currentRound = new JLabel("Current Round: " + (table.
 					getCurrentRound()));
 			currentRound.setFont(MAIN_TEXT_FONT);
@@ -1013,10 +1031,12 @@ public class GUI extends JFrame
 					header.setFont(MAIN_HEADING_FONT);
 					statistics.add(header);
 					
+					//Name
 					JLabel name = new JLabel("Name: " + player.getName());
 					name.setFont(MAIN_TEXT_FONT);
 					statistics.add(name);
 					
+					//Bankrupt
 					if(player.getBankrupt())
 					{
 						JLabel bankrupt = new JLabel("Bankrupt");
@@ -1024,11 +1044,13 @@ public class GUI extends JFrame
 						statistics.add(bankrupt);
 					}
 						
+					//Current Wager
 					JLabel currentWager = new JLabel("Current Wager: $" 
-							+ player.getWager());
+							+ df.format(player.getWager()));
 					currentWager.setFont(MAIN_TEXT_FONT);
 					statistics.add(currentWager);
 					
+					//Not split
 					if(!player.getHand(0).getSplit())
 					{
 						JLabel handScore = new JLabel("Hand Score: " + 
@@ -1041,6 +1063,7 @@ public class GUI extends JFrame
 						cardsHeld.setFont(MAIN_TEXT_FONT);
 						statistics.add(cardsHeld);
 					}
+					//Split
 					else
 					{
 						Hand[] hands = player.getHands();
@@ -1058,51 +1081,62 @@ public class GUI extends JFrame
 						}
 					}
 					
-					JLabel startingMoney = new JLabel("Starting Money: $" + Player.STARTING_MONEY);
+					//Starting Money
+					JLabel startingMoney = new JLabel("Starting Money: $" + df.format(Player.STARTING_MONEY));
 					startingMoney.setFont(MAIN_TEXT_FONT);
 					statistics.add(startingMoney);
 					
+					//Total Money
 					JLabel totalMoney = new JLabel("Total Money: $" 
-							+ player.getTotalMoney());
+							+ df.format(player.getTotalMoney()));
 					totalMoney.setFont(MAIN_TEXT_FONT);
 					statistics.add(totalMoney);
 					
+					//Total Winnings
 					JLabel totalWinnings = new JLabel("Total Winnings: $" 
-							+ player.getTotalWinnings());
+							+ df.format(player.getTotalWinnings()));
 					totalWinnings.setFont(MAIN_TEXT_FONT);
 					statistics.add(totalWinnings);
 					
+					//Total Wagers
 					JLabel totalWagers = new JLabel("Total Wagers: $" 
-							+ player.getTotalWager());
+							+ df.format(player.getTotalWager()));
 					totalWagers.setFont(MAIN_TEXT_FONT);
 					statistics.add(totalWagers);
 					
+					//Total Insurance
 					JLabel totalInsurance = new JLabel("Total Insurance: $" 
-							+ player.getTotalInsurance());
+							+ df.format(player.getTotalInsurance()));
 					totalInsurance.setFont(MAIN_TEXT_FONT);
 					statistics.add(totalInsurance);
 					
+					//Wins
 					JLabel win = new JLabel("Wins: " + player.getWin());
 					win.setFont(MAIN_TEXT_FONT);
 					statistics.add(win);
 					
+					//Losses
 					JLabel loss = new JLabel("Losses: " + player.getLoss());
 					loss.setFont(MAIN_TEXT_FONT);
 					statistics.add(loss);
 					
+					//Pushes
 					JLabel push = new JLabel("Pushes: " + player.getPush());
 					push.setFont(MAIN_TEXT_FONT);
 					statistics.add(push);
 					
+					//Blackjack
 					JLabel blackjack = new JLabel("Blackjack: " + player.
 							getBlackjack());
 					blackjack.setFont(MAIN_TEXT_FONT);
 					statistics.add(blackjack);
 					
+					//Busts
 					JLabel bust = new JLabel("Busts: " + player.getBust());
 					bust.setFont(MAIN_TEXT_FONT);
 					statistics.add(bust);
 					
+					//Surrenders
 					JLabel surrender = new JLabel("Surrenders: " + player.getSurrender());
 					surrender.setFont(MAIN_TEXT_FONT);
 					statistics.add(surrender);
@@ -1120,15 +1154,18 @@ public class GUI extends JFrame
 					header.setFont(MAIN_HEADING_FONT);
 					statistics.add(header);
 					
+					//Name
 					JLabel name = new JLabel("Name: " + dealer.getName());
 					name.setFont(MAIN_TEXT_FONT);
 					statistics.add(name);
 					
+					//Hand Score
 					JLabel handScore = new JLabel("Hand Score: " + dealer.
 							getHand(0).getHandScore());
 					handScore.setFont(MAIN_TEXT_FONT);
 					statistics.add(handScore);
 					
+					//Cards Held
 					JLabel cardsHeld = new JLabel("Cards Held: " + dealer.
 							getHand(0).getCardsRemaining());
 					cardsHeld.setFont(MAIN_TEXT_FONT);
@@ -1226,7 +1263,7 @@ public class GUI extends JFrame
 	 * Used to draw a player's hand onto the display.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.5.0
+	 * @version 1.7.0
 	 * @since 1.2.0
 	 */
 	private class HandPanel extends JPanel
@@ -1234,7 +1271,7 @@ public class GUI extends JFrame
 		/**
 		 * An array of labels displaying cards.
 		 */
-		private JLabel[] cards;
+		private GUICard[] cards;
 		/**
 		 * Number of rows in a hand panel.
 		 */
@@ -1253,12 +1290,11 @@ public class GUI extends JFrame
 		public HandPanel(Hand hand)
 		{
 			setLayout(new GridLayout(row, col));
-			cards = new JLabel[row*col];
+			cards = new GUICard[row*col];
 			for(int i = 0; i < cards.length; i++)
 			{
-				JLabel card = new JLabel("");
+				GUICard card = new GUICard();
 				card.setHorizontalAlignment(JLabel.CENTER);	
-				card.setBorder(new MatteBorder(1, 1, 1, 1, Color.RED));
 				cards[i] = card;
 				add(cards[i]);
 			}
@@ -1278,20 +1314,690 @@ public class GUI extends JFrame
 			{
 				if(i < hand.getCardsRemaining())
 				{
-					if(hand.getCard(i).getFaceUp())
-					{
-						cards[i].setText("" + hand.getCard(i).getValue());
-					}
-					else
-					{
-						cards[i].setText("FD");
-					}
+					cards[i].card = hand.getCard(i);	
 				}
 				else
 				{
-					cards[i].setText("");
+					cards[i].card = null;
 				}
+				cards[i].repaint();
 			}
+		}
+	}
+	
+	/**
+	 * Used to draw a card to the screen.
+	 * 
+	 * @author Brodie Robertson
+	 * @version 1.7.0
+	 * @since 1.7.0
+	 */
+	private class GUICard extends JLabel
+	{
+		/**
+		 * Card being drawn.
+		 */
+		private Card card;
+		
+		/**
+		 * Paints the card to the screen.
+	     * 
+		 * (non-Javadoc)
+		 * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+		 * @since 1.7.0
+		 */
+		@Override
+		protected void paintComponent(Graphics g) 
+		{
+			//If the there is a card in this spot draw a card
+			if(card != null)
+			{
+				final int distFromEdge = 5;
+				Graphics2D g2 = (Graphics2D)g.create();
+	    		g2.setPaint(Color.WHITE);
+				g2.drawRoundRect(distFromEdge, distFromEdge, getWidth() - (distFromEdge*2), 
+						getHeight() - (distFromEdge*2), 6, 6);
+				g2.fillRoundRect(distFromEdge, distFromEdge, getWidth() - (distFromEdge*2), 
+						getHeight() - (distFromEdge*2), 6, 6);
+				
+				//If the card is face up draw front
+	    		if(card.getFaceUp())
+	    		{
+	    			//Draw Ace
+	    			if(card.getFace() == Face.ACE)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+			    			drawDiamond(g2, (getWidth()/2) - 6, (getHeight()/2) - 6);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+			    			drawHeart(g2, (getWidth()/2) - 6, (getHeight()/2) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (getWidth()/2) - 6, (getHeight()/2) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (getWidth()/2) - 6, (getHeight()/2) - 6);
+		    			}
+	    			}
+	    			//Draw Two
+	    			else if(card.getFace() == Face.TWO)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+			    			drawDiamond(g2, (getWidth()/2) - 6, (int)(getHeight()*0.8) - 6);
+			    			drawDiamond(g2, (getWidth()/2) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+			    			drawHeart(g2, (getWidth()/2) - 6, (int)(getHeight()*0.8) - 6);
+			    			drawHeart(g2, (getWidth()/2) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (getWidth()/2) - 6, (int)(getHeight()*0.8) - 6);
+			    			drawClub(g2, (getWidth()/2) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (getWidth()/2) - 6, (int)(getHeight()*0.8) - 6);
+			    			drawSpade(g2, (getWidth()/2) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+	    			}
+	    			//Draw Three
+	    			else if(card.getFace() == Face.THREE)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+		    				drawDiamond(g2, (getWidth()/2) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (getWidth()/2) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawDiamond(g2, (getWidth()/2) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (getWidth()/2) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (getWidth()/2) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawHeart(g2, (getWidth()/2) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (getWidth()/2) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (getWidth()/2) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawClub(g2, (getWidth()/2) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (getWidth()/2) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (getWidth()/2) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawSpade(g2, (getWidth()/2) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+	    			}
+	    			//Draw Four
+	    			else if(card.getFace() == Face.FOUR)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+	    			}
+	    			//Draw Five
+	    			else if(card.getFace() == Face.FIVE)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.5) - 6);
+		    				
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.5) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.5) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.5) - 6);
+		    			}
+	    			}
+	    			//Draw Six
+	    			else if(card.getFace() == Face.SIX)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    			}
+	    			}
+	    			//Draw Seven
+	    			else if(card.getFace() == Face.SEVEN)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.35) - 6);
+			    			
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.35) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.35) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.35) - 6);
+		    			}
+	    			}
+	    			//Draw Eight
+	    			else if(card.getFace() == Face.EIGHT)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.35) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.65) - 6);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.35) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.65) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.35) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.65) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.5) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.35) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.65) - 6);
+		    			}
+	    			}
+	    			//Draw Nine
+	    			else if(card.getFace() == Face.NINE)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.5) - 5);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.5) - 5);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.5) - 5);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.5) - 5);
+		    			}
+	    			}
+	    			//Draw Ten
+	    			else if(card.getFace() == Face.TEN)
+	    			{
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawDiamond(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.3) - 5);
+		    				drawDiamond(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.7) - 5);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawHeart(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.3) - 5);
+		    				drawHeart(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.7) - 5);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawClub(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.3) - 5);
+		    				drawClub(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.7) - 5);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.7) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.8) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.6) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.4) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.3) - 6, (int)(getHeight()*0.2) - 6);
+		    				drawSpade(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.3) - 5);
+		    				drawSpade(g2, (int)(getWidth()*0.5) - 6, (int)(getHeight()*0.7) - 5);
+		    			}
+	    			}
+	    			//Draw Jack, Queen or King
+	    			else if(card.getFace() == Face.JACK || card.getFace() == Face.QUEEN
+	    					|| card.getFace() == Face.KING)
+	    			{
+	    				if(card.getColour() == Colour.RED)
+	    				{
+	    					g2.setPaint(Color.RED);
+	    				}
+	    				else
+	    				{
+	    					g2.setPaint(Color.BLACK);
+	    				}
+	    				
+	    				final Font smallSize = new Font("Bell MT", Font.PLAIN, 72);
+	    				final Font largeSize = new Font("Bell MT", Font.PLAIN, 90);
+	    				
+	    				//Draw Diamond
+		    			if(card.getSuit() == Suit.DIAMONDS)
+		    			{
+			    			drawDiamond(g2, (int)(getWidth()*0.2) - 6, (int)(getHeight()*0.125) - 6);
+			    			drawDiamond(g2, (int)(getWidth()*0.8) - 6, (int)(getHeight()*0.875) - 6);
+		    			}
+		    			//Draw Heart
+		    			else if(card.getSuit() == Suit.HEARTS)
+		    			{
+		    				drawHeart(g2, (int)(getWidth()*0.2) - 6, (int)(getHeight()*0.125) - 6);
+			    			drawHeart(g2, (int)(getWidth()*0.8) - 6, (int)(getHeight()*0.875) - 6);
+		    			}
+		    			//Draw Club
+		    			else if(card.getSuit() == Suit.CLUBS)
+		    			{
+		    				drawClub(g2, (int)(getWidth()*0.2) - 6, (int)(getHeight()*0.125) - 6);
+			    			drawClub(g2, (int)(getWidth()*0.8) - 6, (int)(getHeight()*0.875) - 6);
+		    			}
+		    			//Draw Spade
+		    			else
+		    			{
+		    				drawSpade(g2, (int)(getWidth()*0.2) - 6, (int)(getHeight()*0.125) - 6);
+			    			drawSpade(g2, (int)(getWidth()*0.8) - 6, (int)(getHeight()*0.875) - 6);
+		    			}
+		    			
+		    			//Draw Jack
+		    			if(card.getFace() == Face.JACK)
+		    			{
+		    				g2.setFont(largeSize);
+		    				g2.drawString("J", 22, 93);
+		    			}
+		    			//Draw Queen
+		    			else if(card.getFace() == Face.QUEEN)
+		    			{
+		    				g2.setFont(smallSize);
+		    				g2.drawString("Q", 12, 78);
+		    			}
+		    			//Draw King
+		    			else
+		    			{
+		    				g2.setFont(largeSize);
+		    				g2.drawString("K", 8, 93);
+		    			}
+	    			}
+	    		}
+	    		//If the card is face down draw the back
+	    		else
+	    		{
+	    			int rectX = distFromEdge*2;
+	    			int rectY = distFromEdge*2;
+	    			int cardWidth = getWidth();
+	    			int cardHeight = getHeight();
+	    			g2.setPaint(new Color(36, 46, 133));
+	    			g2.drawRect(rectX, rectY, getWidth() - (rectX * 2), 
+	    					getHeight() - (rectY * 2));
+	    			
+	    			g2.setPaint(new Color(40, 53, 135));
+	    			
+	    			//Main vertical line
+	    			int[] xPoints = new int[]{(int)(cardWidth*0.55), (int)(cardWidth*0.45), 
+	    					(int)(cardWidth*0.45), (int)(cardWidth*0.55)};
+	    			int[] yPoints = new int[]{rectY, rectY, cardHeight - rectY, cardHeight - rectY};
+	    			g2.drawPolygon(xPoints, yPoints, xPoints.length);
+	    			g2.fillPolygon(xPoints, yPoints, xPoints.length);
+	    			
+	    			//Top vertical line
+	    			xPoints = new int[]{(int)(cardWidth*0.7), (int)(cardWidth*0.8), 
+	    					(int)(cardWidth*0.8), (int)(cardWidth*0.7)};
+	    			yPoints = new int[]{rectY, rectY, (int)(cardHeight*0.535), 
+	    					(int)(cardHeight*0.535)};
+	    			g2.drawPolygon(xPoints, yPoints, xPoints.length);
+	    			g2.fillPolygon(xPoints, yPoints, xPoints.length);
+	    			
+	    			//Bottom vertical line
+	    			xPoints = new int[]{(int)(cardWidth*0.2), (int)(cardWidth*0.3), 
+	    					(int)(cardWidth*0.3), (int)(cardWidth*0.2)};
+	    			yPoints = new int[]{(int)(cardHeight*0.465), (int)(cardHeight*0.465), 
+	    					cardHeight - rectY, cardHeight - rectY};
+	    			g2.drawPolygon(xPoints, yPoints, xPoints.length);
+	    			g2.fillPolygon(xPoints, yPoints, xPoints.length);
+	    			
+	    			//Main horizontal line
+	    			xPoints = new int[]{rectX, rectX, cardWidth - rectX, cardWidth - rectX};
+	    			yPoints = new int[]{(int)(cardHeight*0.535), (int)(cardHeight*0.465), 
+	    					(int)(cardHeight*0.465), (int)(cardHeight*0.535)};
+	    			g2.drawPolygon(xPoints, yPoints, xPoints.length);
+	    			g2.fillPolygon(xPoints, yPoints, xPoints.length);
+	    			
+	    			//Top horizontal line
+	    			xPoints = new int[]{rectX, rectX, (int)(cardWidth*0.55), 
+	    					(int)(cardWidth*0.55)};
+	    			yPoints = new int[]{(int)(cardHeight*0.23), (int)(cardHeight*0.3), 
+	    					(int)(cardHeight*0.3), (int)(cardHeight*0.23)};
+	    			g2.drawPolygon(xPoints, yPoints, xPoints.length);
+	    			g2.fillPolygon(xPoints, yPoints, xPoints.length);
+	    			
+	    			//Bottom horizontal line
+	    			xPoints = new int[]{(int)(cardWidth*0.55), (int)(cardWidth*0.55), 
+	    					cardWidth - rectX, cardWidth - rectX};
+	    			yPoints = new int[]{(int)(cardHeight*0.69), (int)(cardHeight*0.76),
+	    					(int)(cardHeight*0.76),(int)(cardHeight*0.69)};
+	    			g2.drawPolygon(xPoints, yPoints, xPoints.length);
+	    			g2.fillPolygon(xPoints, yPoints, xPoints.length);
+	    		}
+	    		g2.dispose();
+			}
+			super.paintComponent(g);
+		}
+		
+		/**
+		 * Draws a diamond to the screen at a specified location.
+		 * 
+		 * @param g graphics object to use.
+		 * @param x position of the diamond.
+		 * @param y position of the diamond.
+		 * @since 1.7.0
+		 */
+		private void drawDiamond(Graphics2D g, int x, int y)
+		{
+			int[] xPoints = new int[]{6 + x, 12 + x, 6 + x, 0 + x, 6 + x};
+			int[] yPoints = new int[]{0 + y, 6 + y, 12 + y, 6 + y, 0 + y};
+			
+			g.setPaint(Color.RED);
+			g.drawPolygon(xPoints, yPoints, xPoints.length);
+			g.fillPolygon(xPoints, yPoints, xPoints.length);
+		}
+		
+		/**
+		 * Draws a heart to the screen at a specified location.
+		 * 
+		 * @param g graphics object to use.
+		 * @param x position of the heart.
+		 * @param y position of the heart.
+		 * @since 1.7.0
+		 */
+		private void drawHeart(Graphics2D g, int x, int y)
+		{
+			g.setPaint(Color.RED);
+			g.drawOval(0 + x, 0 + y, 6, 6);
+			g.fillOval(0 + x, 0 + y, 6, 6);
+			g.drawOval(6 + x, 0 + y, 6, 6);
+			g.fillOval(6 + x, 0 + y, 6, 6);
+			
+			int[] xPoints = new int[]{0 + x, 12 + x, 6 + x, 0 + x};
+			int[] yPoints = new int[]{3 + y, 3 + y, 12 + y, 3 + y};
+			g.drawPolygon(xPoints, yPoints, xPoints.length);
+			g.fillPolygon(xPoints, yPoints, xPoints.length);
+		}
+		
+		/**
+		 * Draws a spade to the screen at a specified location.
+		 * 
+		 * @param g graphics object to use.
+		 * @param x position of the spade.
+		 * @param y position of the spade.
+		 * @since 1.7.0
+		 */
+		private void drawSpade(Graphics2D g, int x, int y)
+		{
+			g.setPaint(Color.BLACK);
+			g.drawOval(0 + x, 6 + y, 6, 6);
+			g.fillOval(0 + x, 6 + y, 6, 6);
+			g.drawOval(6 + x, 6 + y, 6, 6);
+			g.fillOval(6 + x, 6 + y, 6, 6);
+			
+			int[] xPoints = new int[]{0 + x, 6 + x, 12 + x, 0 + x};
+			int[] yPoints = new int[]{9 + y, 0 + y, 9 + y, 9 + y};
+			g.drawPolygon(xPoints, yPoints, xPoints.length);
+			g.fillPolygon(xPoints, yPoints, xPoints.length);
+			
+			xPoints = new int[]{6 + x, 4 + x, 8 + x, 6 + x};
+			yPoints = new int[]{9 + y, 15 + y, 15 + y, 9 + y};
+			g.drawPolygon(xPoints, yPoints, xPoints.length);
+			g.fillPolygon(xPoints, yPoints, xPoints.length);
+		}
+		
+		/**
+		 * Draws a club to the screen at a specified location.
+		 * 
+		 * @param g graphics object to use.
+		 * @param x position of the club.
+		 * @param y position of the club.
+		 */
+		private void drawClub(Graphics2D g, int x, int y)
+		{
+			g.setPaint(Color.BLACK);
+			g.drawOval(3 + x, 0 + y, 6, 6);
+			g.fillOval(3 + x, 0 + y, 6, 6);
+			g.drawOval(0 + x, 5 + y, 6, 6);
+			g.fillOval(0 + x, 5 + y, 6, 6);
+			g.drawOval(6 + x, 5 + y, 6, 6);
+			g.fillOval(6 + x, 5 + y, 6, 6);
+			
+			int[] xPoints = new int[]{6 + x, 4 + x, 8 + x, 6 + x};
+			int[] yPoints = new int[]{8 + y, 14 + y, 14 + y, 8 + y};
+			g.drawPolygon(xPoints, yPoints, xPoints.length);
+			g.fillPolygon(xPoints, yPoints, xPoints.length);
 		}
 	}
 	
@@ -1299,7 +2005,7 @@ public class GUI extends JFrame
 	 * Used to draw a players statistics on the screen, including their hand.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.3
+	 * @version 1.7.0
 	 * @since 1.2.0
 	 */
 	private class PlayerPanel extends JPanel
@@ -1373,7 +2079,7 @@ public class GUI extends JFrame
 			totalMoneyLabel.setFont(MAIN_HEADING_FONT);
 			totalMoneyLabel.setHorizontalAlignment(JLabel.CENTER);
 			totalMoneyPanel.add(totalMoneyLabel);
-			totalMoney = new JLabel("$" + player.getTotalMoney());
+			totalMoney = new JLabel("$" + df.format(player.getTotalMoney()));
 			totalMoney.setFont(MAIN_TEXT_FONT);
 			totalMoney.setHorizontalAlignment(JLabel.CENTER);
 			totalMoney.setToolTipText(player.getName() + "'s total money");
@@ -1386,7 +2092,7 @@ public class GUI extends JFrame
 			wagerLabel.setFont(MAIN_HEADING_FONT);
 			wagerLabel.setHorizontalAlignment(JLabel.CENTER);
 			wagerPanel.add(wagerLabel);
-			wager = new JLabel("$" + player.getWager());
+			wager = new JLabel("$0.00");
 			wager.setFont(MAIN_TEXT_FONT);
 			wager.setHorizontalAlignment(JLabel.CENTER);
 			wager.setToolTipText(player.getName() + "'s wager");
@@ -1462,9 +2168,11 @@ public class GUI extends JFrame
 		public void updatePanel(int index)
 		{
 			Player player = (Player)table.getPersonAtIndex(index);
-			totalMoney.setText("$" + player.getTotalMoney());
-			wager.setText("$" + player.getWager());
+			totalMoney.setText("$" + df.format(player.getTotalMoney()));
+			wager.setText("$" + df.format(player.getWager()));
 			scores[0].setText("" + player.getHand(0).getHandScore());
+			
+			//Hand not split
 			if(player.getHand(0).getSplit() && !splitHand)
 			{
 				scoreLabels[0].setText("Hand 1 Score");
@@ -1480,21 +2188,35 @@ public class GUI extends JFrame
 				handList.add(hands[1]);
 				splitHand = true;
 			}
+			//Hand split
 			else if(player.getHand(0).getSplit())
 			{
 				scores[1].setText("" + player.getHand(1).getHandScore());
 				hands[1].updatePanel(index, 1);
+				hands[1].setToolTipText("Cards in hand: " + player.getHand(0).
+						getCardsRemaining());
 			}
 			
+			//Took insurance
 			if(player.getTookInsurance())
 			{
 				extraLabel.setText("Insurance");
-				extra.setText("$" + player.getInsurance());
+				extra.setText("$" + df.format(player.getInsurance()));
+				extra.setToolTipText(player.getName() + "'s insurance");
 			}
+			//Bankrupt
+			else if(player.getBankrupt())
+			{
+				extraLabel.setText("Bankrupt");
+				extra.setText("");
+				extra.setToolTipText("");
+			}
+			//No extra property
 			else
 			{
 				extraLabel.setText("");
 				extra.setText("");
+				extra.setToolTipText("");
 			}
 			
 			hands[0].setToolTipText("Cards in hand: " + player.getHand(0).
@@ -1511,6 +2233,7 @@ public class GUI extends JFrame
 		{
 			extraLabel.setText("");
 			extra.setText("");
+			extra.setToolTipText("");
 			scores[0].setText("0");
 			hands[0].setToolTipText("Cards in hand: " + 0);
 			hands[0].updatePanel(index, 0);
@@ -1685,7 +2408,7 @@ public class GUI extends JFrame
 						return;
 					}
 					gameLog.setText(gameLog.getText() + table.getPersonAtIndex(index).
-							getName() + "'s wager is $" + wager + "\n");
+							getName() + "'s wager is $" + df.format(wager) + "\n");
 					playerPanels[index].updatePanel(index);
 					dispose();
 					nextWager(index);
@@ -1738,7 +2461,7 @@ public class GUI extends JFrame
 	 * Dialog window used for setting a human's insurance.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.3
+	 * @version 1.7.0
 	 * @since 1.2.0
 	 */
 	private class InsuranceWindow extends JDialog
@@ -1808,7 +2531,7 @@ public class GUI extends JFrame
 						return;
 					}
 					gameLog.setText(gameLog.getText() + player.getName()
-							+ " has $" + insurance + " of insurance\n");
+							+ " has $" + df.format(insurance) + " of insurance\n");
 					dispose();
 					nextInsurance(index);
 				}
@@ -1932,7 +2655,7 @@ public class GUI extends JFrame
 	 * Dialog window used for playing out a human's turn.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.4.3
+	 * @version 1.7.0
 	 * @since 1.2.0
 	 */
 	private class TurnWindow extends JDialog
@@ -2017,6 +2740,7 @@ public class GUI extends JFrame
 				Player player = (Player)table.getPersonAtIndex(index);
 				error.setText("");
 				Card card = table.hit(index, handIndex);
+				updateDeck();
 				player = (Player)table.getPersonAtIndex(index);
 				gameLog.setText(gameLog.getText() + player.getName() 
 					+ " hits and is dealt a " + card + " to hand " + 
@@ -2075,7 +2799,7 @@ public class GUI extends JFrame
 		 * displays the results.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.2
+		 * @version 1.7.0
 		 * @since 1.4.1
 		 */
 		private class SplitDoubleDown extends AbstractAction
@@ -2103,10 +2827,11 @@ public class GUI extends JFrame
 				if(player.getTotalMoney() >= player.getWager())
 				{
 					Card card = table.doubleDown(index, handIndex);
+					updateDeck();
 					player = (Player)table.getPersonAtIndex(index);
 					gameLog.setText(gameLog.getText() + player.getName() 
 						+ " doubles down hand " + (handIndex + 1) + " and their "
-						+ "wager has increased to " + player.getWager() + "\n");
+						+ "wager has increased to " + df.format(player.getWager()) + "\n");
 					gameLog.setText(gameLog.getText() + player.getName() 
 						+ " is dealt a " + card + " to hand " + (handIndex + 1) + "\n");
 					gameLog.setText(gameLog.getText() + player.getName() 
@@ -2187,10 +2912,10 @@ public class GUI extends JFrame
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					Player player = (Player)table.getPersonAtIndex(index);
 					error.setText("");
 					Card card = table.hit(index, 0);
-					player = (Player)table.getPersonAtIndex(index);
+					updateDeck();
+					Player player = (Player)table.getPersonAtIndex(index);
 					gameLog.setText(gameLog.getText() + player.getName() 
 						+ " hits and is dealt a " + card + "\n");
 					playerPanels[index].updatePanel(index);
@@ -2261,10 +2986,11 @@ public class GUI extends JFrame
 					if(player.getTotalMoney() >= player.getWager())
 					{
 						Card card = table.doubleDown(index, 0);
+						updateDeck();
 						player = (Player)table.getPersonAtIndex(index);
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " doubles down and their wager has increased to " 
-								+ player.getWager() + "\n");
+								+ df.format(player.getWager()) + "\n");
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " is dealt a " + card + "\n");
 						gameLog.setText(gameLog.getText() + player.getName() 
@@ -2310,7 +3036,7 @@ public class GUI extends JFrame
 						player = (Player)table.getPersonAtIndex(index);
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " splits their hand and their wager increase to " 
-							+ player.getWager() + "\n");
+							+ df.format(player.getWager()) + "\n");
 						playerPanels[index].updatePanel(index);
 						
 						int handIndex = 0;
@@ -2388,7 +3114,7 @@ public class GUI extends JFrame
 					gameLog.setText(gameLog.getText() + player.getName()
 						+ " surrenders and half of their wager is returned\n");
 					gameLog.setText(gameLog.getText() + player.getName() 
-						+ " regains $" + returnedAmount + "\n");
+						+ " regains $" + df.format(returnedAmount) + "\n");
 					playerPanels[index].updatePanel(index);
 					dispose();
 					nextPlayer(index);
@@ -2536,7 +3262,8 @@ public class GUI extends JFrame
 		public EndGameWindow()
 		{
 			setTitle("End Game");
-			setSize(TINY_WINDOW);
+			final Dimension dimension = new Dimension(800, TINY_WINDOW.height);
+			setSize(dimension);
 			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			setResizable(false);
 			setModalityType(ModalityType.MODELESS);
@@ -2572,6 +3299,32 @@ public class GUI extends JFrame
 				}
 			};
 			
+			//Saves the game log to a .txt file, overwriting the previous log.
+			Action printGameLog = new AbstractAction()
+			{
+				@Override
+				public void actionPerformed(ActionEvent arg0) 
+				{
+					PrintWriter outputStream = null;
+					try
+					{
+						outputStream = new PrintWriter(new FileOutputStream("Game Log.txt"), false);
+					}
+					catch(FileNotFoundException ex)
+					{
+						System.out.println("Error opening the file");
+						System.exit(0);
+					}
+					
+					String[] log = gameLog.getText().split("\n");
+					for(int i = 0; i < log.length; i++)
+					{
+						outputStream.println(log[i]);
+					}
+					outputStream.close();
+				}
+			};
+			
 			//Key bindings
 			JRootPane rootPane = getRootPane();
 			rootPane.getInputMap(WIFW).put(ENTER, "ENTER");
@@ -2588,6 +3341,8 @@ public class GUI extends JFrame
 			rootPane.getActionMap().put("S", new Statistics());
 			rootPane.getInputMap(WIFW).put(A, "A");
 			rootPane.getActionMap().put("A", new About());
+			rootPane.getInputMap(WIFW).put(L, "L");
+			rootPane.getActionMap().put("L", printGameLog);
 			
 			//Button panel
 			JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
@@ -2629,6 +3384,13 @@ public class GUI extends JFrame
 			aboutButton.addActionListener(new About());
 			aboutButton.setToolTipText("Opens the About window");
 			buttonPanel.add(aboutButton);
+			JGradientButton saveButton = new JGradientButton("Save Log");
+			saveButton.setFont(BUTTON_FONT);
+			saveButton.setPreferredSize(BUTTON_SIZE);
+			saveButton.setBackground(LIGHT_BLUE);
+			saveButton.addActionListener(printGameLog);
+			saveButton.setToolTipText("Prints the game log to a txt file");
+			buttonPanel.add(saveButton);
 			
 			add(buttonPanel, BorderLayout.SOUTH);
 		}
@@ -2681,23 +3443,20 @@ public class GUI extends JFrame
 		rootPane.getInputMap(WIFW).put(S, "S");
 		rootPane.getActionMap().put("S", new Statistics());
 		
-		final Color orange = new Color(243, 101, 37);
 		final int buttonPanelHeight = 80;
 		final int buttonVGap = buttonPanelHeight / 4;
 		final int buttonHGap = buttonPanelHeight / 5;
 		final Font buttonFont = new Font("Trebuchet MS", Font.BOLD, 18);
 		final Dimension buttonSize = new Dimension(130, 
 				buttonPanelHeight/2);
-		
-		//Background colour
-		getContentPane().setBackground(orange);
+		getContentPane().setBackground(new Color(243, 101, 37));
 		
 		//Title
 		JLabel title = new JLabel("Blackjack");
-		Font titleFont = new Font("Times New Roman", Font.BOLD, 200);
+		Font titleFont = new Font("Centaur", Font.BOLD, 350);
 		title.setFont(titleFont);
 		title.setHorizontalAlignment(JLabel.CENTER);
-		add(title, BorderLayout.CENTER);
+		add(title);
 		
 		//Button panel
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 
@@ -2739,8 +3498,8 @@ public class GUI extends JFrame
 	private void mainScreen()
 	{
 		getContentPane().removeAll();
-		setLayout(new BorderLayout());
 		getContentPane().setBackground(LIGHT_GRAY);
+		setLayout(new BorderLayout());
 		
 		//Key Bindings
 		JRootPane rootPane = getRootPane();
@@ -2785,9 +3544,26 @@ public class GUI extends JFrame
 		dealerPanel = new DealerPanel((Dealer)table.getPersonAtIndex
 				(table.getPlayers().length - 1));
 		topQuarterPanel.add(dealerPanel);
-		JLabel deck = new JLabel("Deck");
-		deck.setHorizontalAlignment(JLabel.CENTER);
-		topQuarterPanel.add(deck);
+		
+		//Deck Panel
+		JPanel deckPanel = new JPanel(new GridLayout(3, 3));
+		deckPanel.add(new JLabel(""));
+		JLabel deckHeader = new JLabel("Deck");
+		deckHeader.setHorizontalAlignment(JLabel.CENTER);
+		deckHeader.setVerticalAlignment(JLabel.BOTTOM);
+		deckHeader.setFont(MAIN_HEADING_FONT);
+		deckPanel.add(deckHeader);
+		deckPanel.add(new JLabel(""));
+		deckPanel.add(new JLabel(""));
+		deck = new GUICard();
+		deck.card = new Card();
+		updateDeck();
+		deckPanel.add(deck);
+		deckPanel.add(new JLabel(""));
+		deckPanel.add(new JLabel(""));
+		deckPanel.add(new JLabel(""));
+		
+		topQuarterPanel.add(deckPanel);
 		topQuarterPanel.add(new JLabel(""));
 		topCenterPanel.add(topQuarterPanel);
 		centerPanel.add(topCenterPanel);
@@ -2834,7 +3610,18 @@ public class GUI extends JFrame
 		repaint();
 		currentRound();
 		gameLog.setText(gameLog.getText() + "Wagers:\n");
-		intialWager(0);
+		initialWager(0);
+	}
+	
+	/**
+	 * Updates the deck tool tip text.
+	 * 
+	 * @since 1.7.0
+	 */
+	private void updateDeck()
+	{
+		deck.setToolTipText("Cards Remaining: " + table.getDeck().getCardsRemaining() 
+				+ "/" + (table.getDeck().getNumOfDecks() * Deck.DECKSIZE));
 	}
 	
 	/**
@@ -2855,7 +3642,7 @@ public class GUI extends JFrame
 	 * @param index The index of the Player.
 	 * @since 1.2.0
 	 */
-	private void intialWager(int index)
+	private void initialWager(int index)
 	{
 		Player player = (Player)table.getPersonAtIndex(index);
 		//If the player isn't bankrupt.
@@ -2877,7 +3664,7 @@ public class GUI extends JFrame
 					{
 						double wager = table.setCPUWager(index);
 						gameLog.setText(gameLog.getText() + player.getName() + 
-								"'s wager is $" + wager + "\n");
+								"'s wager is $" + df.format(wager) + "\n");
 						playerPanels[index].updatePanel(index);
 						nextWager(index);	
 					}
@@ -2906,7 +3693,7 @@ public class GUI extends JFrame
 		//If there are any more players left.
 		if(index + 1 < table.getPlayers().length - 1)
 		{
-			intialWager(index + 1);
+			initialWager(index + 1);
 		}
 		//If not goes to the next stage of the game.
 		else
@@ -2926,6 +3713,7 @@ public class GUI extends JFrame
 	private void initialDeal(int index)
 	{
 		table.deal(index);
+		updateDeck();
 		Person person = table.getPersonAtIndex(index);
 		ActionListener deal = new ActionListener() 
 		{	
@@ -3021,7 +3809,8 @@ public class GUI extends JFrame
 				{
 					Person[] people = table.getPlayers();
 					//If the dealer's first card is an Ace,begin insurance round.
-					if(people[people.length - 1].getHand(0).getHandScore() == 11)
+					if(people[people.length - 1].getHand(0).getCard(0).
+							getFace() == Face.ACE)
 					{
 						gameLog.setText(gameLog.getText() + "\nInsurance:\n");
 						insurance(0);
@@ -3029,7 +3818,7 @@ public class GUI extends JFrame
 					//If not begin the first player turn.
 					else
 					{
-						gameLog.setText(gameLog.getText() + "\nPlayer Turns:\n");
+						gameLog.setText(gameLog.getText() + "\nPlayer Turns:");
 						playerTurn(0);
 					}
 				}
@@ -3076,7 +3865,7 @@ public class GUI extends JFrame
 						{
 							playerPanels[index].updatePanel(index);
 							gameLog.setText(gameLog.getText() + cpu.getName() + 
-									" has $" + insurance + " of insurance\n");
+									" has $" + df.format(insurance) + " of insurance\n");
 						}
 						//If the CPU doesn't take insurance.
 						else
@@ -3169,6 +3958,7 @@ public class GUI extends JFrame
 		if(table.attemptDealerCardFlip())
 		{
 			Person dealer = table.getPersonAtIndex(finalIndex);
+			gameLog.setText(gameLog.getText() + "\nInsurance Result:\n");
 			gameLog.setText(gameLog.getText() + dealer.getName() + "'s second card is " + 
 					dealer.getHand(0).getCard(1) + "\n");
 			gameLog.setText(gameLog.getText() + dealer.getName() 
@@ -3227,8 +4017,8 @@ public class GUI extends JFrame
 		//If the Player is not bankrupt and has a score of less than Blackjack.
 		if(!player.getBankrupt() && player.getHand(0).getHandScore() < Table.BLACKJACK)			
 		{
-			gameLog.setText(gameLog.getText() + "It's now " 
-					+ player.getName() + "'s turn\n");
+			gameLog.setText(gameLog.getText() + "\nIt's now " 
+					+ player.getName() + "'s turn");
 			//If the Player is a Human open up a new TurnWindow.
 			if(player instanceof Human)
 			{
@@ -3242,12 +4032,33 @@ public class GUI extends JFrame
 				timer.setRepeats(false);
 				timer.start();
 			}
+			gameLog.setText(gameLog.getText() + "\n");
 		}
 		//If the Player is bankrupt or the Player's score is greater than or
 		//equal to Blackjack.
 		else
 		{
 			nextPlayer(index);
+		}
+	}
+	
+	/**
+	 * Checks if there are any player's left to have a turn.
+	 * 
+	 * @param index Index of the player.
+	 * @since 1.3.0
+	 */
+	private void nextPlayer(int index)
+	{
+		//If there are any more Player's left.
+		if(index + 1 < table.getPlayers().length - 1)
+		{
+			playerTurn(index + 1);
+		}
+		//If not run the Dealer's turn.
+		else
+		{
+			dealerTurn();
 		}
 	}
 	
@@ -3298,14 +4109,18 @@ public class GUI extends JFrame
 				player = (Player)table.getPersonAtIndex(index);
 				gameLog.setText(gameLog.getText() + player.getName() 
 					+ " splits their hand and their wager increase to " 
-					+ player.getWager() + "\n");
+					+ df.format(player.getWager()) + "\n");
 				playerPanels[index].updatePanel(index);
 				
-				for(int i = 0; i < player.getHands().length; i++)
+				int i = 0;
+				while(i < player.getHands().length && player.getHand(0).
+						getHandScore() < Table.BLACKJACK && player.getHand(1).
+						getHandScore() < Table.BLACKJACK)
 				{
 					while(player.getHand(i).getHandScore() < 17)
 					{
-						Card card = table.hit(index, 0);
+						Card card = table.hit(index, i);
+						updateDeck();
 						player = (Player)table.getPersonAtIndex(index);
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " hits and is dealt a " + card + " to hand " + 
@@ -3319,14 +4134,12 @@ public class GUI extends JFrame
 					{
 						gameLog.setText(gameLog.getText() + player.getName()
 						+ " has Blackjack and is forced to stand\n");
-						return;
 					}
 					//If the CPU has gone bust.
 					else if(player.getBusted())
 					{
 						gameLog.setText(gameLog.getText() + player.getName() 
 						+ " busts\n");
-						return;
 					}
 					//Else the player stands.
 					else
@@ -3335,7 +4148,10 @@ public class GUI extends JFrame
 							+ (i + 1) + " with a score of " + handScore + "\n");
 					}
 					playerPanels[index].updatePanel(index);
+					i++;
 				}
+				
+				nextPlayer(index);
 			}
 			//If the CPU doesn't split.
 			else
@@ -3353,10 +4169,11 @@ public class GUI extends JFrame
 					if(player.getTotalMoney() >= player.getWager())
 					{
 						Card card = table.doubleDown(index, 0);
+						updateDeck();
 						player = (Player)table.getPersonAtIndex(index);
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " doubles down and their wager has increased to " 
-							+ player.getWager() + "\n");
+							+ df.format(player.getWager()) + "\n");
 						gameLog.setText(gameLog.getText() + player.getName() 
 							+ " is dealt a " + card + "\n");
 						gameLog.setText(gameLog.getText() + player.getName() 
@@ -3383,7 +4200,7 @@ public class GUI extends JFrame
 					gameLog.setText(gameLog.getText() + player.getName()
 						+ " surrenders and half of their wager is returned\n");
 					gameLog.setText(gameLog.getText() + player.getName() 
-						+ " regains $" + returnedAmount + "\n");
+						+ " regains $" + df.format(returnedAmount) + "\n");
 					playerPanels[index].updatePanel(index);
 				}
 				//If the CPU's score is 16 or greater than stand.
@@ -3394,9 +4211,9 @@ public class GUI extends JFrame
 					(index).getHand(0).getHandScore() + "\n");
 					playerPanels[index].updatePanel(index);
 				}
+				playerPanels[index].updatePanel(index);
+				nextPlayer(index);
 			}
-			playerPanels[index].updatePanel(index);
-			nextPlayer(index);
 		}
 		
 		/**
@@ -3412,6 +4229,7 @@ public class GUI extends JFrame
 			while(player.getHand(0).getHandScore() < 17)
 			{
 				Card card = table.hit(index, 0);
+				updateDeck();
 				player = (Player)table.getPersonAtIndex(index);
 				gameLog.setText(gameLog.getText() + player.getName() 
 						+ " hits and is dealt a " + card + "\n");
@@ -3457,20 +4275,31 @@ public class GUI extends JFrame
 			public void actionPerformed(ActionEvent e) 
 			{
 				Person dealer = table.getPersonAtIndex(finalIndex);
-				gameLog.setText(gameLog.getText() + "It's now " 
+				gameLog.setText(gameLog.getText() + "\nIt's now " 
 						+ dealer.getName() + "'s turn\n");
 				gameLog.setText(gameLog.getText() + dealer.getName() + "'s face "
 						+ "down card was " + dealer.getHand(0).getCard(1) + " and"
 						+ " they now have a score of " + dealer.getHand(0).
 						getHandScore() + "\n");	
 				dealerPanel.updatePanel(finalIndex);
+				dealerDraw();
 			}
 		};
 		timer = new Timer(turnDelay, dealerStart);
 		timer.setRepeats(false);
 		timer.start();
-		
+	}
+	
+	/**
+	 * Deals the dealer cards until they reach a score of at least 17.
+	 * 
+	 * @since 1.7.0
+	 */
+	private void dealerDraw()
+	{
+		final int finalIndex = table.getPlayers().length - 1;
 		Card[] cards = table.addToDealersHand();
+		updateDeck();
 		
 		//If the dealer is dealt any cards, add them to the game log.
 		if(cards.length > 0)
@@ -3496,6 +4325,8 @@ public class GUI extends JFrame
 					gameLog.setText(gameLog.getText() + " and now has a score of " 
 							+ dealer.getHand(0).getHandScore() + "\n");
 					dealerPanel.updatePanel(finalIndex);
+					gameLog.setText(gameLog.getText() + "\nRound Results:\n");
+					roundResults(0);
 				}
 			};
 			
@@ -3503,28 +4334,10 @@ public class GUI extends JFrame
 			timer.setRepeats(false);
 			timer.start();
 		}
-		
-		gameLog.setText(gameLog.getText() + "\nRound Results:\n");
-		roundResults(0);
-	}
-	
-	/**
-	 * Checks if there are any player's left to have a turn.
-	 * 
-	 * @param index Index of the player.
-	 * @since 1.3.0
-	 */
-	private void nextPlayer(int index)
-	{
-		//If there are any more Player's left.
-		if(index + 1 < table.getPlayers().length - 1)
-		{
-			playerTurn(index + 1);
-		}
-		//If not run the Dealer's turn.
 		else
 		{
-			dealerTurn();
+			gameLog.setText(gameLog.getText() + "\nRound Results:\n");
+			roundResults(0);
 		}
 	}
 	
@@ -3541,7 +4354,7 @@ public class GUI extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
-				gameLog.setText(gameLog.getText() + table.roundResult(index) + "\n");
+				gameLog.setText(gameLog.getText() + table.roundResult(index) + "\n");		
 				Player player = (Player)table.getPersonAtIndex(index);
 				
 				//If the player has gone bankrupt.
@@ -3557,13 +4370,13 @@ public class GUI extends JFrame
 					if(player.getHasWin())
 					{
 						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " wins $" + player.getCurrentWin() + "\n");
+							+ " wins $" + df.format(player.getCurrentWin()) + "\n");
 					}
 					//If the Player has Blackjack.
 					else if(player.getHasBlackjack())
 					{
 						gameLog.setText(gameLog.getText() + player.getName()
-							+ " wins $"+ player.getCurrentBlackjack() + "\n");
+							+ " wins $" + df.format(player.getCurrentBlackjack()) + "\n");
 					}
 				}
 				playerPanels[index].updatePanel(index);	
@@ -3610,7 +4423,7 @@ public class GUI extends JFrame
 			table.setCurrentRound(table.getCurrentRound() + 1);
 			gameLog.setText(gameLog.getText() + "\n");
 			currentRound();
-			intialWager(0);
+			initialWager(0);
 		}
 		//If there are no rounds remaining or every player is bankrupt.
 		else
