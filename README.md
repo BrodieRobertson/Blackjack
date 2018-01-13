@@ -1,4 +1,18 @@
 # Blackjack Changelog
+GUI 1.7.0
+<br>Note:
+Finally, it's done, it ended up taking far longer than expected but this project is finally over, I've been lost every now and then but I'm so happy that I decided to do this now instead of waiting for the new semester to roll around and then trying to learn it then along side everything else. The next time I take on a project of this scale I'll definetly do more in the way of planning the GUI classes, I couldn't do so this time because I was learning Event-Driven Programming for the first time whilst I was writing this game. I'll take a short break but as for my next project it will be in a web language, it won't be too this scale as I've never touched web programming before so we'll see how that goes.
+
+Change Log:
+1. CPU bets and insurance are generated based on how much money the CPU has left.
+2. The game log can be optionally printed to a text file at the end of the game.
+3. Every card is drawn to the screen and looks as the a physical card would.
+4. Face down cards are drawn to the screen showing the back of the card, this includes the deck.
+5. Completely rewrote how ace vlaues are swapped so that they swap under the correct conditions.
+6. Modified the where new lines occur within the game log to make it easier to read.
+7. Changed the font and the size of the logo.
+8. Modiged some of the lines that are outputted to the game log.
+
 GUI Beta 1.6.0
 <br>Note:
 I intend to have this project out of beta by tomorrow whether that means it'll be completed wiill be dependent upon how much I feel like I can deal with looking at this code any longer.
