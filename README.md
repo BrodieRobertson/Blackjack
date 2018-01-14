@@ -1,4 +1,13 @@
 # Blackjack Changelog
+GUI 1.7.1
+<br>Note:
+So it turns out that I don't understand how Blackjack works as well as I thought I did, I didn't realize that Blackjack only occurs when a player hits 21 with their first 2 cards, so now this project is actually done. Thanks Robert, if you read this go look at the About Window in the latest version.
+
+Change Log:
+1. Fixed the issues with Blackjack occurring when the player has more than 2 cards.
+2. Cleaned up the round results method by storing the scores in variables.
+3. Modified the game log outputs to accurately represent the win condition fixes.
+
 GUI 1.7.0
 <br>Note:
 Finally, it's done, it ended up taking far longer than expected but this project is finally over, I've been lost every now and then but I'm so happy that I decided to do this now instead of waiting for the new semester to roll around and then trying to learn it then along side everything else. The next time I take on a project of this scale I'll definetly do more in the way of planning the GUI classes, I couldn't do so this time because I was learning Event-Driven Programming for the first time whilst I was writing this game. I'll take a short break but as for my next project it will be in a web language, it won't be too this scale as I've never touched web programming before so we'll see how that goes.
