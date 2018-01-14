@@ -9,7 +9,7 @@ import player.*;
  * The logic layer for the game, manages all of the back end data manipulation.
  * 
  * @author Brodie Robertson
- * @version 1.7.0
+ * @version 1.7.1
  * @since 1.0.0
  */
 public class Table 
@@ -804,6 +804,7 @@ public class Table
 	{	
 		//Dealer's score is greater than 21.
 		Dealer dealer = (Dealer) players[players.length - 1];
+		int dealerScore = dealer.getHand(0).getHandScore();
 		Player player = (Player) players[index];
 		Hand[] hands = player.getHands();
 			
@@ -814,23 +815,34 @@ public class Table
 			return player.getName() + " surrendered this hand";
 		}
 		//If the dealer's score is greater than blackjack.
-		else if (dealer.getHand(0).getHandScore() > BLACKJACK)
+		else if (dealerScore > BLACKJACK)
 		{
 			//If the player hasn't used split
 			if (hands.length < 2) 
 			{
+				int handScore = hands[0].getHandScore();
 				//If the player's score is greater than 21
-				if (hands[0].getHandScore() > BLACKJACK) 
+				if (handScore > BLACKJACK) 
 				{
 					double push = player.getWager();
 					pushPayout(player);
 					return player.getName() + " pushes and regains $" + df.format(push);
 				}
 				//If the player's score is 21
-				else if (hands[0].getHandScore() == BLACKJACK) 
+				else if (handScore == BLACKJACK) 
 				{
-					blackjackPayout(player);
-					return player.getName() + " has Blackjack";
+					//If the player only has 2 cards
+					if(hands[0].getCards().length == 2)
+					{
+						blackjackPayout(player);
+						return player.getName() + " has Blackjack";
+					}
+					//If the player has more than 2 cards
+					else
+					{
+						standardPayout(player);
+						return player.getName() + " wins hand";
+					}
 				}
 				//If the player's score is less than 21
 				else 
@@ -853,9 +865,9 @@ public class Table
 						bestHandIndex = j;
 					}
 				}
-				
-				//If the player's score is greater than 21
-				if (hands[bestHandIndex].getHandScore() > BLACKJACK)
+				int handScore = hands[bestHandIndex].getHandScore();
+				//If the player's score is greater than Blackjack
+				if (handScore > BLACKJACK)
 				{
 					double push = player.getWager();
 					pushPayout(player);
@@ -863,36 +875,54 @@ public class Table
 							+ " and regains $" + df.format(push);
 				}
 
-				//If the player's score is equal to or less than 21
-				else 
+				//If the player's score is equal to Blackjack
+				else if(handScore == BLACKJACK)
+				{
+					//If the player only has 2 cards
+					if(hands[0].getCards().length == 2)
+					{
+						blackjackPayout(player);
+						return player.getName() + " has Blackjack with hand " 
+								+ (bestHandIndex + 1);
+					}
+					//If the player has more than 2 cards
+					else
+					{
+						standardPayout(player);
+						return player.getName() + " wins hand " + (bestHandIndex + 1);
+					}
+				}
+				//Else the player's score is less than Blackjack
+				else
 				{
 					standardPayout(player);
-					return player.getName() + " wins with hand " + (bestHandIndex + 1);
+					return player.getName() + " wins hand " + (bestHandIndex + 1);
 				}
 			}
 		}
 		//Dealer's score is 21 (equivalent to blackjack)
-		else if (dealer.getHand(0).getHandScore() == BLACKJACK)
+		else if (dealerScore == BLACKJACK)
 		{
 			//Player hasn't used split
 			if (hands.length < 2)
 			{
+				int handScore = hands[0].getHandScore();
 				//If the player's score is greater than 21
-				if (hands[0].getHandScore() > BLACKJACK)
+				if (handScore > BLACKJACK)
 				{
 					player.setBust(player.getBust() + 1);
 					player.setLoss(player.getLoss() + 1);
 					return player.getName() + " busts";
 				}
 				//If the player's score is 21
-				else if (hands[0].getHandScore() == BLACKJACK)
+				else if (handScore == BLACKJACK)
 				{
 					double push = player.getWager();
 					pushPayout(player);
 					return player.getName() + " pushes and regains $" + df.format(push);
 				}
 				//If the player's score is less than 21
-				else 
+				else
 				{
 					player.setLoss(player.getLoss() + 1);
 					return player.getName() + " loses this hand";
@@ -912,20 +942,21 @@ public class Table
 						bestHandIndex = j;
 					}
 				}
+				int handScore = hands[bestHandIndex].getHandScore();
 
 				//If the player's score is greater than 21
-				if (hands[bestHandIndex].getHandScore() > BLACKJACK) 
+				if (handScore > BLACKJACK) 
 				{
 					player.setBust(player.getBust() + 1);
 					player.setLoss(player.getLoss() + 1);
 					return player.getName() + " busts with all hands";
 				}
 				//If the player's score is 21
-				else if (hands[bestHandIndex].getHandScore() == BLACKJACK)
+				else if (handScore == BLACKJACK)
 				{
 					double push = player.getWager();
 					pushPayout(player);
-					return player.getName() + " pushes with hand " + (bestHandIndex + 1) 
+					return player.getName() + " pushes with hand " + (bestHandIndex + 1)
 							+ " and regains $" + df.format(push);
 				}
 				//If the player's score is less than 21
@@ -942,36 +973,47 @@ public class Table
 			//If player hasn't split
 			if (hands.length < 2) 
 			{
+				int handScore = hands[0].getHandScore();
 				//If the player's score is greater than 21
-				if (hands[0].getHandScore() > BLACKJACK) 
+				if (handScore > BLACKJACK) 
 				{
 					player.setBust(player.getBust() + 1);
 					player.setLoss(player.getLoss() + 1);
 					return player.getName() + " busts";
 				}
 				//If the player's score is 21
-				else if (hands[0].getHandScore() == BLACKJACK) 
+				else if (handScore == BLACKJACK) 
 				{
-					blackjackPayout(player);
-					return player.getName() + " has Blackjack";
+					//If the player only has 2 cards
+					if(hands[0].getCards().length == 2)
+					{
+						blackjackPayout(player);
+						return player.getName() + " has Blackjack";
+					}
+					//If the player has more than 2 cards
+					else
+					{
+						standardPayout(player);
+						return player.getName() + " wins hand";
+					}
 				}
 				//If the player's score is greater than the dealer's score
 				//and less than 21
-				else if (hands[0].getHandScore() > dealer.getHand(0).getHandScore()
-						&& hands[0].getHandScore() < BLACKJACK) 
+				else if (handScore > dealerScore && handScore < BLACKJACK) 
 				{
 					standardPayout(player);
 					return player.getName() + " wins hand";
 				}
 				//If the player's score equals the dealer's score
-				else if (hands[0].getHandScore() == dealer.getHand(0).getHandScore()) 
+				else if (handScore == dealerScore) 
 				{
 					double push = player.getWager();
 					pushPayout(player);
 					return player.getName() + " pushes and regains $" + df.format(push);
 				}
-				//If the player's score is less than the dealer's score
-				else 
+				//If the player's score is less than the dealer's score and 
+				//less than Blackjack
+				else
 				{
 					player.setLoss(player.getLoss() + 1);
 					return player.getName() + " loses this hand";
@@ -991,32 +1033,42 @@ public class Table
 						bestHandIndex = j;
 					}
 				}
+				int handScore = hands[bestHandIndex].getHandScore();
 
 				//If the player's score is greater than 21
-				if (hands[bestHandIndex].getHandScore() > BLACKJACK) 
+				if (handScore > BLACKJACK) 
 				{
 					player.setBust(player.getBust() + 1);
 					player.setLoss(player.getLoss() + 1);
 					return player.getName() + " busts with all hands";
 				}
 				//If the player's score is 21
-				else if (hands[bestHandIndex].getHandScore() == BLACKJACK)
+				else if (handScore == BLACKJACK)
 				{
-					blackjackPayout(player);
-					return player.getName() + " has Blackjack with hand " 
-							   + (bestHandIndex + 1);
+					//If the player only has 2 cards
+					if(hands[bestHandIndex].getCards().length == 2)
+					{
+						blackjackPayout(player);
+						return player.getName() + " has Blackjack with hand " 
+								+ (bestHandIndex + 1);
+					}
+					//If the player has more than 2 cards
+					else
+					{
+						standardPayout(player);
+						return player.getName() + " wins hand " + (bestHandIndex + 1);
+					}
 					
 				}
 				//If the player's score is greater than the dealer's score
 				//and less than 21
-				else if (hands[bestHandIndex].getHandScore() > dealer.getHand(0).getHandScore()
-						&& hands[bestHandIndex].getHandScore() < BLACKJACK) 
+				else if (handScore > dealerScore && handScore < BLACKJACK) 
 				{
 					standardPayout(player);
 					return player.getName() + " wins with hand " + (bestHandIndex + 1);
 				}
 				//If the player's score equals the dealer's score
-				else if (hands[bestHandIndex].getHandScore() == dealer.getHand(0).getHandScore()) 
+				else if (handScore == dealerScore) 
 				{
 					double push = player.getWager();
 					pushPayout(player);

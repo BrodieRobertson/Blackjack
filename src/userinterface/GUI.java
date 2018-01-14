@@ -59,7 +59,7 @@ import player.*;
  * the logic layer.
  * 
  * @author Brodie Robertson
- * @version 1.7.0
+ * @version 1.7.1
  * @since 1.2.0
  */
 public class GUI extends JFrame 
@@ -865,7 +865,7 @@ public class GUI extends JFrame
 	 * game.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.7.0
+	 * @version 1.7.1
 	 * @since 1.2.0
 	 */
 	private class AboutWindow extends JDialog
@@ -878,7 +878,7 @@ public class GUI extends JFrame
 		public AboutWindow()
 		{
 			setTitle("About");
-			setSize(new Dimension(325, 200));
+			setSize(new Dimension(325, 210));
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			setModalityType(ModalityType.APPLICATION_MODAL);
 			setLayout(new BorderLayout());
@@ -900,13 +900,13 @@ public class GUI extends JFrame
 			title.setFont(headingFont);
 			about.add(title);
 			
-			JLabel version = new JLabel("Version: Beta 1.7.0");
+			JLabel version = new JLabel("Version: Beta 1.7.1");
 			version.setVerticalAlignment(JLabel.TOP);
 			version.setAlignmentX(JLabel.CENTER_ALIGNMENT);
 			version.setFont(MAIN_HEADING_FONT);
 			about.add(version);
 			
-			JLabel lastUpdated = new JLabel("Last Updated: 8/1/2017");
+			JLabel lastUpdated = new JLabel("Last Updated: 14/1/2017");
 			lastUpdated.setVerticalAlignment(JLabel.TOP);
 			lastUpdated.setAlignmentX(JLabel.CENTER_ALIGNMENT);
 			lastUpdated.setFont(MAIN_HEADING_FONT);
@@ -926,11 +926,17 @@ public class GUI extends JFrame
 			developed.setFont(MAIN_HEADING_FONT);
 			about.add(developed);
 			
-			JLabel tested = new JLabel("Tested by Brodie Robertson");
-			tested.setVerticalAlignment(JLabel.TOP);
-			tested.setAlignmentX(JLabel.CENTER_ALIGNMENT);
-			tested.setFont(MAIN_HEADING_FONT);
-			about.add(tested);
+			JLabel tested1 = new JLabel("Tested by Brodie Robertson and");
+			tested1.setVerticalAlignment(JLabel.TOP);
+			tested1.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+			tested1.setFont(MAIN_HEADING_FONT);
+			about.add(tested1);
+			
+			JLabel tested2 = new JLabel("Robert Sanders");
+			tested2.setVerticalAlignment(JLabel.TOP);
+			tested2.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+			tested2.setFont(MAIN_HEADING_FONT);
+			about.add(tested2);
 			
 			add(about, BorderLayout.NORTH);
 		}
@@ -2655,7 +2661,7 @@ public class GUI extends JFrame
 	 * Dialog window used for playing out a human's turn.
 	 * 
 	 * @author Brodie Robertson
-	 * @version 1.7.0
+	 * @version 1.7.1
 	 * @since 1.2.0
 	 */
 	private class TurnWindow extends JDialog
@@ -2715,7 +2721,7 @@ public class GUI extends JFrame
 		 * Deals the human another card to this hand and displays the reslts.
 		 * 
 		 * @author Brodie Robertson
-		 * @version 1.4.3
+		 * @version 1.7.1
 		 * @since 1.4.1
 		 */
 		private class SplitHit extends AbstractAction
@@ -2780,7 +2786,9 @@ public class GUI extends JFrame
 				else if(handScore == Table.BLACKJACK)
 				{
 					gameLog.setText(gameLog.getText() + player.getName() 
-						+ " has Blackjack and is forced to stand\n");
+						+ "'s score is " + Table.BLACKJACK + " with hand " 
+						+ (handIndex + 1) + " and is forced to stand");
+					dispose();
 					nextPlayer(index);
 				}
 				//If the hand's score is greater than Blackjack.
@@ -2957,7 +2965,8 @@ public class GUI extends JFrame
 					else if(handScore == Table.BLACKJACK)
 					{
 						gameLog.setText(gameLog.getText() + player.getName() 
-							+ " has Blackjack and is forced to stand\n");
+							+ "'s score is " + Table.BLACKJACK + " and is "
+							+ "forced to stand\n");
 						dispose();
 						nextPlayer(index);
 					}
@@ -4132,8 +4141,9 @@ public class GUI extends JFrame
 					//If the CPU has Blackjack.
 					if(handScore == Table.BLACKJACK)
 					{
-						gameLog.setText(gameLog.getText() + player.getName()
-						+ " has Blackjack and is forced to stand\n");
+						gameLog.setText(gameLog.getText() + player.getName() 
+						+ "'s score is " + Table.BLACKJACK + " and is forced"
+						+ " to stand\n");
 					}
 					//If the CPU has gone bust.
 					else if(player.getBusted())
@@ -4240,8 +4250,9 @@ public class GUI extends JFrame
 			//If the CPU's score equals Blackjack stand
 			if(handScore == Table.BLACKJACK)
 			{
-				gameLog.setText(gameLog.getText() + player.getName()
-				+ " has Blackjack and is forced to stand\n");
+				gameLog.setText(gameLog.getText() + player.getName() 
+				+ "'s score is " + Table.BLACKJACK + " and is forced"
+				+ " to stand\n");
 			}
 			//If the CPU has gone bust.
 			else if(player.getBusted())
